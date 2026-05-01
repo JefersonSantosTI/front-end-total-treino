@@ -105,7 +105,6 @@ function App() {
   };
 
   const salvarOnboarding = async () => {
-    // ADICIONE perfil.idade NA VALIDAÇÃO ABAIXO
     if (!perfil.nome || !perfil.peso || !perfil.altura || !perfil.idade) {
       alert("Preencha todos os campos, incluindo a idade!");
       return;
@@ -117,15 +116,16 @@ function App() {
         body: JSON.stringify({
           whatsapp: usuario,
           nome: perfil.nome,
-          peso: perfil.peso,
-          altura: perfil.altura,
+          peso: Number(perfil.peso), // Garanta que vai como número
+          altura: Number(perfil.altura),
           meta: perfil.meta,
-          idade: perfil.idade // Enviando o novo dado
+          idade: Number(perfil.idade) // Enviando como número
         })
       });
 
       if (response.ok) {
-        const saude = calcularSaude(perfil.peso, perfil.altura);
+        // CORREÇÃO AQUI: Passar a idade para o cálculo de saúde
+        const saude = calcularSaude(perfil.peso, perfil.altura, perfil.idade);
         setPerfil(prev => ({ ...prev, ...saude }));
         setEtapa("home");
       } else {
