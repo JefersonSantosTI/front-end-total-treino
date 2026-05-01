@@ -108,15 +108,15 @@ const ChatReceitas = ({ whatsapp, isVip, aoPedirUpgrade, aoAtualizarPerfil, setT
                 whatsapp,
                 mensagemAtual: textoDigitado,
                 perfilExtraido: {
-                    nome: perfil?.nome || "Guerreiro", // Adicionado fallback seguro
-                    peso: perfil?.peso || 0,
-                    altura: perfil?.altura || 0,
+                    nome: perfil?.nome || "Guerreiro",
+                    peso: perfil?.peso || 75,
+                    altura: perfil?.altura || 1.70,
+                    idade: perfil?.idade || 25, // <--- ADICIONE ESTA LINHA AQUI
                     meta: perfil?.meta || "Emagrecimento",
                     imc: perfil?.imc || "0",
                     tmb: perfil?.tmb || "0"
                 }
             });
-            // ... resto do códi
 
             const respostaTexto = response.data.resposta || "";
             extrairEGuardarDados(respostaTexto);
