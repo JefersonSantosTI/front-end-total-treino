@@ -17,7 +17,7 @@ function App() {
     nome: "Guerreiro(a)",
     peso: "0",
     altura: "0",
-    idade: "0", // <--- ADICIONE ESTA LINHA
+    idade: "0",
     meta: "Emagrecimento",
     imc: "0",
     tmb: "0",
@@ -27,14 +27,27 @@ function App() {
   const API_URL = "https://api-backend-treino-fit.onrender.com/api";
   const verificandoRef = useRef(false);
 
-  const calcularSaude = useCallback((peso, altura, idade) => { // <--- Adicione idade aqui
+  // --- LÓGICA DO GRÁFICO DINÂMICO ---
+  const porcentagemProgresso = 75; // Pode ser vinculado a (pesoInicial - pesoAtual) posteriormente
+  const strokeDashoffset = 628 - (628 * porcentagemProgresso) / 100;
+
+  const getCorStatus = () => {
+    const imc = parseFloat(perfil.imc);
+    if (imc < 1) return "#10b981"; // Padrão inicial
+    if (imc < 18.5) return "#3b82f6"; // Azul
+    if (imc < 25) return "#10b981";   // Verde
+    if (imc < 30) return "#f59e0b";   // Laranja
+    return "#ef4444";                 // Vermelho
+  };
+  // ----------------------------------
+
+  const calcularSaude = useCallback((peso, altura, idade) => {
     const p = parseFloat(peso) || 0;
     const a = parseFloat(altura) || 0;
-    const i = parseInt(idade) || 25; // <--- Se não tiver idade, usa 25 como padrão
+    const i = parseInt(idade) || 25;
 
     if (p > 0 && a > 0) {
       const imc = (p / (a * a)).toFixed(1);
-      // Agora usando o 'i' da idade real do usuário:
       const tmb = (10 * p + (6.25 * (a * 100)) - (5 * i)).toFixed(0);
       const falta = (p * 0.1).toFixed(1);
       return { imc, tmb, falta };
@@ -44,29 +57,24 @@ function App() {
 
   const sincronizarComBanco = useCallback(async (whatsappId) => {
     if (!whatsappId || verificandoRef.current) return;
-
     try {
       verificandoRef.current = true;
       const whatsLimpo = String(whatsappId).replace(/\D/g, "");
       const response = await fetch(`${API_URL}/usuarios/${whatsLimpo}`);
-
       if (response.ok) {
         const dados = await response.json();
-
         if (!dados.peso || dados.peso === 0) {
           setEtapa("onboarding");
         } else {
-          // Passe dados.idade para o cálculo aqui:
           const saude = calcularSaude(dados.peso, dados.altura, dados.idade);
           setPerfil({
             nome: dados.nome || "Guerreiro(a)",
             peso: String(dados.peso),
             altura: String(dados.altura),
-            idade: String(dados.idade || 25), // <--- Carregue a idade do banco
+            idade: String(dados.idade || 25),
             meta: dados.meta || "Emagrecimento",
             ...saude
           });
-
           setIsVip(dados.pago === true);
           setTreinoIAPescado(dados.treinoIA || null);
           setEtapa("home");
@@ -116,15 +124,13 @@ function App() {
         body: JSON.stringify({
           whatsapp: usuario,
           nome: perfil.nome,
-          peso: Number(perfil.peso), // Garanta que vai como número
+          peso: Number(perfil.peso),
           altura: Number(perfil.altura),
           meta: perfil.meta,
-          idade: Number(perfil.idade) // Enviando como número
+          idade: Number(perfil.idade)
         })
       });
-
       if (response.ok) {
-        // CORREÇÃO AQUI: Passar a idade para o cálculo de saúde
         const saude = calcularSaude(perfil.peso, perfil.altura, perfil.idade);
         setPerfil(prev => ({ ...prev, ...saude }));
         setEtapa("home");
@@ -150,7 +156,6 @@ function App() {
   if (etapa === "onboarding") {
     return (
       <div className="fixed inset-0 bg-gray-950 flex flex-col items-center justify-center p-8 text-white z-[999] overflow-y-auto">
-        {/* BOTÃO VOLTAR ADICIONADO ABAIXO */}
         <button
           onClick={() => {
             localStorage.clear();
@@ -164,17 +169,10 @@ function App() {
         <div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center text-black font-black mb-6 shadow-[0_0_20px_rgba(16,185,129,0.4)]">FIT</div>
         <h2 className="text-2xl font-black mb-2 uppercase italic text-emerald-500 text-center leading-tight">Construa seu Perfil</h2>
         <p className="text-gray-400 text-center text-sm mb-8 italic">O Mentor IA precisa desses dados para criar sua dieta expert.</p>
-
         <div className="w-full max-w-sm space-y-4">
           <input type="text" placeholder="Seu Nome" className="w-full bg-white/5 border border-white/10 p-5 rounded-3xl outline-none focus:border-emerald-500 transition-all" onChange={(e) => setPerfil({ ...perfil, nome: e.target.value })} />
           <div className="flex gap-4">
-            {/* Adicione este input abaixo do input de Nome */}
-            <input
-              type="number"
-              placeholder="Sua Idade"
-              className="w-full bg-white/5 border border-white/10 p-5 rounded-3xl outline-none focus:border-emerald-500 transition-all"
-              onChange={(e) => setPerfil({ ...perfil, idade: e.target.value })}
-            />
+            <input type="number" placeholder="Sua Idade" className="w-full bg-white/5 border border-white/10 p-5 rounded-3xl outline-none focus:border-emerald-500 transition-all" onChange={(e) => setPerfil({ ...perfil, idade: e.target.value })} />
             <input type="number" placeholder="Peso (kg)" className="w-1/2 bg-white/5 border border-white/10 p-5 rounded-3xl outline-none focus:border-emerald-500 transition-all" onChange={(e) => setPerfil({ ...perfil, peso: e.target.value })} />
             <input type="number" placeholder="Altura (m)" className="w-1/2 bg-white/5 border border-white/10 p-5 rounded-3xl outline-none focus:border-emerald-500 transition-all" onChange={(e) => setPerfil({ ...perfil, altura: e.target.value })} />
           </div>
@@ -185,7 +183,6 @@ function App() {
           <button onClick={salvarOnboarding} className="w-full bg-emerald-500 text-black font-black py-5 rounded-3xl uppercase shadow-lg active:scale-95 transition-all">Ativar Protocolo FIT →</button>
         </div>
       </div>
-
     );
   }
 
@@ -193,7 +190,6 @@ function App() {
     <div className="fixed inset-0 bg-gray-950 text-white flex flex-col overflow-hidden font-sans">
       {abaAtiva === "home" && (
         <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center">
-          {/* Header Superior */}
           <header className="w-full max-w-md flex justify-between items-center mt-4 mb-8">
             <div className="flex items-center space-x-3">
               <div className="w-11 h-11 bg-emerald-500 rounded-xl flex items-center justify-center text-black font-black shadow-lg">FIT</div>
@@ -208,19 +204,43 @@ function App() {
           </header>
 
           <main className="w-full max-w-md flex flex-col items-center">
-            {/* Gráfico de Progresso Central */}
-            <div className="relative w-60 h-60 mb-6 flex items-center justify-center">
-              <svg className="w-full h-full -rotate-90 filter drop-shadow-[0_0_10px_rgba(16,185,129,0.2)]">
-                <circle cx="120" cy="120" r="100" stroke="#111827" strokeWidth="12" fill="transparent" />
-                <circle cx="120" cy="120" r="100" stroke="#10b981" strokeWidth="12" fill="transparent" strokeDasharray="628" strokeDashoffset={628 - (628 * 0.80)} strokeLinecap="round" />
+
+            {/* GRÁFICO ATUALIZADO */}
+            <div className="relative w-64 h-64 mb-8 flex items-center justify-center">
+              <svg className="w-full h-full -rotate-90 filter drop-shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+                <circle cx="128" cy="128" r="100" stroke="#111827" strokeWidth="14" fill="transparent" />
+                <circle
+                  cx="128"
+                  cy="128"
+                  r="100"
+                  stroke={getCorStatus()}
+                  strokeWidth="14"
+                  fill="transparent"
+                  strokeDasharray="628"
+                  strokeDashoffset={strokeDashoffset}
+                  strokeLinecap="round"
+                  className="transition-all duration-1000 ease-out"
+                />
               </svg>
+
               <div className="absolute flex flex-col items-center text-center">
-                <span className="text-6xl font-black tracking-tighter leading-none">{perfil.faltam}</span>
-                <span className="text-[10px] text-emerald-500 font-black uppercase tracking-[0.2em] mt-1">Faltam para a meta</span>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-7xl font-black tracking-tighter leading-none animate-pulse">
+                    {perfil.faltam}
+                  </span>
+                  <span className="text-xl font-black text-gray-500 uppercase">kg</span>
+                </div>
+                <span className="text-[10px] text-emerald-500 font-black uppercase tracking-[0.2em] mt-2">Faltam para o alvo</span>
+
+                <div className="mt-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full animate-ping" style={{ backgroundColor: getCorStatus() }}></div>
+                  <span className="text-[9px] font-black uppercase tracking-widest text-gray-300">
+                    Status: {parseFloat(perfil.imc) < 25 ? "Evolução" : "Queima"}
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Dashboard de Atleta (Peso e Altura) */}
             <div className="w-full mb-4 bg-white/5 border border-white/10 rounded-[2.5rem] p-6 flex justify-between items-center relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl -z-10 group-hover:bg-emerald-500/10 transition-all"></div>
               <div className="flex gap-8">
@@ -242,7 +262,6 @@ function App() {
               </div>
             </div>
 
-            {/* Insight Dinâmico do Coach */}
             <div className="w-full p-5 bg-gradient-to-br from-gray-900 to-black border border-white/5 rounded-[2rem] mb-8">
               <div className="flex items-center gap-3 mb-2">
                 <span className="text-xl">🔥</span>
@@ -255,7 +274,6 @@ function App() {
               </p>
             </div>
 
-            {/* Botões de Ação */}
             <div className="w-full space-y-4 mb-10">
               <button onClick={() => setAbaAtiva("chat")} className="w-full bg-emerald-500 text-black font-black py-6 rounded-[2.2rem] uppercase text-sm shadow-[0_10px_20px_rgba(16,185,129,0.3)] active:scale-95 transition-all">💬 Consultoria & Nutrição</button>
               <button onClick={() => setAbaAtiva("treino")} className="w-full bg-white/5 text-white border border-white/10 font-black py-6 rounded-[2.2rem] uppercase text-sm hover:bg-white/10 transition-all">💪 Área de Treinos</button>
