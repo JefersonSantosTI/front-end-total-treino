@@ -112,7 +112,8 @@ function App() {
           nome: perfil.nome,
           peso: perfil.peso,
           altura: perfil.altura,
-          meta: perfil.meta
+          meta: perfil.meta,
+          idade: perfil.idade // Enviando o novo dado
         })
       });
 
@@ -142,6 +143,17 @@ function App() {
   if (etapa === "onboarding") {
     return (
       <div className="fixed inset-0 bg-gray-950 flex flex-col items-center justify-center p-8 text-white z-[999] overflow-y-auto">
+        {/* BOTÃO VOLTAR ADICIONADO ABAIXO */}
+        <button
+          onClick={() => {
+            localStorage.clear();
+            setEtapa("login");
+            setUsuario(null);
+          }}
+          className="absolute top-8 left-8 text-emerald-500 font-black text-[10px] uppercase flex items-center gap-2 hover:opacity-70 transition-all"
+        >
+          <span className="text-lg">←</span> Voltar
+        </button>
         <div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center text-black font-black mb-6 shadow-[0_0_20px_rgba(16,185,129,0.4)]">FIT</div>
         <h2 className="text-2xl font-black mb-2 uppercase italic text-emerald-500 text-center leading-tight">Construa seu Perfil</h2>
         <p className="text-gray-400 text-center text-sm mb-8 italic">O Mentor IA precisa desses dados para criar sua dieta expert.</p>
@@ -149,6 +161,13 @@ function App() {
         <div className="w-full max-w-sm space-y-4">
           <input type="text" placeholder="Seu Nome" className="w-full bg-white/5 border border-white/10 p-5 rounded-3xl outline-none focus:border-emerald-500 transition-all" onChange={(e) => setPerfil({ ...perfil, nome: e.target.value })} />
           <div className="flex gap-4">
+            {/* Adicione este input abaixo do input de Nome */}
+            <input
+              type="number"
+              placeholder="Sua Idade"
+              className="w-full bg-white/5 border border-white/10 p-5 rounded-3xl outline-none focus:border-emerald-500 transition-all"
+              onChange={(e) => setPerfil({ ...perfil, idade: e.target.value })}
+            />
             <input type="number" placeholder="Peso (kg)" className="w-1/2 bg-white/5 border border-white/10 p-5 rounded-3xl outline-none focus:border-emerald-500 transition-all" onChange={(e) => setPerfil({ ...perfil, peso: e.target.value })} />
             <input type="number" placeholder="Altura (m)" className="w-1/2 bg-white/5 border border-white/10 p-5 rounded-3xl outline-none focus:border-emerald-500 transition-all" onChange={(e) => setPerfil({ ...perfil, altura: e.target.value })} />
           </div>
@@ -159,6 +178,7 @@ function App() {
           <button onClick={salvarOnboarding} className="w-full bg-emerald-500 text-black font-black py-5 rounded-3xl uppercase shadow-lg active:scale-95 transition-all">Ativar Protocolo FIT →</button>
         </div>
       </div>
+
     );
   }
 
