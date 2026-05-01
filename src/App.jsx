@@ -14,9 +14,10 @@ function App() {
   const [modalidadeAberta, setModalidadeAberta] = useState(null);
 
   const [perfil, setPerfil] = useState({
-    nome: "Guerreiro(a)", // Valor inicial padrão
+    nome: "Guerreiro(a)",
     peso: "0",
     altura: "0",
+    idade: "0", // <--- ADICIONE ESTA LINHA
     meta: "Emagrecimento",
     imc: "0",
     tmb: "0",
@@ -26,12 +27,15 @@ function App() {
   const API_URL = "https://api-backend-treino-fit.onrender.com/api";
   const verificandoRef = useRef(false);
 
-  const calcularSaude = useCallback((peso, altura) => {
+  const calcularSaude = useCallback((peso, altura, idade) => { // <--- Adicione idade aqui
     const p = parseFloat(peso) || 0;
     const a = parseFloat(altura) || 0;
+    const i = parseInt(idade) || 25; // <--- Se não tiver idade, usa 25 como padrão
+
     if (p > 0 && a > 0) {
       const imc = (p / (a * a)).toFixed(1);
-      const tmb = (10 * p + (6.25 * (a * 100)) - (5 * 25)).toFixed(0);
+      // Agora usando o 'i' da idade real do usuário:
+      const tmb = (10 * p + (6.25 * (a * 100)) - (5 * i)).toFixed(0);
       const falta = (p * 0.1).toFixed(1);
       return { imc, tmb, falta };
     }
@@ -52,14 +56,17 @@ function App() {
         if (!dados.peso || dados.peso === 0) {
           setEtapa("onboarding");
         } else {
-          const saude = calcularSaude(dados.peso, dados.altura);
+          // Passe dados.idade para o cálculo aqui:
+          const saude = calcularSaude(dados.peso, dados.altura, dados.idade);
           setPerfil({
             nome: dados.nome || "Guerreiro(a)",
             peso: String(dados.peso),
             altura: String(dados.altura),
+            idade: String(dados.idade || 25), // <--- Carregue a idade do banco
             meta: dados.meta || "Emagrecimento",
             ...saude
           });
+
           setIsVip(dados.pago === true);
           setTreinoIAPescado(dados.treinoIA || null);
           setEtapa("home");
