@@ -32,7 +32,7 @@ const ListaExercicios = ({ whatsapp, aoFechar, API_URL, modalidade, perfil, trei
       .replace(/[^a-z0-9-]/g, "");    // Remove caracteres especiais
   };
 
-  // --- TREINOS FIXOS (Usando a pasta local agora) ---
+  // --- TREINOS FIXOS ---
   const treinosFixosData = {
     A: [
       { nome: "Supino Reto", series: 3, reps: "12", arquivo: "supino-reto" },
@@ -51,18 +51,27 @@ const ListaExercicios = ({ whatsapp, aoFechar, API_URL, modalidade, perfil, trei
   const gerarTreinoIA = async (objetivo) => {
     setCarregandoIA(true);
     try {
+      const diasSemanas = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB'];
+      const diaAtual = diasSemanas[new Date().getDay()];
+
       const response = await fetch(`${API_URL}/usuarios/gerar-treino-ia`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           whatsapp,
           objetivo,
-          perfil: { peso: perfil.weight || perfil.peso, altura: perfil.height || perfil.altura }
+          diaAtual,
+          perfil: {
+            peso: perfil.weight || perfil.peso,
+            altura: perfil.height || perfil.altura,
+            plano: "Elite"
+          }
         })
       });
       const dadosIA = await response.json();
+
       setExerciciosGerados(dadosIA.treino || []);
-      setFaseTreino(dadosIA.fase || "Alta Performance");
+      setFaseTreino(dadosIA.fase || "Choque Metabólico");
       setEtapaIA('treino_ia');
     } catch {
       alert("Erro ao conectar com Mentor IA.");
@@ -114,6 +123,7 @@ const ListaExercicios = ({ whatsapp, aoFechar, API_URL, modalidade, perfil, trei
               <h4 className="text-2xl font-black italic uppercase text-white tracking-tighter">{faseTreino}</h4>
             </div>
 
+            {/* MAP de exercícios gerados pela IA */}
             {exerciciosGerados.map((ex, i) => (
               <div key={i} className="bg-gray-900 border border-white/5 p-6 rounded-[2.5rem] shadow-lg">
                 <div className="flex justify-between items-start mb-4">
@@ -142,6 +152,19 @@ const ListaExercicios = ({ whatsapp, aoFechar, API_URL, modalidade, perfil, trei
                 </div>
               </div>
             ))}
+
+            {/* RODAPÉ DE ENGAJAMENTO - INSERIDO AQUI */}
+            <div className="mt-8 bg-orange-600/10 border-2 border-dashed border-orange-500 p-6 rounded-[2.5rem] text-center">
+              <p className="text-[10px] font-black uppercase text-orange-500 mb-2">Próximo Desafio</p>
+              <h5 className="text-white font-black italic uppercase text-lg">
+                {faseTreino.toLowerCase().includes("hipertrofia")
+                  ? "Amanhã: Esmagar Costas e Bíceps 🦅"
+                  : "Amanhã: Queima Abdominal Extrema 🔥"}
+              </h5>
+              <p className="text-gray-400 text-[9px] uppercase mt-2">
+                Seu Mentor IA já preparou a progressão de carga para sua próxima sessão.
+              </p>
+            </div>
           </div>
         )}
 
@@ -168,7 +191,7 @@ const ListaExercicios = ({ whatsapp, aoFechar, API_URL, modalidade, perfil, trei
     );
   }
 
-  // --- VIEW ACADEMIA / CASA ---
+  // --- VIEW ACADEMIA / CASA (TREINOS FIXOS) ---
   return (
     <div className={modalStyle}>
       <header className="flex justify-between items-center mb-8">

@@ -57,4 +57,6 @@ export const PROTOCOLOS_TREINO = {
       }
     ]
   }
+
+  
 };
