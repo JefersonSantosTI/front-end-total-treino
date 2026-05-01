@@ -98,11 +98,11 @@ function App() {
   };
 
   const salvarOnboarding = async () => {
-    if (!perfil.nome || !perfil.peso || !perfil.altura) {
-      alert("Preencha todos os campos!");
+    // ADICIONE perfil.idade NA VALIDAÇÃO ABAIXO
+    if (!perfil.nome || !perfil.peso || !perfil.altura || !perfil.idade) {
+      alert("Preencha todos os campos, incluindo a idade!");
       return;
     }
-
     try {
       const response = await fetch(`${API_URL}/usuarios/atualizar`, {
         method: 'POST',
