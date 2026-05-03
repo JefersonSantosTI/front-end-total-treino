@@ -27,7 +27,10 @@ function App() {
   const API_URL = "https://api-backend-treino-fit.onrender.com/api";
   const verificandoRef = useRef(false);
 
-  // --- NOVA FUNÇÃO PARA ATUALIZAR VIP SEM RECARREGAR TUDO ---
+  // --- MANTENDO DADOS PARA O GRÁFICO DE PIZZA ---
+
+
+  // --- SINCRONIZAÇÃO BACKEND (PRESERVADA) ---
   const atualizarStatusVIP = useCallback(async () => {
     if (!usuario) return;
     try {
@@ -35,8 +38,21 @@ function App() {
       const response = await fetch(`${API_URL}/usuarios/${whatsLimpo}`);
       if (response.ok) {
         const dados = await response.json();
-        setIsVip(dados.pago === true); //
+        setIsVip(dados.pago === true);
         if (dados.treinoIA) setTreinoIAPescado(dados.treinoIA);
+
+        // Atualiza biometria se houver mudança no banco
+        if (dados.peso) {
+          const saude = calcularSaude(dados.peso, dados.altura, dados.idade);
+          setPerfil(prev => ({
+            ...prev,
+            nome: dados.nome || prev.nome,
+            peso: String(dados.peso),
+            altura: String(dados.altura),
+            meta: dados.meta || prev.meta,
+            ...saude
+          }));
+        }
       }
     } catch (err) {
       console.error("Erro ao sincronizar VIP:", err);
@@ -47,7 +63,6 @@ function App() {
     const p = parseFloat(peso) || 0;
     const a = parseFloat(altura) || 0;
     const i = parseInt(idade) || 25;
-
     if (p > 0 && a > 0) {
       const imc = (p / (a * a)).toFixed(1);
       const tmb = (10 * p + (6.25 * (a * 100)) - (5 * i)).toFixed(0);
@@ -77,15 +92,14 @@ function App() {
             meta: dados.meta || "Emagrecimento",
             ...saude
           });
-          setIsVip(dados.pago === true); //
+          setIsVip(dados.pago === true);
           setTreinoIAPescado(dados.treinoIA || null);
           setEtapa("home");
         }
       } else {
         setEtapa("onboarding");
       }
-    } catch (err) {
-      console.error("Erro de conexão:", err);
+    } catch {
       setEtapa("onboarding");
     } finally {
       verificandoRef.current = false;
@@ -94,9 +108,7 @@ function App() {
 
   useEffect(() => {
     if (usuario) {
-      if (etapa === "verificando") {
-        sincronizarComBanco(usuario);
-      }
+      if (etapa === "verificando") sincronizarComBanco(usuario);
     } else {
       setEtapa("login");
     }
@@ -116,7 +128,7 @@ function App() {
 
   const salvarOnboarding = async () => {
     if (!perfil.nome || !perfil.peso || !perfil.altura || !perfil.idade) {
-      alert("Preencha todos os campos, incluindo a idade!");
+      alert("Preencha todos os campos!");
       return;
     }
     try {
@@ -136,16 +148,11 @@ function App() {
         const saude = calcularSaude(perfil.peso, perfil.altura, perfil.idade);
         setPerfil(prev => ({ ...prev, ...saude }));
         setEtapa("home");
-      } else {
-        alert("Erro ao salvar. Tente novamente.");
       }
     } catch {
-      alert("Erro de conexão com o servidor.");
+      alert("Erro de conexão.");
     }
   };
-
-  // Renderização e demais componentes (Home, Onboarding, Login) seguem aqui...
-  // Abaixo, foco na parte que gerencia a transição das abas e modais:
 
   if (etapa === "verificando") {
     return (
@@ -161,30 +168,20 @@ function App() {
   if (etapa === "onboarding") {
     return (
       <div className="fixed inset-0 bg-gray-950 flex flex-col items-center justify-center p-8 text-white z-[999] overflow-y-auto">
-        <button
-          onClick={() => {
-            localStorage.clear();
-            setEtapa("login");
-            setUsuario(null);
-          }}
-          className="absolute top-8 left-8 text-emerald-500 font-black text-[10px] uppercase flex items-center gap-2 hover:opacity-70 transition-all"
-        >
-          <span className="text-lg">←</span> Voltar
-        </button>
         <div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center text-black font-black mb-6 shadow-[0_0_20px_rgba(16,185,129,0.4)]">FIT</div>
-        <h2 className="text-2xl font-black mb-2 uppercase italic text-emerald-500 text-center leading-tight">Construa seu Perfil</h2>
+        <h2 className="text-2xl font-black mb-2 uppercase italic text-emerald-500 text-center">Construa seu Perfil</h2>
         <div className="w-full max-w-sm space-y-4">
-          <input type="text" placeholder="Seu Nome" className="w-full bg-white/5 border border-white/10 p-5 rounded-3xl outline-none focus:border-emerald-500 transition-all" onChange={(e) => setPerfil({ ...perfil, nome: e.target.value })} />
+          <input type="text" placeholder="Seu Nome" className="w-full bg-white/5 border border-white/10 p-5 rounded-3xl outline-none" onChange={(e) => setPerfil({ ...perfil, nome: e.target.value })} />
           <div className="flex gap-4">
-            <input type="number" placeholder="Sua Idade" className="w-full bg-white/5 border border-white/10 p-5 rounded-3xl outline-none focus:border-emerald-500 transition-all" onChange={(e) => setPerfil({ ...perfil, idade: e.target.value })} />
-            <input type="number" placeholder="Peso (kg)" className="w-1/2 bg-white/5 border border-white/10 p-5 rounded-3xl outline-none focus:border-emerald-500 transition-all" onChange={(e) => setPerfil({ ...perfil, peso: e.target.value })} />
-            <input type="number" placeholder="Altura (m)" className="w-1/2 bg-white/5 border border-white/10 p-5 rounded-3xl outline-none focus:border-emerald-500 transition-all" onChange={(e) => setPerfil({ ...perfil, altura: e.target.value })} />
+            <input type="number" placeholder="Idade" className="w-full bg-white/5 border border-white/10 p-5 rounded-3xl outline-none" onChange={(e) => setPerfil({ ...perfil, idade: e.target.value })} />
+            <input type="number" placeholder="Peso (kg)" className="w-1/2 bg-white/5 border border-white/10 p-5 rounded-3xl outline-none" onChange={(e) => setPerfil({ ...perfil, peso: e.target.value })} />
+            <input type="number" placeholder="Altura (m)" className="w-1/2 bg-white/5 border border-white/10 p-5 rounded-3xl outline-none" onChange={(e) => setPerfil({ ...perfil, altura: e.target.value })} />
           </div>
-          <select className="w-full bg-white/5 border border-white/10 p-5 rounded-3xl outline-none focus:border-emerald-500" onChange={(e) => setPerfil({ ...perfil, meta: e.target.value })}>
+          <select className="w-full bg-white/5 border border-white/10 p-5 rounded-3xl outline-none" onChange={(e) => setPerfil({ ...perfil, meta: e.target.value })}>
             <option value="Emagrecimento">Meta: Emagrecimento</option>
             <option value="Hipertrofia">Meta: Hipertrofia</option>
           </select>
-          <button onClick={salvarOnboarding} className="w-full bg-emerald-500 text-black font-black py-5 rounded-3xl uppercase shadow-lg active:scale-95 transition-all">Ativar Protocolo FIT →</button>
+          <button onClick={salvarOnboarding} className="w-full bg-emerald-500 text-black font-black py-5 rounded-3xl uppercase">Ativar Protocolo FIT →</button>
         </div>
       </div>
     );
@@ -202,17 +199,54 @@ function App() {
                 <h2 className="text-xl font-black uppercase tracking-tighter leading-none">{perfil.nome}</h2>
               </div>
             </div>
-            <button onClick={() => !isVip && setBloqueado(true)} className={`px-4 py-2 rounded-2xl border ${isVip ? 'border-emerald-500/30 text-emerald-500 bg-emerald-500/5' : 'border-orange-500 text-orange-500 animate-pulse'} text-[10px] font-black uppercase tracking-widest transition-all`}>
+            <button onClick={() => !isVip && setBloqueado(true)} className={`px-4 py-2 rounded-2xl border ${isVip ? 'border-emerald-500/30 text-emerald-500 bg-emerald-500/5' : 'border-orange-500 text-orange-500 animate-pulse'} text-[10px] font-black uppercase tracking-widest`}>
               {isVip ? "💎 VIP Ativo" : "⚡ Upgrade VIP"}
             </button>
           </header>
 
-          {/* Gráficos e Insights (mantido igual ao seu original) */}
           <main className="w-full max-w-md flex flex-col items-center">
-            {/* ... seu código de gráfico, peso e insights ... */}
+            {/* --- CARDS DE PESO E ALTURA (RECUPERADOS) --- */}
+            <div className="flex gap-4 w-full mb-6">
+              <div className="flex-1 bg-white/5 border border-white/10 p-6 rounded-[2.5rem] relative overflow-hidden">
+                <p className="text-gray-500 text-[10px] font-black uppercase mb-1">Peso Atual</p>
+                <h3 className="text-3xl font-black italic">{perfil.peso}<span className="text-sm ml-1 text-emerald-500">kg</span></h3>
+                <div className="mt-2 text-emerald-500 font-bold text-[9px] uppercase tracking-tighter italic">Status: Queima</div>
+              </div>
+              <div className="flex-1 bg-white/5 border border-white/10 p-6 rounded-[2.5rem]">
+                <p className="text-gray-500 text-[10px] font-black uppercase mb-1">Altura</p>
+                <h3 className="text-3xl font-black italic">{perfil.altura}<span className="text-sm ml-1 text-emerald-500">m</span></h3>
+                <div className="mt-2 text-gray-400 font-bold text-[9px] uppercase tracking-tighter">{perfil.meta}</div>
+              </div>
+            </div>
+
+            {/* --- GRÁFICO DE PIZZA E CONSUMO ALVO --- */}
+            <div className="w-full bg-white/5 border border-white/10 p-8 rounded-[3rem] mb-6 flex flex-col items-center">
+              <p className="text-gray-500 text-[10px] font-black uppercase mb-6 tracking-widest">Consumo Alvo Diário</p>
+              <div className="relative flex items-center justify-center mb-6">
+                {/* Placeholder visual do Gráfico Pizza se não usar a lib externa */}
+                <div className="w-32 h-32 rounded-full border-[12px] border-emerald-500 border-t-orange-500 border-l-red-500 animate-pulse"></div>
+                <div className="absolute flex flex-col items-center">
+                  <span className="text-2xl font-black italic leading-none">{perfil.tmb}</span>
+                  <span className="text-[8px] font-black text-gray-500 uppercase">kcal</span>
+                </div>
+              </div>
+              <div className="flex gap-6 text-[10px] font-black uppercase">
+                <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-500"></div> Prot</div>
+                <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-orange-500"></div> Carb</div>
+                <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-red-500"></div> Gord</div>
+              </div>
+            </div>
+
+            {/* --- INSIGHT DO COACH --- */}
+            <div className="w-full bg-emerald-500/10 border border-emerald-500/20 p-6 rounded-[2.5rem] mb-8">
+              <p className="text-emerald-500 text-[10px] font-black uppercase mb-2">🔥 Insight do seu Coach</p>
+              <p className="text-sm font-medium italic text-gray-300 leading-relaxed">
+                "{perfil.nome}, seu foco hoje é oxidação de gordura. Priorize proteínas e hidratação para acelerar o processo!"
+              </p>
+            </div>
 
             <div className="w-full space-y-4 mb-10">
-              <button onClick={() => setAbaAtiva("chat")} className="w-full bg-emerald-500 text-black font-black py-6 rounded-[2.2rem] uppercase text-sm">💬 Consultoria & Nutrição</button>
+              <button onClick={() => setAbaAtiva("chat")} className="w-full bg-emerald-500 text-black font-black py-6 rounded-[2.2rem] uppercase text-sm shadow-[0_10px_20px_rgba(16,185,129,0.3)]">💬 Consultoria & Nutrição</button>
               <button onClick={() => setAbaAtiva("treino")} className="w-full bg-white/5 text-white border border-white/10 font-black py-6 rounded-[2.2rem] uppercase text-sm">💪 Área de Treinos</button>
               <button onClick={handleSair} className="w-full text-[10px] font-black uppercase text-gray-600 tracking-widest pt-2 hover:text-red-500 transition-colors">[ Encerrar Sessão ]</button>
             </div>
@@ -220,12 +254,11 @@ function App() {
         </div>
       )}
 
+      {/* --- ABAS CHAT E TREINO (MANTIDAS) --- */}
       {abaAtiva === "chat" && (
         <div className="flex-1 flex flex-col overflow-hidden">
           <header className="p-4 flex items-center justify-between border-b border-white/5 bg-gray-950">
-            <button onClick={() => { setAbaAtiva("home"); atualizarStatusVIP(); }} className="text-emerald-500 font-black text-[10px] uppercase flex items-center gap-2">
-              <span className="text-lg">←</span> Início
-            </button>
+            <button onClick={() => { setAbaAtiva("home"); atualizarStatusVIP(); }} className="text-emerald-500 font-black text-[10px] uppercase flex items-center gap-2"><span className="text-lg">←</span> Início</button>
             <span className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Mentor IA Nutrição</span>
           </header>
           <ChatReceitas
@@ -234,7 +267,7 @@ function App() {
             aoPedirUpgrade={() => setBloqueado(true)}
             perfil={perfil}
             setTreinoIAPescado={setTreinoIAPescado}
-            aoAtualizarPerfil={atualizarStatusVIP} // Sincroniza ao interagir
+            aoAtualizarPerfil={atualizarStatusVIP}
           />
         </div>
       )}
@@ -242,18 +275,15 @@ function App() {
       {abaAtiva === "treino" && (
         <div className="flex-1 flex flex-col bg-gray-950 p-6 overflow-y-auto">
           <header className="flex justify-between items-center mb-8">
-            <button onClick={() => { setAbaAtiva("home"); atualizarStatusVIP(); }} className="text-emerald-500 font-black text-[10px] uppercase flex items-center gap-2">
-              <span className="text-lg">←</span> Voltar
-            </button>
+            <button onClick={() => { setAbaAtiva("home"); atualizarStatusVIP(); }} className="text-emerald-500 font-black text-[10px] uppercase flex items-center gap-2"><span className="text-lg">←</span> Voltar</button>
             <h3 className="text-white font-black italic uppercase tracking-tighter">Treinos Fit</h3>
           </header>
           <div className="space-y-4">
-            {/* Lógica: IA bloqueado para free, Academia livre */}
-            <button onClick={() => isVip ? setModalidadeAberta('ia') : setBloqueado(true)} className="w-full bg-gradient-to-r from-orange-600 to-orange-400 p-7 rounded-[2.5rem] flex items-center gap-5 shadow-lg relative group">
+            <button onClick={() => isVip ? setModalidadeAberta('ia') : setBloqueado(true)} className="w-full bg-gradient-to-r from-orange-600 to-orange-400 p-7 rounded-[2.5rem] flex items-center gap-5 shadow-lg">
               <div className="text-3xl">🤖</div>
               <div className="text-left">
                 <p className="font-black uppercase text-lg leading-tight text-white">Mentor IA</p>
-                <p className="text-[10px] text-orange-100 uppercase font-bold">{!isVip ? "Bloqueado 🔒" : "Plano Elite Ativo"}</p>
+                <p className="text-[10px] text-orange-100 uppercase font-bold">{!isVip ? "Bloqueado 🔒" : "Elite Ativo"}</p>
               </div>
             </button>
             <button onClick={() => setModalidadeAberta('academia')} className="w-full bg-blue-600 p-7 rounded-[2.5rem] flex items-center gap-5 shadow-lg">
@@ -261,14 +291,12 @@ function App() {
               <div className="text-left"><p className="font-black uppercase text-lg leading-tight text-white">Academia (ABC)</p></div>
             </button>
           </div>
-
           {modalidadeAberta && (
             <ListaExercicios modalidade={modalidadeAberta} whatsapp={usuario} API_URL={API_URL} perfil={perfil} treinoIA={treinoIAPescado} aoFechar={() => { setModalidadeAberta(null); atualizarStatusVIP(); }} />
           )}
         </div>
       )}
 
-      {/* MODAL DE PAGAMENTO: Ao fechar, ele re-checa o status do VIP no banco */}
       {bloqueado && (
         <div className="fixed inset-0 z-[500] bg-gray-950 flex flex-col items-center p-6 overflow-y-auto animate-in slide-in-from-bottom duration-500">
           <button onClick={() => { setBloqueado(false); atualizarStatusVIP(); }} className="absolute top-6 right-6 text-white bg-white/10 w-10 h-10 rounded-full flex items-center justify-center">✕</button>
