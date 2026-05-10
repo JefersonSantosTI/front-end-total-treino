@@ -9,7 +9,7 @@ const ChatReceitas = ({ whatsapp, isVip, aoPedirUpgrade, aoAtualizarPerfil, setT
     const [mostrarBotãoUpgrade, setMostrarBotãoUpgrade] = useState(false);
     const scrollRef = useRef(null);
 
-    const LIMITE_FREE = 6;
+    const LIMITE_FREE = 2;
 
     const scrollToBottom = () => {
         if (scrollRef.current) {
