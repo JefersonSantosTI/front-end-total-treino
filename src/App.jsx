@@ -181,7 +181,27 @@ function App() {
             <option value="Emagrecimento">Meta: Emagrecimento</option>
             <option value="Hipertrofia">Meta: Hipertrofia</option>
           </select>
-          <button onClick={salvarOnboarding} className="w-full bg-emerald-500 text-black font-black py-5 rounded-3xl uppercase">Ativar Protocolo FIT →</button>
+
+          {/* --- BOTÕES DE AÇÃO ADICIONADOS AQUI --- */}
+          <div className="flex gap-4 w-full">
+            <button
+              onClick={() => {
+                localStorage.removeItem("usuario_whatsapp");
+                setUsuario(null);
+                setEtapa("login");
+              }}
+              className="w-1/3 bg-white/5 hover:bg-white/10 text-white border border-white/10 font-black py-5 rounded-3xl uppercase text-xs tracking-wider transition-colors"
+            >
+              ← Voltar
+            </button>
+
+            <button
+              onClick={salvarOnboarding}
+              className="w-2/3 bg-emerald-500 hover:bg-emerald-600 text-black font-black py-5 rounded-3xl uppercase text-xs tracking-wider transition-colors shadow-[0_10px_20px_rgba(16,185,129,0.2)]"
+            >
+              Ativar Protocolo FIT →
+            </button>
+          </div>
         </div>
       </div>
     );
