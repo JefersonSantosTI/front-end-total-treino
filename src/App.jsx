@@ -24,7 +24,7 @@ function App() {
     faltam: "0"
   });
 
-  const API_URL = "https://api-backend-treino-fit.onrender.com/api";
+  const API_URL = "https://api.treinofit.app.br";
   const verificandoRef = useRef(false);
 
   // --- MANTENDO DADOS PARA O GRÁFICO DE PIZZA ---
