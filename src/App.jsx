@@ -9,13 +9,11 @@ function App() {
   const [etapa, setEtapa] = useState("verificando");
 
   // --- ESTADOS DA IA E MONETIZAÇÃO ---
-  /* eslint-disable no-unused-vars */
   const [abaAtiva, setAbaAtiva] = useState("home");
   const [isVip, setIsVip] = useState(false);
   const [treinoIAPescado, setTreinoIAPescado] = useState(null);
   const [bloqueado, setBloqueado] = useState(false);
   const [modalidadeAberta, setModalidadeAberta] = useState(null);
-  /* eslint-enable no-unused-vars */
 
   // --- ESTADOS PORTAL DO PERSONAL E ALUNO ---
   const [personalLogado, setPersonalLogado] = useState(null);
@@ -29,7 +27,7 @@ function App() {
   const [alunoEmEdicao, setAlunoEmEdicao] = useState(null);
   const [treinoForm, setTreinoForm] = useState([]);
 
-  // ✅ NOVO: Estados para o Personal cadastrar aluno manualmente
+  // Estados para o Personal cadastrar aluno manualmente
   const [modalNovoAluno, setModalNovoAluno] = useState(false);
   const [novoAlunoForm, setNovoAlunoForm] = useState({ nome: "", whatsapp: "", objetivo: "Emagrecimento" });
 
@@ -78,7 +76,6 @@ function App() {
     return { imc: "0", tmb: "0", falta: "0" };
   }, []);
 
-  // eslint-disable-next-line no-unused-vars
   const atualizarStatusVIP = useCallback(async () => {
     if (!usuario) return;
     try {
@@ -170,7 +167,7 @@ function App() {
     setEtapa("personal");
   };
 
-  // ✅ NOVO: Função para o Personal cadastrar aluno
+  // Função para o Personal cadastrar aluno
   const cadastrarNovoAluno = async (e) => {
     e.preventDefault();
     try {
@@ -469,7 +466,6 @@ function App() {
           </div>
 
           <div className="md:col-span-2 bg-[#16171d] border border-neutral-800 rounded-xl p-5 shadow-xl overflow-x-auto">
-            {/* ✅ NOVO: Botão de Cadastrar Aluno */}
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400">Carteira de Clientes</h3>
               <button type="button" onClick={() => setModalNovoAluno(true)} className="bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold px-3 py-1.5 rounded transition-colors uppercase">+ Novo Aluno</button>
@@ -515,7 +511,6 @@ function App() {
           </div>
         </main>
 
-        {/* ✅ NOVO: MODAL CADASTRAR ALUNO */}
         {modalNovoAluno && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="w-full max-w-sm bg-[#16171d] border border-neutral-800 rounded-2xl shadow-2xl p-6">
@@ -534,7 +529,6 @@ function App() {
           </div>
         )}
 
-        {/* MODAL CONSTRUTOR DE PLANILHAS */}
         {alunoEmEdicao && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="w-full max-w-2xl bg-[#16171d] border border-neutral-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
@@ -563,7 +557,6 @@ function App() {
     );
   }
 
-  // --- RENDER DO PORTAL DO ALUNO ---
   if (etapa === "aluno") {
     return (
       <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col p-6 overflow-y-auto font-sans z-40">
@@ -616,15 +609,127 @@ function App() {
     );
   }
 
-  // --- RENDER DO USUÁRIO FINAL (HOME E CHAT) ---
+  // --- RENDER DO DASHBOARD PRINCIPAL DA CONSULTORIA (COM ABA DE CHAT) ---
   if (etapa === "home") {
     return (
-      <ChatReceitas
-        usuario={usuario}
-        perfil={perfil}
-        setPerfil={setPerfil}
-        handleSair={handleSair}
-      />
+      <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col overflow-hidden font-sans z-30">
+        {abaAtiva === "home" && (
+          <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center">
+            <header className="w-full max-w-4xl flex justify-between items-center border-b border-neutral-800 pb-4 mb-6">
+              <div className="flex items-center space-x-3">
+                <div className="w-7 h-7 bg-neutral-800 border border-neutral-700 rounded flex items-center justify-center text-emerald-500 font-mono text-xs font-bold">TF</div>
+                <div>
+                  <h2 className="text-sm font-bold text-white uppercase tracking-tight">{perfil.nome}</h2>
+                  <p className="text-[10px] text-neutral-500 font-mono uppercase tracking-wider">Conta {isVip ? 'Premium Elite' : 'Free Tier'}</p>
+                </div>
+              </div>
+              <button type="button" onClick={() => !isVip && setBloqueado(true)} className={`px-3 py-1.5 rounded text-[10px] font-bold uppercase font-mono border ${isVip ? 'border-emerald-500/20 text-emerald-500 bg-emerald-500/5' : 'border-amber-500/20 text-amber-500 bg-amber-500/5 animate-pulse'}`}>
+                {isVip ? "✓ Assinatura Sincronizada" : "Upgrade para Enterprise"}
+              </button>
+            </header>
+
+            <main className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-6 items-start pb-10">
+              <div className="md:col-span-1 space-y-4">
+                <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl">
+                  <p className="text-neutral-500 text-[10px] font-bold uppercase tracking-wider mb-2">Composição Corporal</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-[#0d0e12] p-3 border border-neutral-850 rounded-lg">
+                      <span className="text-[9px] text-neutral-500 uppercase block">Massa Global</span>
+                      <span className="text-2xl font-semibold text-white">{perfil.peso}<span className="text-xs text-neutral-500 font-normal ml-0.5">kg</span></span>
+                    </div>
+                    <div className="bg-[#0d0e12] p-3 border border-neutral-850 rounded-lg">
+                      <span className="text-[9px] text-neutral-500 uppercase block">Estatura</span>
+                      <span className="text-2xl font-semibold text-white">{perfil.altura}<span className="text-xs text-neutral-500 font-normal ml-0.5">m</span></span>
+                    </div>
+                  </div>
+                  <div className="mt-3 text-[10px] text-neutral-400 font-mono flex justify-between border-t border-neutral-800/60 pt-2">
+                    <span>Planejamento:</span>
+                    <span className="text-emerald-500 font-bold uppercase">{perfil.meta}</span>
+                  </div>
+                </div>
+
+                <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl text-center">
+                  <p className="text-neutral-500 text-[10px] font-bold uppercase tracking-wider text-left mb-4">Meta Metabólica Diária</p>
+                  <div className="inline-flex flex-col items-center justify-center p-6 border border-neutral-800 bg-[#0d0e12] rounded-full w-28 h-28 mx-auto mb-4 border-t-emerald-600">
+                    <span className="text-xl font-bold text-white">{perfil.tmb}</span>
+                    <span className="text-[9px] font-mono text-neutral-500 uppercase">kcal/dia</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="md:col-span-2 space-y-4">
+                <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl">
+                  <p className="text-emerald-500 text-[10px] font-bold uppercase tracking-wider font-mono mb-2">⚡ Diretriz Técnica Operacional</p>
+                  <p className="text-xs font-medium text-neutral-300 leading-relaxed">
+                    "{perfil.nome}, seus parâmetros apontam foco em oxidação de gordura ativa. Otimize a ingestão proteinada."
+                  </p>
+                </div>
+
+                <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl space-y-3">
+                  <p className="text-neutral-500 text-[10px] font-bold uppercase tracking-wider mb-2">Terminais de Execução</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button type="button" onClick={() => setAbaAtiva("chat")} className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 px-4 rounded-lg text-xs uppercase tracking-wider text-center transition-all shadow-lg">
+                      Abrir Chat IA & Consultoria
+                    </button>
+                    <button type="button" onClick={() => setAbaAtiva("treino")} className="bg-transparent hover:bg-neutral-800 border border-neutral-800 text-neutral-200 font-bold py-3.5 px-4 rounded-lg text-xs uppercase tracking-wider text-center transition-all">
+                      Acessar Biblioteca de Treinos
+                    </button>
+                  </div>
+                  <div className="text-center pt-3 border-t border-neutral-800/40">
+                    <button type="button" onClick={handleSair} className="text-[10px] font-mono uppercase text-neutral-600 hover:text-red-400 transition-colors">Encerrar sessão de dados</button>
+                  </div>
+                </div>
+              </div>
+            </main>
+          </div>
+        )}
+
+        {abaAtiva === "chat" && (
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <header className="p-4 flex items-center justify-between border-b border-neutral-800 bg-[#16171d]">
+              <button type="button" onClick={() => { setAbaAtiva("home"); atualizarStatusVIP(); }} className="text-emerald-500 font-bold text-[10px] uppercase font-mono flex items-center gap-2">← Voltar para o Dashboard</button>
+              <span className="text-[10px] font-mono uppercase text-neutral-500">Módulo Consultoria de Nutrição</span>
+            </header>
+            <ChatReceitas whatsapp={usuario} isVip={isVip} aoPedirUpgrade={() => setBloqueado(true)} perfil={perfil} setTreinoIAPescado={setTreinoIAPescado} aoAtualizarPerfil={atualizarStatusVIP} />
+          </div>
+        )}
+
+        {abaAtiva === "treino" && (
+          <div className="flex-1 flex flex-col bg-[#0d0e12] p-6 overflow-y-auto">
+            <header className="w-full max-w-4xl mx-auto flex justify-between items-center border-b border-neutral-800 pb-4 mb-6">
+              <button type="button" onClick={() => { setAbaAtiva("home"); atualizarStatusVIP(); }} className="text-emerald-500 font-bold text-[10px] uppercase font-mono flex items-center gap-2">← Retornar</button>
+              <span className="text-white font-bold uppercase text-xs tracking-wider">Módulo de Planilhas</span>
+            </header>
+
+            <div className="w-full max-w-4xl grid grid-cols-1 sm:grid-cols-2 gap-4 mx-auto">
+              <button type="button" onClick={() => isVip ? setModalidadeAberta('ia') : setBloqueado(true)} className="bg-[#16171d] hover:bg-[#1e2029] border border-neutral-800 p-6 rounded-xl flex items-center justify-between transition-all text-left">
+                <div>
+                  <p className="font-bold uppercase text-sm text-white">Treino Inteligência Artificial</p>
+                  <p className="text-[9px] text-neutral-500 font-mono mt-0.5 uppercase tracking-wider">{!isVip ? "Status: Bloqueado corporativo" : "Acesso Elite Ativado"}</p>
+                </div>
+                <span className="text-xl">🤖</span>
+              </button>
+              <button type="button" onClick={() => setModalidadeAberta('academia')} className="bg-[#16171d] hover:bg-[#1e2029] border border-neutral-800 p-6 rounded-xl flex items-center justify-between transition-all text-left">
+                <div>
+                  <p className="font-bold uppercase text-sm text-white">Metodologia Tradicional (ABC)</p>
+                  <p className="text-[9px] text-neutral-500 font-mono mt-0.5 uppercase tracking-wider">Acesso Livre</p>
+                </div>
+                <span className="text-xl">🏋️‍♂️</span>
+              </button>
+            </div>
+            {modalidadeAberta && (
+              <ListaExercicios modalidade={modalidadeAberta} whatsapp={usuario} API_URL={API_URL} perfil={perfil} treinoIA={treinoIAPescado} aoFechar={() => { setModalidadeAberta(null); atualizarStatusVIP(); }} />
+            )}
+          </div>
+        )}
+
+        {bloqueado && (
+          <div className="fixed inset-0 z-[500] bg-[#0d0e12]/95 backdrop-blur-sm flex flex-col items-center p-6 overflow-y-auto">
+            <button type="button" onClick={() => { setBloqueado(false); atualizarStatusVIP(); }} className="absolute top-6 right-6 text-neutral-400 hover:text-white bg-neutral-900 border border-neutral-800 w-8 h-8 rounded flex items-center justify-center text-xs">✕</button>
+            <TelaPlanos />
+          </div>
+        )}
+      </div>
     );
   }
 
