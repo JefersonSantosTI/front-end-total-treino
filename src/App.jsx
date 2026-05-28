@@ -27,7 +27,7 @@ function App() {
   const [alunoEmEdicao, setAlunoEmEdicao] = useState(null);
   const [treinoForm, setTreinoForm] = useState([]);
 
-  // Estados para o Personal cadastrar aluno manualmente
+  // Estados para o Personal cadastrar aluno manualmente e a IA capturar o WhatsApp
   const [modalNovoAluno, setModalNovoAluno] = useState(false);
   const [novoAlunoForm, setNovoAlunoForm] = useState({ nome: "", whatsapp: "", objetivo: "Emagrecimento" });
 
@@ -137,8 +137,14 @@ function App() {
     }
   }, [API_URL, calcularSaude]);
 
+  // ✅ NOVO: Intercetar URL de Matrícula (Verifica o link de convite)
   useEffect(() => {
-    if (usuario) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const refPersonal = urlParams.get('ref');
+
+    if (refPersonal) {
+      setEtapa("matricula_externa");
+    } else if (usuario) {
       if (etapa === "verificando") sincronizarComBanco(usuario);
     } else {
       if (etapa === "verificando") {
@@ -167,7 +173,7 @@ function App() {
     setEtapa("personal");
   };
 
-  // Função para o Personal cadastrar aluno
+  // Função para o Personal cadastrar aluno manualmente
   const cadastrarNovoAluno = async (e) => {
     e.preventDefault();
     try {
@@ -466,10 +472,26 @@ function App() {
           </div>
 
           <div className="md:col-span-2 bg-[#16171d] border border-neutral-800 rounded-xl p-5 shadow-xl overflow-x-auto">
+
+            {/* ✅ NOVO: Botão de Copiar Link da IA ao lado do Botão Manual */}
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400">Carteira de Clientes</h3>
-              <button type="button" onClick={() => setModalNovoAluno(true)} className="bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold px-3 py-1.5 rounded transition-colors uppercase">+ Novo Aluno</button>
+              <div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const link = `${window.location.origin}?ref=${personalLogado?.cref?.replace(/\D/g, "") || "treinador"}`;
+                    navigator.clipboard.writeText(link);
+                    alert(`🔗 Link copiado com sucesso!\n\nEnvie este link no WhatsApp do seu aluno para ele realizar o auto-cadastro pela Inteligência Artificial:\n\n${link}`);
+                  }}
+                  className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold px-3 py-1.5 rounded transition-colors uppercase mr-2 shadow-lg"
+                >
+                  🔗 Copiar Link IA
+                </button>
+                <button type="button" onClick={() => setModalNovoAluno(true)} className="bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold px-3 py-1.5 rounded transition-colors uppercase shadow-lg">+ Novo Manual</button>
+              </div>
             </div>
+
             <table className="w-full text-left border-collapse min-w-[600px]">
               <thead>
                 <tr className="border-b border-neutral-800 text-[10px] uppercase text-neutral-500 tracking-wider">
@@ -557,6 +579,7 @@ function App() {
     );
   }
 
+  // --- RENDER DO PORTAL DO ALUNO PRO ---
   if (etapa === "aluno") {
     return (
       <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col p-6 overflow-y-auto font-sans z-40">
@@ -609,7 +632,7 @@ function App() {
     );
   }
 
-  // --- RENDER DO DASHBOARD PRINCIPAL DA CONSULTORIA (COM ABA DE CHAT) ---
+  // --- RENDER DO USUÁRIO FINAL E MÓDULO CONSULTORIA ---
   if (etapa === "home") {
     return (
       <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col overflow-hidden font-sans z-30">
@@ -729,6 +752,75 @@ function App() {
             <TelaPlanos />
           </div>
         )}
+      </div>
+    );
+  }
+
+  // ✅ NOVO: TELA DO LINK DO ALUNO (VIA IA)
+  if (etapa === "matricula_externa") {
+    return (
+      <div className="fixed inset-0 bg-[#0d0e12] flex flex-col items-center justify-center p-6 text-white font-sans z-50 overflow-y-auto">
+        <div className="w-full max-w-md bg-[#16171d] border border-neutral-800 p-8 rounded-2xl shadow-2xl">
+          <div className="text-center mb-6">
+            <span className="text-4xl mb-3 block">🤖</span>
+            <h2 className="text-lg font-bold uppercase tracking-tight text-emerald-500">Auto-Avaliação IA</h2>
+            <p className="text-neutral-400 text-[11px] mt-2">Preencha sua biometria para a Inteligência Artificial estruturar a base do seu treino.</p>
+          </div>
+
+          <form onSubmit={async (e) => {
+            e.preventDefault();
+            setEtapa("verificando");
+            try {
+              const urlParams = new URLSearchParams(window.location.search);
+              const refPersonal = urlParams.get('ref');
+
+              const res = await fetch(`${API_URL}/aluno/matricula-ia`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  ...perfil,
+                  whatsapp: novoAlunoForm.whatsapp, // Coleta o whatsapp isolado deste formulário
+                  objetivo: perfil.meta,
+                  personalRef: refPersonal
+                })
+              });
+              if (res.ok) {
+                alert("🎉 Análise concluída! Sua ficha já está na mesa do Personal. Aguarde a liberação e acesse pelo 'Módulo Aluno' com o seu nome.");
+                window.location.href = window.location.origin; // Volta pra home limpa
+              } else {
+                const data = await res.json();
+                alert(data.mensagem || "Erro na análise.");
+                setEtapa("matricula_externa");
+              }
+            } catch {
+              alert("Erro de conexão.");
+              setEtapa("matricula_externa");
+            }
+          }} className="space-y-4">
+
+            <input required type="text" placeholder="Nome Completo" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, nome: e.target.value })} />
+            <input required type="text" placeholder="WhatsApp (Apenas Números)" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setNovoAlunoForm({ ...novoAlunoForm, whatsapp: e.target.value })} />
+
+            <div className="grid grid-cols-2 gap-3">
+              <input required type="number" step="0.1" placeholder="Peso (kg)" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, peso: e.target.value })} />
+              <input required type="number" step="0.01" placeholder="Altura (m)" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, altura: e.target.value })} />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <input required type="number" placeholder="Idade" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, idade: e.target.value })} />
+              <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none text-neutral-400 focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, meta: e.target.value })}>
+                <option value="">Selecione a Meta</option>
+                <option value="Emagrecimento">Emagrecimento</option>
+                <option value="Hipertrofia">Hipertrofia</option>
+                <option value="Performance">Performance</option>
+              </select>
+            </div>
+
+            <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-xl uppercase tracking-wider font-bold text-xs shadow-lg mt-4 transition-all">
+              ⚡ Gerar Diagnóstico com IA
+            </button>
+          </form>
+        </div>
       </div>
     );
   }
