@@ -479,7 +479,7 @@ function App() {
               </div>
             </div>
             <button type="button" onClick={() => !isVip && setBloqueado(true)} className={`px-3 py-1.5 rounded text-[10px] font-bold uppercase font-mono border ${isVip ? 'border-emerald-500/20 text-emerald-500 bg-emerald-500/5' : 'border-amber-500/20 text-amber-500 bg-amber-500/5 animate-pulse'}`}>
-              {isVip ? "✓ Assinatura Sincronizada" : "Upgrade para Enterprise"}
+              {isVip ? "✓ Vip" : "Upgrade para Vip"}
             </button>
           </header>
 
