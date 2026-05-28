@@ -17,13 +17,11 @@ function App() {
   const [personalLogado, setPersonalLogado] = useState(null);
   const [cref, setCref] = useState("");
 
-  // O alunoLogado agora vai guardar o objeto completo do aluno vindo da lista
   const [alunoLogado, setAlunoLogado] = useState(null);
   const [codigoAcessoAluno, setCodigoAcessoAluno] = useState("");
-  // Estado para controlar quais exercícios o aluno já marcou como concluído no treino do dia
   const [exerciciosConcluidos, setExerciciosConcluidos] = useState([]);
 
-  // LISTA DE ALUNOS (Simulando nosso Banco de Dados em memória)
+  // LISTA DE ALUNOS
   const [alunosPersonal, setAlunosPersonal] = useState([
     {
       id: "1",
@@ -64,7 +62,11 @@ function App() {
   const [alunoEmEdicao, setAlunoEmEdicao] = useState(null);
   const [treinoForm, setTreinoForm] = useState([]);
 
-  const [checkinsAluno, setCheckinsAluno] = useState([]);
+  // Histórico de Check-ins agora guarda objetos estruturados: { data: '28/05', diaSemana: 'Quinta-feira' }
+  const [checkinsAluno, setCheckinsAluno] = useState([
+    { data: "26/05", diaSemana: "Terça-feira" },
+    { data: "27/05", diaSemana: "Quarta-feira" }
+  ]);
 
   const [perfil, setPerfil] = useState({
     nome: "Guerreiro(a)",
@@ -177,34 +179,6 @@ function App() {
     setEtapa("triagem");
   };
 
-  const salvarOnboarding = async () => {
-    if (!perfil.nome || !perfil.peso || !perfil.altura || !perfil.idade) {
-      alert("Preencha todos os campos!");
-      return;
-    }
-    try {
-      const response = await fetch(`${API_URL}/usuarios/atualizar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          whatsapp: usuario,
-          nome: perfil.nome,
-          peso: Number(perfil.peso),
-          altura: Number(perfil.altura),
-          meta: perfil.meta,
-          idade: Number(perfil.idade)
-        })
-      });
-      if (response.ok) {
-        const saude = calcularSaude(perfil.peso, perfil.altura, perfil.idade);
-        setPerfil(prev => ({ ...prev, ...saude }));
-        setEtapa("home");
-      }
-    } catch {
-      alert("Erro de conexão.");
-    }
-  };
-
   // --- LÓGICAS DO PAINEL DO PERSONAL ---
   const handleLoginPersonal = (e) => {
     e.preventDefault();
@@ -256,16 +230,14 @@ function App() {
     }
   };
 
-  // --- LÓGICAS DA ÁREA DO ALUNO VIVA ---
+  // --- LÓGICAS DA ÁREA DO ALUNO ---
   const handleLoginAluno = (e) => {
     e.preventDefault();
     const termoBusca = codigoAcessoAluno.trim().toLowerCase();
-
-    // Procura o aluno correspondente na nossa lista "banco de dados"
     const alunoEncontrado = alunosPersonal.find(a => a.nome.toLowerCase() === termoBusca);
 
     if (!alunoEncontrado) {
-      return alert("Código/Nome de aluno não encontrado na assessoria. Digite exatamente 'João Silva' ou 'Maria Oliveira' para testar.");
+      return alert("Código/Nome de aluno não encontrado na assessoria.");
     }
 
     if (alunoEncontrado.statusConta === "Off") {
@@ -273,7 +245,7 @@ function App() {
     }
 
     setAlunoLogado(alunoEncontrado);
-    setExerciciosConcluidos([]); // Reseta o checklist do dia
+    setExerciciosConcluidos([]);
     setEtapa("aluno");
   };
 
@@ -286,10 +258,45 @@ function App() {
   };
 
   const executarCheckin = () => {
-    const hoje = new Date().toLocaleDateString("pt-BR");
-    if (checkinsAluno.includes(hoje)) return alert("Check-in já realizado hoje!");
-    setCheckinsAluno(prev => [...prev, hoje]);
+    const hojeObj = new Date();
+    const dataFormatada = hojeObj.toLocaleDateString("pt-BR", { day: '2-digit', month: '2-digit' });
+    const diaSemana = hojeObj.toLocaleDateString("pt-BR", { weekday: 'long' });
+    const diaSemanaFormatado = diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1);
+
+    // Evita duplicar o check-in na mesma data
+    const jaFezCheckin = checkinsAluno.some(c => c.data === dataFormatada);
+    if (jaFezCheckin) return alert("Check-in de hoje já foi computado!");
+
+    setCheckinsAluno(prev => [{ data: dataFormatada, diaSemana: diaSemanaFormatado }, ...prev]);
     alert("🔥 Fantástico! O seu check-in de hoje foi registrado no painel da assessoria.");
+  };
+
+  const salvarOnboarding = async () => {
+    if (!perfil.nome || !perfil.peso || !perfil.altura || !perfil.idade) {
+      alert("Preencha todos os campos!");
+      return;
+    }
+    try {
+      const response = await fetch(`${API_URL}/usuarios/atualizar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          whatsapp: usuario,
+          nome: perfil.nome,
+          peso: Number(perfil.peso),
+          altura: Number(perfil.altura),
+          meta: perfil.meta,
+          idade: Number(perfil.idade)
+        })
+      });
+      if (response.ok) {
+        const saude = calcularSaude(perfil.peso, perfil.altura, perfil.idade);
+        setPerfil(prev => ({ ...prev, ...saude }));
+        setEtapa("home");
+      }
+    } catch {
+      alert("Erro de conexão.");
+    }
   };
 
 
@@ -534,7 +541,7 @@ function App() {
     );
   }
 
-  // 7. PORTAL DO ALUNO PRO (VIVO E INTEGRADO COM ESTADO DO PERSONAL)
+  // 7. PORTAL DO ALUNO PRO (COM LINHA DO TEMPO DO HISTÓRICO DE CHECK-INS)
   if (etapa === "aluno") {
     return (
       <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col p-6 overflow-y-auto font-sans z-40">
@@ -551,13 +558,34 @@ function App() {
           {/* Caixa de Métricas de Progresso */}
           <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Check-ins Concluídos</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Check-ins Validados</p>
               <h3 className="text-3xl font-bold text-white mt-1">{checkinsAluno.length}</h3>
             </div>
             <button type="button" onClick={executarCheckin} className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-3 rounded-lg text-xs uppercase tracking-wider transition-colors shadow-lg">
               Confirmar Treino de Hoje
             </button>
           </div>
+
+          {/* ================= SEÇÃO ADICIONADA: LINHA DO TEMPO DE CHECK-INS ================= */}
+          <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl space-y-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Histórico de Consistência</p>
+            {checkinsAluno.length === 0 ? (
+              <p className="text-[11px] text-neutral-500 uppercase font-mono">Nenhum treino registrado esta semana. Comece hoje!</p>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                {checkinsAluno.map((ch, idx) => (
+                  <div key={idx} className="bg-[#0d0e12] border border-neutral-850 p-2.5 rounded-lg flex items-center justify-between">
+                    <div>
+                      <p className="text-[11px] font-bold text-white tracking-tight">{ch.diaSemana}</p>
+                      <p className="text-[9px] text-neutral-500 font-mono mt-0.5">Data: {ch.data}</p>
+                    </div>
+                    <span className="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded font-mono font-bold uppercase">🔥 OK</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          {/* ================================================================================== */}
 
           <div className="flex justify-between items-center">
             <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-500">Planilha Prescrita pelo Personal</h3>
@@ -569,7 +597,6 @@ function App() {
           </div>
 
           <div className="space-y-3">
-            {/* Tratativa para caso o Personal ainda não tenha adicionado nenhum exercício na planilha deste aluno */}
             {!alunoLogado?.treinoPrescrito || alunoLogado.treinoPrescrito.length === 0 ? (
               <div className="bg-[#16171d] border border-neutral-800 p-8 rounded-xl text-center">
                 <span className="text-2xl block mb-2">⏳</span>
@@ -600,7 +627,6 @@ function App() {
                         )}
                       </div>
 
-                      {/* Botão de Checklist lateral */}
                       <button type="button" onClick={() => alternarConclusaoExercicio(i)} className={`w-8 h-8 rounded-lg border flex items-center justify-center font-bold text-sm transition-all ${estaconcluido ? 'bg-blue-600 border-blue-500 text-white' : 'border-neutral-700 hover:border-neutral-500 text-neutral-500'}`}>
                         {estaconcluido ? "✓" : ""}
                       </button>
@@ -645,7 +671,7 @@ function App() {
     );
   }
 
-  // 9. RETORNO DO DASHBOARD PRINCIPAL DA CONSULTORIA (B2C HOME)
+  // 9. RETORNO DO DASHBOARD PRINCIPAL DA CONSULTORIA
   return (
     <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col overflow-hidden font-sans z-30">
       {abaAtiva === "home" && (
@@ -696,7 +722,7 @@ function App() {
               <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl">
                 <p className="text-emerald-500 text-[10px] font-bold uppercase tracking-wider font-mono mb-2">⚡ Diretriz Técnica Operacional</p>
                 <p className="text-xs font-medium text-neutral-300 leading-relaxed">
-                  "{perfil.nome}, seus parâmetros apontam foco em oxidação de gordura active. Otimize a ingestão proteica."
+                  "{perfil.nome}, seus parâmetros apontam foco em oxidação de gordura active. Otimize a ingestão proteinada."
                 </p>
               </div>
 
