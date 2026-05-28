@@ -21,7 +21,7 @@ function App() {
   const [codigoAcessoAluno, setCodigoAcessoAluno] = useState("");
   const [exerciciosConcluidos, setExerciciosConcluidos] = useState([]);
 
-  // LISTA DE ALUNOS
+  // LISTA DE ALUNOS (Agora cada aluno possui seu próprio array de checkins histórico)
   const [alunosPersonal, setAlunosPersonal] = useState([
     {
       id: "1",
@@ -30,6 +30,7 @@ function App() {
       statusTreino: "Rascunho IA",
       statusConta: "Ativo",
       whatsapp: "5511999999999",
+      checkins: [{ data: "26/05", diaSemana: "Terça-feira" }],
       treinoPrescrito: [
         { nome: "Agachamento Livre", series: 4, reps: "10", obs: "Foco na amplitude máxima." },
         { nome: "Leg Press 45°", series: 4, reps: "12", obs: "Progressão de carga lenta." }
@@ -42,6 +43,7 @@ function App() {
       statusTreino: "Enviado",
       statusConta: "Ativo",
       whatsapp: "5511888888888",
+      checkins: [{ data: "27/05", diaSemana: "Quarta-feira" }],
       treinoPrescrito: [
         { nome: "Corrida na Esteira", series: 1, reps: "20 min", obs: "Manter batimento em zona de queima." },
         { nome: "Afundo com Halteres", series: 3, reps: "12 (cada lado)", obs: "Tronco ligeiramente inclinado à frente." }
@@ -54,6 +56,7 @@ function App() {
       statusTreino: "Pendente",
       statusConta: "Off",
       whatsapp: "5511777777777",
+      checkins: [],
       treinoPrescrito: []
     }
   ]);
@@ -61,12 +64,6 @@ function App() {
   // Controle do Modal de Prescrição
   const [alunoEmEdicao, setAlunoEmEdicao] = useState(null);
   const [treinoForm, setTreinoForm] = useState([]);
-
-  // Histórico de Check-ins agora guarda objetos estruturados: { data: '28/05', diaSemana: 'Quinta-feira' }
-  const [checkinsAluno, setCheckinsAluno] = useState([
-    { data: "26/05", diaSemana: "Terça-feira" },
-    { data: "27/05", diaSemana: "Quarta-feira" }
-  ]);
 
   const [perfil, setPerfil] = useState({
     nome: "Guerreiro(a)",
@@ -234,6 +231,8 @@ function App() {
   const handleLoginAluno = (e) => {
     e.preventDefault();
     const termoBusca = codigoAcessoAluno.trim().toLowerCase();
+
+    // Busca o aluno dinamicamente do nosso estado global de alunos
     const alunoEncontrado = alunosPersonal.find(a => a.nome.toLowerCase() === termoBusca);
 
     if (!alunoEncontrado) {
@@ -257,18 +256,37 @@ function App() {
     }
   };
 
+  // INTERAÇÃO EM TEMPO REAL: O Aluno faz o check-in e atualiza o "Banco de Dados" do Personal
   const executarCheckin = () => {
     const hojeObj = new Date();
     const dataFormatada = hojeObj.toLocaleDateString("pt-BR", { day: '2-digit', month: '2-digit' });
     const diaSemana = hojeObj.toLocaleDateString("pt-BR", { weekday: 'long' });
     const diaSemanaFormatado = diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1);
 
-    // Evita duplicar o check-in na mesma data
-    const jaFezCheckin = checkinsAluno.some(c => c.data === dataFormatada);
+    // Verifica se já existe check-in hoje na ficha do aluno logado
+    const jaFezCheckin = alunoLogado.checkins?.some(c => c.data === dataFormatada);
     if (jaFezCheckin) return alert("Check-in de hoje já foi computado!");
 
-    setCheckinsAluno(prev => [{ data: dataFormatada, diaSemana: diaSemanaFormatado }, ...prev]);
-    alert("🔥 Fantástico! O seu check-in de hoje foi registrado no painel da assessoria.");
+    const novoCheckin = { data: dataFormatada, diaSemana: diaSemanaFormatado };
+
+    // 1. Atualiza o banco global (alunosPersonal) para que o Personal veja o treino realizado
+    setAlunosPersonal(prev => prev.map(aluno => {
+      if (aluno.id === alunoLogado.id) {
+        return {
+          ...aluno,
+          checkins: [novoCheckin, ...(aluno.checkins || [])]
+        };
+      }
+      return aluno;
+    }));
+
+    // 2. Atualiza a tela local do aluno para renderização imediata do histórico
+    setAlunoLogado(prev => ({
+      ...prev,
+      checkins: [novoCheckin, ...(prev.checkins || [])]
+    }));
+
+    alert("🔥 Fantástico! Seu check-in foi enviado com sucesso ao painel do seu Personal Trainer.");
   };
 
   const salvarOnboarding = async () => {
@@ -396,8 +414,10 @@ function App() {
     );
   }
 
-  // 6. DASHBOARD INTERNO DO PERSONAL
+  // 6. DASHBOARD INTERNO DO PERSONAL (COM COLUNA DE MONITORAMENTO DE CHECK-IN)
   if (etapa === "personal") {
+    const hojeDataStr = new Date().toLocaleDateString("pt-BR", { day: '2-digit', month: '2-digit' });
+
     return (
       <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col p-6 overflow-y-auto font-sans z-40">
         <header className="w-full max-w-5xl mx-auto flex justify-between items-center border-b border-neutral-800 pb-4 mb-6">
@@ -435,43 +455,65 @@ function App() {
               <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400">Carteira de Clientes Ativos</h3>
             </div>
 
-            <table className="w-full text-left border-collapse min-w-[500px]">
+            <table className="w-full text-left border-collapse min-w-[600px]">
               <thead>
                 <tr className="border-b border-neutral-800 text-[10px] uppercase text-neutral-500 tracking-wider">
                   <th className="pb-3 font-semibold">Nome do Aluno</th>
                   <th className="pb-3 font-semibold">Objetivo</th>
                   <th className="pb-3 font-semibold">Status Planilha</th>
+                  <th className="pb-3 font-semibold">Último Treino</th>
                   <th className="pb-3 font-semibold text-right">Ações Gerenciais</th>
                 </tr>
               </thead>
               <tbody className="text-xs divide-y divide-neutral-800/40">
-                {alunosPersonal.map((aluno) => (
-                  <tr key={aluno.id} className={`hover:bg-neutral-800/20 transition-colors ${aluno.statusConta === 'Off' ? 'opacity-40' : ''}`}>
-                    <td className="py-3.5 font-medium text-white">
-                      <div>{aluno.nome}</div>
-                      <div className="text-[10px] text-neutral-500 font-mono mt-0.5">{aluno.whatsapp}</div>
-                    </td>
-                    <td className="py-3.5 text-neutral-400">{aluno.objetivo}</td>
-                    <td className="py-3.5">
-                      <span className={`px-2 py-0.5 rounded text-[9px] font-bold font-mono uppercase ${aluno.statusTreino === 'Rascunho IA' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : aluno.statusTreino === 'Enviado' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-neutral-800 text-neutral-400'}`}>
-                        {aluno.statusTreino}
-                      </span>
-                    </td>
-                    <td className="py-3.5 text-right space-x-2">
-                      <button type="button" onClick={() => abrirGeradorTreino(aluno)} className="bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase">
-                        {aluno.statusTreino === "Rascunho IA" ? "Revisar IA" : "Montar Treino"}
-                      </button>
-                      {aluno.statusConta === "Ativo" ? (
-                        <button type="button" onClick={() => alterStatusContaAluno(aluno.id, "Off")} className="border border-neutral-800 text-neutral-400 hover:bg-neutral-800 text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase">Arquivar</button>
-                      ) : (
-                        <button type="button" onClick={() => alterStatusContaAluno(aluno.id, "Ativo")} className="bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase">Ativar</button>
-                      )}
-                      <button type="button" onClick={() => deletarAluno(aluno.id)} className="text-red-500/70 hover:text-red-400 text-xs py-1 px-2 border border-neutral-800 hover:border-red-500/20 rounded transition-colors uppercase font-bold text-[9px]">
-                        Excluir
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {alunosPersonal.map((aluno) => {
+                  // Verifica se o último check-in do aluno corresponde ao dia de hoje
+                  const fezCheckinHoje = aluno.checkins?.some(c => c.data === hojeDataStr);
+
+                  return (
+                    <tr key={aluno.id} className={`hover:bg-neutral-800/20 transition-colors ${aluno.statusConta === 'Off' ? 'opacity-40' : ''}`}>
+                      <td className="py-3.5 font-medium text-white">
+                        <div>{aluno.nome}</div>
+                        <div className="text-[10px] text-neutral-500 font-mono mt-0.5">{aluno.whatsapp}</div>
+                      </td>
+                      <td className="py-3.5 text-neutral-400">{aluno.objetivo}</td>
+                      <td className="py-3.5">
+                        <span className={`px-2 py-0.5 rounded text-[9px] font-bold font-mono uppercase ${aluno.statusTreino === 'Rascunho IA' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : aluno.statusTreino === 'Enviado' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-neutral-800 text-neutral-400'}`}>
+                          {aluno.statusTreino}
+                        </span>
+                      </td>
+
+                      {/* COLUNA REALTIME: Mostra se o aluno treinou hoje ou puxa a última data */}
+                      <td className="py-3.5">
+                        {fezCheckinHoje ? (
+                          <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded animate-pulse">
+                            🔥 Treinou Hoje!
+                          </span>
+                        ) : aluno.checkins && aluno.checkins.length > 0 ? (
+                          <span className="text-[10px] font-mono text-neutral-400">
+                            Check-in: {aluno.checkins[0].data}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-neutral-600 font-mono">Nenhum treino</span>
+                        )}
+                      </td>
+
+                      <td className="py-3.5 text-right space-x-2">
+                        <button type="button" onClick={() => abrirGeradorTreino(aluno)} className="bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase">
+                          {aluno.statusTreino === "Rascunho IA" ? "Revisar IA" : "Montar Treino"}
+                        </button>
+                        {aluno.statusConta === "Ativo" ? (
+                          <button type="button" onClick={() => alterStatusContaAluno(aluno.id, "Off")} className="border border-neutral-800 text-neutral-400 hover:bg-neutral-800 text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase">Arquivar</button>
+                        ) : (
+                          <button type="button" onClick={() => alterStatusContaAluno(aluno.id, "Ativo")} className="bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase">Ativar</button>
+                        )}
+                        <button type="button" onClick={() => deletarAluno(aluno.id)} className="text-red-500/70 hover:text-red-400 text-xs py-1 px-2 border border-neutral-800 hover:border-red-500/20 rounded transition-colors uppercase font-bold text-[9px]">
+                          Excluir
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -541,7 +583,7 @@ function App() {
     );
   }
 
-  // 7. PORTAL DO ALUNO PRO (COM LINHA DO TEMPO DO HISTÓRICO DE CHECK-INS)
+  // 7. PORTAL DO ALUNO PRO
   if (etapa === "aluno") {
     return (
       <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col p-6 overflow-y-auto font-sans z-40">
@@ -555,25 +597,24 @@ function App() {
         </header>
 
         <main className="w-full max-w-md mx-auto flex-1 space-y-6 pb-10">
-          {/* Caixa de Métricas de Progresso */}
           <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl flex items-center justify-between">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Check-ins Validados</p>
-              <h3 className="text-3xl font-bold text-white mt-1">{checkinsAluno.length}</h3>
+              <h3 className="text-3xl font-bold text-white mt-1">{alunoLogado?.checkins?.length || 0}</h3>
             </div>
             <button type="button" onClick={executarCheckin} className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-3 rounded-lg text-xs uppercase tracking-wider transition-colors shadow-lg">
               Confirmar Treino de Hoje
             </button>
           </div>
 
-          {/* ================= SEÇÃO ADICIONADA: LINHA DO TEMPO DE CHECK-INS ================= */}
+          {/* LINHA DO TEMPO DO ALUNO */}
           <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl space-y-3">
             <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Histórico de Consistência</p>
-            {checkinsAluno.length === 0 ? (
+            {!alunoLogado?.checkins || alunoLogado.checkins.length === 0 ? (
               <p className="text-[11px] text-neutral-500 uppercase font-mono">Nenhum treino registrado esta semana. Comece hoje!</p>
             ) : (
               <div className="grid grid-cols-2 gap-2">
-                {checkinsAluno.map((ch, idx) => (
+                {alunoLogado.checkins.map((ch, idx) => (
                   <div key={idx} className="bg-[#0d0e12] border border-neutral-850 p-2.5 rounded-lg flex items-center justify-between">
                     <div>
                       <p className="text-[11px] font-bold text-white tracking-tight">{ch.diaSemana}</p>
@@ -585,7 +626,6 @@ function App() {
               </div>
             )}
           </div>
-          {/* ================================================================================== */}
 
           <div className="flex justify-between items-center">
             <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-500">Planilha Prescrita pelo Personal</h3>
@@ -759,7 +799,7 @@ function App() {
         <div className="flex-1 flex flex-col bg-[#0d0e12] p-6 overflow-y-auto">
           <header className="w-full max-w-4xl mx-auto flex justify-between items-center border-b border-neutral-800 pb-4 mb-6">
             <button type="button" onClick={() => { setAbaAtiva("home"); atualizarStatusVIP(); }} className="text-emerald-500 font-bold text-[10px] uppercase font-mono flex items-center gap-2">← Retornar</button>
-            <h3 className="text-white font-bold uppercase text-xs tracking-wider">Módulo de Planilhas</h3>
+            <span className="text-white font-bold uppercase text-xs tracking-wider">Módulo de Planilhas</span>
           </header>
 
           <div className="w-full max-w-4xl grid grid-cols-1 sm:grid-cols-2 gap-4 mx-auto">
