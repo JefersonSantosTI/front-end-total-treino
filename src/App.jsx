@@ -16,21 +16,55 @@ function App() {
   // --- ESTADOS PORTAL DO PERSONAL E ALUNO ---
   const [personalLogado, setPersonalLogado] = useState(null);
   const [cref, setCref] = useState("");
+
+  // O alunoLogado agora vai guardar o objeto completo do aluno vindo da lista
   const [alunoLogado, setAlunoLogado] = useState(null);
   const [codigoAcessoAluno, setCodigoAcessoAluno] = useState("");
+  // Estado para controlar quais exercícios o aluno já marcou como concluído no treino do dia
+  const [exerciciosConcluidos, setExerciciosConcluidos] = useState([]);
 
+  // LISTA DE ALUNOS (Simulando nosso Banco de Dados em memória)
   const [alunosPersonal, setAlunosPersonal] = useState([
-    { id: "1", nome: "João Silva", objetivo: "Hipertrofia", statusTreino: "Rascunho IA", statusConta: "Ativo", whatsapp: "5511999999999" },
-    { id: "2", nome: "Maria Oliveira", objetivo: "Emagrecimento", statusTreino: "Enviado", statusConta: "Ativo", whatsapp: "5511888888888" },
-    { id: "3", nome: "Carlos Lima", objective: "Performance", statusTreino: "Pendente", statusConta: "Off", whatsapp: "5511777777777" }
+    {
+      id: "1",
+      nome: "João Silva",
+      objetivo: "Hipertrofia",
+      statusTreino: "Rascunho IA",
+      statusConta: "Ativo",
+      whatsapp: "5511999999999",
+      treinoPrescrito: [
+        { nome: "Agachamento Livre", series: 4, reps: "10", obs: "Foco na amplitude máxima." },
+        { nome: "Leg Press 45°", series: 4, reps: "12", obs: "Progressão de carga lenta." }
+      ]
+    },
+    {
+      id: "2",
+      nome: "Maria Oliveira",
+      objetivo: "Emagrecimento",
+      statusTreino: "Enviado",
+      statusConta: "Ativo",
+      whatsapp: "5511888888888",
+      treinoPrescrito: [
+        { nome: "Corrida na Esteira", series: 1, reps: "20 min", obs: "Manter batimento em zona de queima." },
+        { nome: "Afundo com Halteres", series: 3, reps: "12 (cada lado)", obs: "Tronco ligeiramente inclinado à frente." }
+      ]
+    },
+    {
+      id: "3",
+      nome: "Carlos Lima",
+      objetivo: "Performance",
+      statusTreino: "Pendente",
+      statusConta: "Off",
+      whatsapp: "5511777777777",
+      treinoPrescrito: []
+    }
   ]);
+
+  // Controle do Modal de Prescrição
+  const [alunoEmEdicao, setAlunoEmEdicao] = useState(null);
+  const [treinoForm, setTreinoForm] = useState([]);
 
   const [checkinsAluno, setCheckinsAluno] = useState([]);
-
-  const [treinoEnviadoPersonal] = useState([
-    { nome: "Supino Inclinado Pro", series: 4, reps: "10-12", obs: "Foco na cadência excêntrica de 3s." },
-    { nome: "Desenvolvimento Halter Pro", series: 4, reps: "10", obs: "Não travar os cotovelos no topo." }
-  ]);
 
   const [perfil, setPerfil] = useState({
     nome: "Guerreiro(a)",
@@ -183,9 +217,37 @@ function App() {
     setAlunosPersonal(prev => prev.map(a => a.id === id ? { ...a, statusConta: novoStatus } : a));
   };
 
-  const aprovarRascunhoIA = (id) => {
-    setAlunosPersonal(prev => prev.map(a => a.id === id ? { ...a, statusTreino: "Enviado" } : a));
-    alert("Treino gerado por IA revisado e enviado ao aluno!");
+  const abrirGeradorTreino = (aluno) => {
+    setAlunoEmEdicao(aluno);
+    setTreinoForm(aluno.treinoPrescrito || []);
+  };
+
+  const adicionarExercicioForm = () => {
+    setTreinoForm([...treinoForm, { nome: "", series: 4, reps: "10", obs: "" }]);
+  };
+
+  const removerExercicioForm = (index) => {
+    setTreinoForm(treinoForm.filter((_, i) => i !== index));
+  };
+
+  const handleExercicioChange = (index, campo, valor) => {
+    const novoTreino = [...treinoForm];
+    novoTreino[index][campo] = valor;
+    setTreinoForm(novoTreino);
+  };
+
+  const salvarTreinoPersonal = (e) => {
+    e.preventDefault();
+    if (treinoForm.length === 0) return alert("Adicione pelo menos um exercício!");
+
+    setAlunosPersonal(prev => prev.map(a =>
+      a.id === alunoEmEdicao.id
+        ? { ...a, statusTreino: "Enviado", treinoPrescrito: treinoForm }
+        : a
+    ));
+
+    alert(`Planilha de treino aplicada e enviada para ${alunoEmEdicao.nome}!`);
+    setAlunoEmEdicao(null);
   };
 
   const deletarAluno = (id) => {
@@ -194,22 +256,44 @@ function App() {
     }
   };
 
-  // --- LÓGICAS DA ÁREA DO ALUNO ---
+  // --- LÓGICAS DA ÁREA DO ALUNO VIVA ---
   const handleLoginAluno = (e) => {
     e.preventDefault();
-    if (!codigoAcessoAluno.trim()) return alert("Insira o seu código de acesso.");
-    setAlunoLogado({ nome: "Atleta Pro", codigo: codigoAcessoAluno });
+    const termoBusca = codigoAcessoAluno.trim().toLowerCase();
+
+    // Procura o aluno correspondente na nossa lista "banco de dados"
+    const alunoEncontrado = alunosPersonal.find(a => a.nome.toLowerCase() === termoBusca);
+
+    if (!alunoEncontrado) {
+      return alert("Código/Nome de aluno não encontrado na assessoria. Digite exatamente 'João Silva' ou 'Maria Oliveira' para testar.");
+    }
+
+    if (alunoEncontrado.statusConta === "Off") {
+      return alert("Acesso suspenso! Entre em contato com seu Personal Trainer.");
+    }
+
+    setAlunoLogado(alunoEncontrado);
+    setExerciciosConcluidos([]); // Reseta o checklist do dia
     setEtapa("aluno");
+  };
+
+  const alternarConclusaoExercicio = (index) => {
+    if (exerciciosConcluidos.includes(index)) {
+      setExerciciosConcluidos(exerciciosConcluidos.filter(i => i !== index));
+    } else {
+      setExerciciosConcluidos([...exerciciosConcluidos, index]);
+    }
   };
 
   const executarCheckin = () => {
     const hoje = new Date().toLocaleDateString("pt-BR");
     if (checkinsAluno.includes(hoje)) return alert("Check-in já realizado hoje!");
     setCheckinsAluno(prev => [...prev, hoje]);
-    alert("🔥 Check-in realizado!");
+    alert("🔥 Fantástico! O seu check-in de hoje foi registrado no painel da assessoria.");
   };
 
-  // 1. TELA DE CARREGAMENTO / SINCRONIZAÇÃO
+
+  // 1. TELA DE CARREGAMENTO
   if (etapa === "verificando") {
     return (
       <div className="fixed inset-0 bg-[#0d0e12] flex flex-col items-center justify-center font-sans z-50">
@@ -219,7 +303,7 @@ function App() {
     );
   }
 
-  // 2. SUB-LOGIN DA CONSULTORIA (B2C TRADICIONAL)
+  // 2. SUB-LOGIN DA CONSULTORIA
   if (etapa === "login") {
     return <Login aoLogar={handleLogin} />;
   }
@@ -292,9 +376,9 @@ function App() {
       <div className="fixed inset-0 bg-[#0d0e12] flex flex-col items-center justify-center p-6 text-white font-sans z-50">
         <div className="w-full max-w-sm bg-[#16171d] border border-neutral-800 p-8 rounded-2xl shadow-2xl">
           <h2 className="text-md font-bold uppercase tracking-tight text-neutral-200 mb-1">Portal do Aluno</h2>
-          <p className="text-neutral-500 text-xs mb-5">Insira as credenciais geradas pela sua assessoria.</p>
+          <p className="text-neutral-500 text-xs mb-5">Para testar, digite o nome completo do aluno (Ex: João Silva).</p>
           <form onSubmit={handleLoginAluno} className="space-y-4">
-            <input required type="text" placeholder="Código de Acesso Corporativo" className="w-full bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl text-sm font-medium outline-none focus:border-neutral-700 text-white" value={codigoAcessoAluno} onChange={(e) => setCodigoAcessoAluno(e.target.value)} />
+            <input required type="text" placeholder="Nome do Aluno (Ex: João Silva)" className="w-full bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl text-sm font-medium outline-none focus:border-neutral-700 text-white" value={codigoAcessoAluno} onChange={(e) => setCodigoAcessoAluno(e.target.value)} />
             <div className="flex gap-3 text-xs font-bold">
               <button type="button" onClick={() => setEtapa("triagem")} className="w-1/3 bg-transparent border border-neutral-800 hover:bg-neutral-800 p-4 rounded-xl uppercase tracking-wider text-neutral-400 transition-colors">Voltar</button>
               <button type="submit" className="w-2/3 bg-blue-600 hover:bg-blue-500 text-white p-4 rounded-xl uppercase tracking-wider transition-colors shadow-lg">Entrar</button>
@@ -342,7 +426,6 @@ function App() {
           <div className="md:col-span-2 bg-[#16171d] border border-neutral-800 rounded-xl p-5 shadow-xl overflow-x-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400">Carteira de Clientes Ativos</h3>
-              <button type="button" className="bg-emerald-600/10 text-emerald-500 border border-emerald-500/20 text-[10px] font-bold px-3 py-1.5 rounded hover:bg-emerald-600/20 transition-all uppercase">Gerar Novo Treino</button>
             </div>
 
             <table className="w-full text-left border-collapse min-w-[500px]">
@@ -361,16 +444,16 @@ function App() {
                       <div>{aluno.nome}</div>
                       <div className="text-[10px] text-neutral-500 font-mono mt-0.5">{aluno.whatsapp}</div>
                     </td>
-                    <td className="py-3.5 text-neutral-400">{aluno.objective || aluno.objetivo}</td>
+                    <td className="py-3.5 text-neutral-400">{aluno.objetivo}</td>
                     <td className="py-3.5">
                       <span className={`px-2 py-0.5 rounded text-[9px] font-bold font-mono uppercase ${aluno.statusTreino === 'Rascunho IA' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : aluno.statusTreino === 'Enviado' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-neutral-800 text-neutral-400'}`}>
                         {aluno.statusTreino}
                       </span>
                     </td>
                     <td className="py-3.5 text-right space-x-2">
-                      {aluno.statusTreino === "Rascunho IA" && (
-                        <button type="button" onClick={() => aprovarRascunhoIA(aluno.id)} className="bg-amber-600 hover:bg-amber-500 text-black text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase">Revisar e Enviar</button>
-                      )}
+                      <button type="button" onClick={() => abrirGeradorTreino(aluno)} className="bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase">
+                        {aluno.statusTreino === "Rascunho IA" ? "Revisar IA" : "Montar Treino"}
+                      </button>
                       {aluno.statusConta === "Ativo" ? (
                         <button type="button" onClick={() => alterStatusContaAluno(aluno.id, "Off")} className="border border-neutral-800 text-neutral-400 hover:bg-neutral-800 text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase">Arquivar</button>
                       ) : (
@@ -386,26 +469,89 @@ function App() {
             </table>
           </div>
         </main>
+
+        {/* MODAL: CONSTRUTOR DE PLANILHAS DO PERSONAL */}
+        {alunoEmEdicao && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="w-full max-w-2xl bg-[#16171d] border border-neutral-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+              <header className="p-5 border-b border-neutral-800 flex justify-between items-center bg-[#1c1d26]">
+                <div>
+                  <span className="text-[10px] text-emerald-500 font-mono font-bold uppercase tracking-wider">Prescrevendo Planilha Pro</span>
+                  <h3 className="text-base font-bold text-white uppercase">{alunoEmEdicao.nome}</h3>
+                </div>
+                <button type="button" onClick={() => setAlunoEmEdicao(null)} className="text-neutral-400 hover:text-white text-sm uppercase font-mono font-bold">Fechar ✕</button>
+              </header>
+
+              <form onSubmit={salvarTreinoPersonal} className="flex-1 overflow-y-auto p-6 space-y-4">
+                <div className="flex justify-between items-center pb-2 border-b border-neutral-800/60">
+                  <p className="text-xs font-bold uppercase tracking-wider text-neutral-400">Estrutura de Exercícios</p>
+                  <button type="button" onClick={adicionarExercicioForm} className="bg-emerald-600/10 text-emerald-500 border border-emerald-500/20 text-[10px] font-bold px-3 py-1.5 rounded hover:bg-emerald-600/20 transition-all uppercase">+ Adicionar Linha</button>
+                </div>
+
+                {treinoForm.length === 0 ? (
+                  <div className="text-center py-10 border border-dashed border-neutral-800 rounded-xl">
+                    <p className="text-xs text-neutral-500 uppercase font-mono">Nenhum exercício na planilha. Clique em Adicionar Linha.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {treinoForm.map((ex, idx) => (
+                      <div key={idx} className="bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl space-y-3 relative group">
+                        <button type="button" onClick={() => removerExercicioForm(idx)} className="absolute top-3 right-3 text-neutral-600 hover:text-red-400 text-[10px] uppercase font-mono tracking-wider transition-colors">Remover</button>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <div className="sm:col-span-1">
+                            <label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Nome do Movimento</label>
+                            <input required type="text" placeholder="Ex: Leg Press 45°" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ex.nome} onChange={(e) => handleExercicioChange(idx, "nome", e.target.value)} />
+                          </div>
+                          <div>
+                            <label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Séries</label>
+                            <input required type="number" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ex.series} onChange={(e) => handleExercicioChange(idx, "series", Number(e.target.value))} />
+                          </div>
+                          <div>
+                            <label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Repetições / Tempo</label>
+                            <input required type="text" placeholder="Ex: 10-12" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ex.reps} onChange={(e) => handleExercicioChange(idx, "reps", e.target.value)} />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Diretriz Técnica / Observação</label>
+                          <input type="text" placeholder="Ex: Intervalo de 60s." className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ex.obs} onChange={(e) => handleExercicioChange(idx, "obs", e.target.value)} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <footer className="pt-4 border-t border-neutral-800 flex gap-3 justify-end text-xs font-bold">
+                  <button type="button" onClick={() => setAlunoEmEdicao(null)} className="bg-transparent border border-neutral-800 text-neutral-400 p-3 rounded-xl uppercase tracking-wider hover:bg-neutral-800 transition-colors">Cancelar</button>
+                  <button type="submit" className="bg-emerald-600 hover:bg-emerald-500 text-white p-3 rounded-xl uppercase tracking-wider transition-colors shadow-lg px-6">Aplicar Treino Pro</button>
+                </footer>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
 
-  // 7. DASHBOARD INTERNO DO ALUNO PRO
+  // 7. PORTAL DO ALUNO PRO (VIVO E INTEGRADO COM ESTADO DO PERSONAL)
   if (etapa === "aluno") {
     return (
       <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col p-6 overflow-y-auto font-sans z-40">
         <header className="w-full max-w-md mx-auto flex justify-between items-center border-b border-neutral-800 pb-4 mb-6">
           <div>
-            <p className="text-[9px] text-blue-400 font-mono font-bold uppercase tracking-wider">Consultoria Privada</p>
+            <p className="text-[9px] text-blue-400 font-mono font-bold uppercase tracking-wider">Consultoria Privada Treino Fit</p>
             <h2 className="text-md font-bold text-white uppercase tracking-tight">{alunoLogado?.nome}</h2>
+            <p className="text-[10px] text-neutral-500 font-mono mt-0.5">Objetivo: {alunoLogado?.objetivo}</p>
           </div>
-          <button type="button" onClick={() => setEtapa("triagem")} className="px-3 py-1.5 bg-neutral-900 border border-neutral-800 rounded-md text-[10px] font-bold uppercase tracking-wider text-neutral-400 transition-colors">Sair</button>
+          <button type="button" onClick={() => { setEtapa("triagem"); setAlunoLogado(null); }} className="px-3 py-1.5 bg-neutral-900 border border-neutral-800 rounded-md text-[10px] font-bold uppercase tracking-wider text-neutral-400 transition-colors">Sair</button>
         </header>
 
         <main className="w-full max-w-md mx-auto flex-1 space-y-6 pb-10">
+          {/* Caixa de Métricas de Progresso */}
           <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Check-ins Validados</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Check-ins Concluídos</p>
               <h3 className="text-3xl font-bold text-white mt-1">{checkinsAluno.length}</h3>
             </div>
             <button type="button" onClick={executarCheckin} className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-3 rounded-lg text-xs uppercase tracking-wider transition-colors shadow-lg">
@@ -413,22 +559,56 @@ function App() {
             </button>
           </div>
 
-          <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-500">Planilha Prescrita</h3>
+          <div className="flex justify-between items-center">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-500">Planilha Prescrita pelo Personal</h3>
+            {alunoLogado?.treinoPrescrito?.length > 0 && (
+              <span className="text-[10px] text-neutral-500 font-mono">
+                {exerciciosConcluidos.length}/{alunoLogado.treinoPrescrito.length} Concluídos
+              </span>
+            )}
+          </div>
 
           <div className="space-y-3">
-            {treinoEnviadoPersonal.map((ex, i) => (
-              <div key={i} className="bg-[#16171d] border border-neutral-800 rounded-xl overflow-hidden shadow-xl">
-                <div className="p-5">
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-bold uppercase text-base text-white tracking-tight">{ex.nome}</h4>
-                    <span className="text-blue-400 font-mono text-xs font-bold uppercase">{ex.series}x {ex.reps}</span>
-                  </div>
-                  <div className="bg-[#0d0e12] border border-neutral-850 p-3 rounded-lg mt-3">
-                    <p className="text-xs text-neutral-400 font-medium leading-relaxed"><strong>Instruções:</strong> {ex.obs}</p>
-                  </div>
-                </div>
+            {/* Tratativa para caso o Personal ainda não tenha adicionado nenhum exercício na planilha deste aluno */}
+            {!alunoLogado?.treinoPrescrito || alunoLogado.treinoPrescrito.length === 0 ? (
+              <div className="bg-[#16171d] border border-neutral-800 p-8 rounded-xl text-center">
+                <span className="text-2xl block mb-2">⏳</span>
+                <p className="text-xs text-neutral-400 font-semibold uppercase font-mono">Nenhum treino ativo.</p>
+                <p className="text-[11px] text-neutral-500 mt-1">Aguarde o Prof. montar sua primeira planilha técnica.</p>
               </div>
-            ))}
+            ) : (
+              alunoLogado.treinoPrescrito.map((ex, i) => {
+                const estaconcluido = exerciciosConcluidos.includes(i);
+                return (
+                  <div key={i} className={`bg-[#16171d] border transition-all rounded-xl overflow-hidden shadow-xl ${estaconcluido ? 'border-blue-500/30 opacity-60' : 'border-neutral-800'}`}>
+                    <div className="p-5 flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className={`font-bold uppercase text-base tracking-tight transition-all text-white ${estaconcluido ? 'line-through text-neutral-500' : ''}`}>
+                            {ex.nome}
+                          </h4>
+                        </div>
+                        <span className="bg-blue-500/10 text-blue-400 font-mono text-[10px] font-bold uppercase px-2 py-0.5 rounded border border-blue-500/15">
+                          {ex.series} Séries × {ex.reps} Reps
+                        </span>
+                        {ex.obs && (
+                          <div className="bg-[#0d0e12] border border-neutral-850 p-3 rounded-lg mt-3">
+                            <p className="text-[11px] text-neutral-400 leading-relaxed">
+                              <strong>Diretriz:</strong> {ex.obs}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Botão de Checklist lateral */}
+                      <button type="button" onClick={() => alternarConclusaoExercicio(i)} className={`w-8 h-8 rounded-lg border flex items-center justify-center font-bold text-sm transition-all ${estaconcluido ? 'bg-blue-600 border-blue-500 text-white' : 'border-neutral-700 hover:border-neutral-500 text-neutral-500'}`}>
+                        {estaconcluido ? "✓" : ""}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </main>
       </div>
@@ -479,7 +659,7 @@ function App() {
               </div>
             </div>
             <button type="button" onClick={() => !isVip && setBloqueado(true)} className={`px-3 py-1.5 rounded text-[10px] font-bold uppercase font-mono border ${isVip ? 'border-emerald-500/20 text-emerald-500 bg-emerald-500/5' : 'border-amber-500/20 text-amber-500 bg-amber-500/5 animate-pulse'}`}>
-              {isVip ? "✓ Vip" : "Upgrade para Vip"}
+              {isVip ? "✓ Assinatura Sincronizada" : "Upgrade para Enterprise"}
             </button>
           </header>
 
@@ -516,7 +696,7 @@ function App() {
               <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl">
                 <p className="text-emerald-500 text-[10px] font-bold uppercase tracking-wider font-mono mb-2">⚡ Diretriz Técnica Operacional</p>
                 <p className="text-xs font-medium text-neutral-300 leading-relaxed">
-                  "{perfil.nome}, seus parâmetros apontam foco em oxidação de gordura ativa. Otimize a ingestão proteica."
+                  "{perfil.nome}, seus parâmetros apontam foco em oxidação de gordura active. Otimize a ingestão proteica."
                 </p>
               </div>
 
@@ -542,7 +722,7 @@ function App() {
       {abaAtiva === "chat" && (
         <div className="flex-1 flex flex-col overflow-hidden">
           <header className="p-4 flex items-center justify-between border-b border-neutral-800 bg-[#16171d]">
-            <button type="button" onClick={() => { setAbaAtiva("home"); atualizarStatusVIP(); }} className="text-emerald-500 font-bold text-[10px] uppercase font-mono flex items-center gap-2">← Voltar para o Home</button>
+            <button type="button" onClick={() => { setAbaAtiva("home"); atualizarStatusVIP(); }} className="text-emerald-500 font-bold text-[10px] uppercase font-mono flex items-center gap-2">← Voltar para o Dashboard</button>
             <span className="text-[10px] font-mono uppercase text-neutral-500">Módulo Consultoria de Nutrição</span>
           </header>
           <ChatReceitas whatsapp={usuario} isVip={isVip} aoPedirUpgrade={() => setBloqueado(true)} perfil={perfil} setTreinoIAPescado={setTreinoIAPescado} aoAtualizarPerfil={atualizarStatusVIP} />
