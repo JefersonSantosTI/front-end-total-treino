@@ -1,8 +1,13 @@
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+import { jwtDecode } from "jwt-decode";
 import { useState, useEffect, useCallback, useRef } from "react";
 import ListaExercicios from "./services/ListaExercicio";
 import ChatReceitas from "./pages/ChatReceitas";
 import Login from "./components/Login";
 import TelaPlanos from "./components/TelaPlanos";
+
+// ✅ ADICIONADO: Constante com os dias da semana para o Calendário
+const DIAS_SEMANA = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 
 function App() {
   const [usuario, setUsuario] = useState(() => localStorage.getItem("usuario_whatsapp"));
@@ -16,6 +21,7 @@ function App() {
 
   const [personalLogado, setPersonalLogado] = useState(null);
   const [cref, setCref] = useState("");
+  const [googleUser, setGoogleUser] = useState(null);
 
   const [alunoLogado, setAlunoLogado] = useState(null);
   const [codigoAcessoAluno, setCodigoAcessoAluno] = useState("");
@@ -23,9 +29,13 @@ function App() {
   const [alunosPersonal, setAlunosPersonal] = useState([]);
 
   const [alunoEmEdicao, setAlunoEmEdicao] = useState(null);
-  const [treinoForm, setTreinoForm] = useState([]);
+  const [treinoForm, setTreinoForm] = useState([]); // Agora será um array de dias da semana
   const [dietaForm, setDietaForm] = useState([]);
-  const [aguaForm, setAguaForm] = useState(""); // ✅ ADICIONADO: Estado para controlar a água
+  const [aguaForm, setAguaForm] = useState("");
+
+  // ✅ ADICIONADO: Estados para controlar a aba do calendário selecionada
+  const [diaAbaAluno, setDiaAbaAluno] = useState("Segunda");
+  const [diaAbaPersonal, setDiaAbaPersonal] = useState("Segunda");
 
   const [modalNovoAluno, setModalNovoAluno] = useState(false);
   const [novoAlunoForm, setNovoAlunoForm] = useState({ nome: "", whatsapp: "", objetivo: "Emagrecimento" });
@@ -36,6 +46,13 @@ function App() {
 
   const API_URL = "https://api-backend-treino-fit.onrender.com/api";
   const verificandoRef = useRef(false);
+
+  // ✅ ADICIONADO: Descobre qual é o dia de hoje para abrir a aba certa no portal do aluno
+  useEffect(() => {
+    const diaAtualSistema = new Date().toLocaleDateString("pt-BR", { weekday: 'long' });
+    const diaFormatado = DIAS_SEMANA.find(d => diaAtualSistema.toLowerCase().includes(d.toLowerCase().slice(0, 4))) || "Segunda";
+    setDiaAbaAluno(diaFormatado);
+  }, []);
 
   const carregarAlunosAssessoria = useCallback(async () => {
     try {
@@ -136,11 +153,55 @@ function App() {
     setEtapa("triagem");
   };
 
-  const handleLoginPersonal = (e) => {
+  const handleGoogleSuccess = async (credentialResponse) => {
+    const decoded = jwtDecode(credentialResponse.credential);
+    const dadosGoogle = {
+      nome: decoded.name,
+      email: decoded.email,
+      googleId: decoded.sub,
+      foto: decoded.picture
+    };
+
+    setGoogleUser(dadosGoogle);
+
+    try {
+      const response = await fetch(`${API_URL}/personal/auth`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dadosGoogle)
+      });
+      const data = await response.json();
+
+      if (response.ok && !data.requerCref) {
+        setPersonalLogado(data);
+        setEtapa("personal");
+      } else if (data.requerCref) {
+        // Aguarda a tela de CREF
+      } else {
+        alert(data.mensagem);
+      }
+    } catch (err) { console.error("Erro na comunicação com o banco:", err); }
+  };
+
+  const handleCadastrarCref = async (e) => {
     e.preventDefault();
     if (!cref.trim()) return alert("Por favor, insira o seu CREF técnico.");
-    setPersonalLogado({ nome: "Prof. " + cref.split("/")[0], cref });
-    setEtapa("personal");
+
+    try {
+      const response = await fetch(`${API_URL}/personal/auth`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...googleUser, cref })
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        setPersonalLogado(data);
+        setEtapa("personal");
+      } else {
+        alert(data.mensagem);
+      }
+    } catch (err) { console.error("Erro ao salvar CREF:", err); }
   };
 
   const cadastrarNovoAluno = async (e) => {
@@ -172,17 +233,54 @@ function App() {
     } catch { alert("Erro ao alterar status no servidor."); }
   };
 
+  // ✅ ATUALIZADO: Carrega a estrutura de calendário semanal
   const abrirGeradorTreino = (aluno) => {
     setAlunoEmEdicao(aluno);
-    setTreinoForm(aluno.treinoPrescrito || []);
+
+    if (aluno.treinoSemanal && aluno.treinoSemanal.length > 0) {
+      setTreinoForm(aluno.treinoSemanal);
+    } else {
+      // Cria a estrutura vazia de Segunda a Domingo para o Personal preencher
+      const estruturaSemanal = DIAS_SEMANA.map(dia => ({
+        dia,
+        exercicios: dia === "Segunda" ? (aluno.treinoPrescrito || []) : [] // Mantém os exercícios antigos na segunda por segurança
+      }));
+      setTreinoForm(estruturaSemanal);
+    }
+
     setDietaForm(aluno.dietaPrescrita || []);
-    setAguaForm(aluno.metaAgua || ""); // ✅ ADICIONADO: Carrega a água do banco para o personal editar
+    setAguaForm(aluno.metaAgua || "");
+    setDiaAbaPersonal("Segunda"); // Sempre abre na aba da segunda
   };
 
-  const adicionarExercicioForm = () => setTreinoForm([...treinoForm, { nome: "", series: 4, reps: "10", obs: "" }]);
-  const removerExercicioForm = (index) => setTreinoForm(treinoForm.filter((_, i) => i !== index));
-  const handleExercicioChange = (index, campo, valor) => {
-    const novoTreino = [...treinoForm]; novoTreino[index][campo] = valor; setTreinoForm(novoTreino);
+  // ✅ ATUALIZADO: Manipulação de exercícios agora foca APENAS no dia selecionado (diaAbaPersonal)
+  const adicionarExercicioForm = () => {
+    setTreinoForm(prev => prev.map(diaObj => {
+      if (diaObj.dia === diaAbaPersonal) {
+        return { ...diaObj, exercicios: [...diaObj.exercicios, { nome: "", series: 4, reps: "10", obs: "" }] };
+      }
+      return diaObj;
+    }));
+  };
+
+  const removerExercicioForm = (indexExercicio) => {
+    setTreinoForm(prev => prev.map(diaObj => {
+      if (diaObj.dia === diaAbaPersonal) {
+        return { ...diaObj, exercicios: diaObj.exercicios.filter((_, i) => i !== indexExercicio) };
+      }
+      return diaObj;
+    }));
+  };
+
+  const handleExercicioChange = (indexExercicio, campo, valor) => {
+    setTreinoForm(prev => prev.map(diaObj => {
+      if (diaObj.dia === diaAbaPersonal) {
+        const novosExercicios = [...diaObj.exercicios];
+        novosExercicios[indexExercicio][campo] = valor;
+        return { ...diaObj, exercicios: novosExercicios };
+      }
+      return diaObj;
+    }));
   };
 
   const adicionarDietaForm = () => setDietaForm([...dietaForm, { refeicao: "", itens: "" }]);
@@ -191,24 +289,23 @@ function App() {
     const novaDieta = [...dietaForm]; novaDieta[index][campo] = valor; setDietaForm(novaDieta);
   };
 
+  // ✅ ATUALIZADO: Salva o Treino Semanal na Nuvem
   const salvarTreinoPersonal = async (e) => {
     e.preventDefault();
-    if (treinoForm.length === 0) return alert("Adicione pelo menos um exercício!");
-
     const alunoId = alunoEmEdicao.id || alunoEmEdicao._id;
     try {
       const response = await fetch(`${API_URL}/aluno/${alunoId}/prescrever`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ treinoPrescrito: treinoForm, dietaPrescrita: dietaForm, metaAgua: aguaForm }) // ✅ ADICIONADO: Envia a água para salvar no banco
+        body: JSON.stringify({ treinoSemanal: treinoForm, dietaPrescrita: dietaForm, metaAgua: aguaForm })
       });
 
       if (response.ok) {
         setAlunosPersonal(prev => prev.map(a =>
           (a.id === alunoId || a._id === alunoId)
-            ? { ...a, statusTreino: "Enviado", treinoPrescrito: treinoForm, dietaPrescrita: dietaForm, metaAgua: aguaForm } // ✅ ADICIONADO: Atualiza estado local da água
+            ? { ...a, statusTreino: "Enviado", treinoSemanal: treinoForm, dietaPrescrita: dietaForm, metaAgua: aguaForm }
             : a
         ));
-        alert(`Plano completo aplicado com sucesso na nuvem para ${alunoEmEdicao.nome}!`);
+        alert(`Plano Semanal aplicado com sucesso na nuvem para ${alunoEmEdicao.nome}!`);
         setAlunoEmEdicao(null);
       }
     } catch { alert("Erro de conexão ao salvar plano no banco."); }
@@ -241,9 +338,13 @@ function App() {
     } catch { alert("Erro ao conectar com o portal da assessoria."); }
   };
 
-  const alternarConclusaoExercicio = (index) => {
-    if (exerciciosConcluidos.includes(index)) { setExerciciosConcluidos(exerciciosConcluidos.filter(i => i !== index)); }
-    else { setExerciciosConcluidos([...exerciciosConcluidos, index]); }
+  // ✅ ATUALIZADO: Lida com conclusão de exercícios baseado na chave (Dia + Index)
+  const alternarConclusaoExercicio = (chaveUnica) => {
+    if (exerciciosConcluidos.includes(chaveUnica)) {
+      setExerciciosConcluidos(exerciciosConcluidos.filter(id => id !== chaveUnica));
+    } else {
+      setExerciciosConcluidos([...exerciciosConcluidos, chaveUnica]);
+    }
   };
 
   const ejecutarCheckin = async () => {
@@ -324,16 +425,55 @@ function App() {
   }
 
   if (etapa === "login_personal") {
+    // Você vai precisar gerar o seu Client ID no console do Google Cloud gratuitamente
+    const GOOGLE_CLIENT_ID = "SEU_CLIENT_ID_AQUI.apps.googleusercontent.com";
+
     return (
-      <div className="fixed inset-0 bg-[#0d0e12] flex flex-col items-center justify-center p-6 text-white font-sans z-50">
-        <div className="w-full max-w-sm bg-[#16171d] border border-neutral-800 p-8 rounded-2xl shadow-2xl">
-          <h2 className="text-md font-bold uppercase tracking-tight text-neutral-200 mb-1">Acesso Técnico</h2><p className="text-neutral-500 text-xs mb-5">Insira seu registro para autenticação profissional.</p>
-          <form onSubmit={handleLoginPersonal} className="space-y-4">
-            <input required type="text" placeholder="Registro CREF (Ex: 123456-G/SP)" className="w-full bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl text-sm font-medium outline-none focus:border-neutral-700 text-white" value={cref} onChange={(e) => setCref(e.target.value)} />
-            <div className="flex gap-3 text-xs font-bold"><button type="button" onClick={() => setEtapa("triagem")} className="w-1/3 bg-transparent border border-neutral-800 hover:bg-neutral-800 p-4 rounded-xl uppercase tracking-wider text-neutral-400 transition-colors">Voltar</button><button type="submit" className="w-2/3 bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-xl uppercase tracking-wider transition-colors shadow-lg">Validar Acesso</button></div>
-          </form>
+      <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+        <div className="fixed inset-0 bg-[#0d0e12] flex flex-col items-center justify-center p-6 text-white font-sans z-50">
+          <div className="w-full max-w-sm bg-[#16171d] border border-neutral-800 p-8 rounded-2xl shadow-2xl">
+
+            {/* ESTADO 1: A pessoa AINDA NÃO clicou no botão do Google */}
+            {!googleUser ? (
+              <>
+                <h2 className="text-md font-bold uppercase tracking-tight text-neutral-200 mb-1">Acesso Técnico</h2>
+                <p className="text-neutral-500 text-xs mb-8">Autentique-se com sua conta Google profissional.</p>
+                <div className="flex justify-center mb-6">
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={() => alert('Falha no Login do Google')}
+                    theme="filled_black"
+                    text="continue_with"
+                  />
+                </div>
+                <button type="button" onClick={() => setEtapa("triagem")} className="w-full bg-transparent border border-neutral-800 hover:bg-neutral-800 p-4 rounded-xl text-xs uppercase tracking-wider text-neutral-400 transition-colors font-bold">Voltar</button>
+              </>
+            ) : (
+
+              /* ESTADO 2: O Google confirmou quem é, mas é o primeiro acesso (Falta o CREF) */
+              <>
+                <div className="flex items-center gap-3 mb-4">
+                  <img src={googleUser.foto} alt="Perfil" className="w-10 h-10 rounded-full border border-emerald-500" />
+                  <div>
+                    <h2 className="text-sm font-bold text-white uppercase">{googleUser.nome}</h2>
+                    <p className="text-[10px] text-emerald-500 font-mono">Autenticação Concluída</p>
+                  </div>
+                </div>
+                <p className="text-neutral-400 text-[11px] mb-5 leading-relaxed">Este é o seu primeiro acesso. Para ativar a sua licença no sistema Treino Fit, insira o seu registo profissional.</p>
+
+                <form onSubmit={handleCadastrarCref} className="space-y-4">
+                  <input required type="text" placeholder="Registro CREF (Ex: 123456-G/SP)" className="w-full bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl text-sm font-medium outline-none focus:border-neutral-700 text-white" value={cref} onChange={(e) => setCref(e.target.value)} />
+                  <div className="flex gap-3 text-xs font-bold">
+                    <button type="button" onClick={() => setGoogleUser(null)} className="w-1/3 bg-transparent border border-neutral-800 hover:bg-neutral-800 p-4 rounded-xl uppercase tracking-wider text-neutral-400 transition-colors">Cancelar</button>
+                    <button type="submit" className="w-2/3 bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-xl uppercase tracking-wider transition-colors shadow-lg">Validar Licença</button>
+                  </div>
+                </form>
+              </>
+            )}
+
+          </div>
         </div>
-      </div>
+      </GoogleOAuthProvider>
     );
   }
 
@@ -403,7 +543,7 @@ function App() {
                         <td className="py-3.5"><span className={`px-2 py-0.5 rounded text-[9px] font-bold font-mono uppercase ${aluno.statusTreino === 'Rascunho IA' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : aluno.statusTreino === 'Enviado' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-neutral-800 text-neutral-400'}`}>{aluno.statusTreino}</span></td>
                         <td className="py-3.5">{fezCheckinHoje ? <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded animate-pulse">🔥 Treinou Hoje!</span> : aluno.checkins && aluno.checkins.length > 0 ? <span className="text-[10px] font-mono text-neutral-400">Check-in: {aluno.checkins[0].data}</span> : <span className="text-[10px] text-neutral-600 font-mono">Nenhum treino</span>}</td>
                         <td className="py-3.5 text-right space-x-2">
-                          <button type="button" onClick={() => abrirGeradorTreino(aluno)} className="bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase">{aluno.statusTreino === "Rascunho IA" ? "Revisar IA" : "Montar Treino"}</button>
+                          <button type="button" onClick={() => abrirGeradorTreino(aluno)} className="bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase">{aluno.statusTreino === "Rascunho IA" ? "Revisar IA" : "Montar Semanal"}</button>
                           <button type="button" onClick={() => alterStatusContaAluno(idUnico, aluno.statusConta === "Ativo" ? "Off" : "Ativo")} className="border border-neutral-800 text-neutral-400 hover:bg-neutral-800 text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase">{aluno.statusConta === "Ativo" ? "Arquivar" : "Ativar"}</button>
                           <button type="button" onClick={() => deletarAluno(idUnico)} className="text-red-500/70 hover:text-red-400 border border-neutral-800 hover:border-red-500/20 rounded font-bold text-[9px] py-1 px-2 uppercase">Excluir</button>
                         </td>
@@ -501,21 +641,51 @@ function App() {
                   <input required type="text" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-sm text-white font-bold" value={aguaForm} onChange={(e) => setAguaForm(e.target.value)} />
                 </div>
 
-                {/* ÁREA DE TREINO */}
+                {/* ✅ ÁREA DE TREINO COM ABAS SEMANAIS (PERSONAL) */}
                 <div>
-                  <div className="flex justify-between items-center pb-2 border-b border-neutral-800/60 mb-3"><p className="text-xs font-bold uppercase tracking-wider text-neutral-400">Estrutura de Exercícios</p><button type="button" onClick={adicionarExercicioForm} className="bg-emerald-600/10 text-emerald-500 border border-emerald-500/20 text-[10px] font-bold px-3 py-1.5 rounded hover:bg-emerald-600/20 transition-all uppercase">+ Exercício</button></div>
-                  <div className="space-y-3">
-                    {treinoForm.map((ex, idx) => (
-                      <div key={idx} className="bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl space-y-3 relative group">
-                        <button type="button" onClick={() => removerExercicioForm(idx)} className="absolute top-3 right-3 text-neutral-600 hover:text-red-400 text-[10px] uppercase font-mono tracking-wider transition-colors">Remover</button>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 sm:pt-0">
-                          <div className="sm:col-span-1"><label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Movimento</label><input required type="text" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ex.nome} onChange={(e) => handleExercicioChange(idx, "nome", e.target.value)} /></div>
-                          <div><label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Séries</label><input required type="number" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ex.series} onChange={(e) => handleExercicioChange(idx, "series", Number(e.target.value))} /></div>
-                          <div><label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Repetições/Tempo</label><input required type="text" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ex.reps} onChange={(e) => handleExercicioChange(idx, "reps", e.target.value)} /></div>
-                        </div>
-                        <div><label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Observação</label><input type="text" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ex.obs || ""} onChange={(e) => handleExercicioChange(idx, "obs", e.target.value)} /></div>
-                      </div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-3 border-b border-neutral-800/60 pb-2">Estrutura de Exercícios Semanal</p>
+
+                  {/* ABAS DOS DIAS DA SEMANA */}
+                  <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-neutral-800/40 mb-4">
+                    {DIAS_SEMANA.map(dia => (
+                      <button
+                        key={dia}
+                        type="button"
+                        onClick={() => setDiaAbaPersonal(dia)}
+                        className={`px-4 py-2 rounded-t-lg text-[10px] font-bold uppercase transition-all flex-shrink-0 ${diaAbaPersonal === dia
+                            ? 'bg-neutral-800/50 border-b-2 border-emerald-500 text-emerald-500'
+                            : 'text-neutral-500 hover:text-neutral-300'
+                          }`}
+                      >
+                        {dia}
+                      </button>
                     ))}
+                  </div>
+
+                  <div className="flex justify-between items-center mb-3">
+                    <p className="text-[10px] font-mono text-emerald-500 font-bold uppercase">Treino de {diaAbaPersonal}</p>
+                    <button type="button" onClick={adicionarExercicioForm} className="bg-emerald-600/10 text-emerald-500 border border-emerald-500/20 text-[10px] font-bold px-3 py-1.5 rounded hover:bg-emerald-600/20 transition-all uppercase">+ Exercício</button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {(() => {
+                      const diaObj = treinoForm.find(d => d.dia === diaAbaPersonal) || { exercicios: [] };
+                      if (diaObj.exercicios.length === 0) {
+                        return <p className="text-xs text-neutral-500 italic text-center py-4 bg-[#0d0e12] rounded-xl border border-neutral-800">Nenhum exercício cadastrado para {diaAbaPersonal}. Dia de descanso?</p>;
+                      }
+
+                      return diaObj.exercicios.map((ex, idx) => (
+                        <div key={idx} className="bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl space-y-3 relative group">
+                          <button type="button" onClick={() => removerExercicioForm(idx)} className="absolute top-3 right-3 text-neutral-600 hover:text-red-400 text-[10px] uppercase font-mono tracking-wider transition-colors">Remover</button>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 sm:pt-0">
+                            <div className="sm:col-span-1"><label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Movimento</label><input required type="text" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ex.nome} onChange={(e) => handleExercicioChange(idx, "nome", e.target.value)} /></div>
+                            <div><label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Séries</label><input required type="number" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ex.series} onChange={(e) => handleExercicioChange(idx, "series", Number(e.target.value))} /></div>
+                            <div><label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Repetições/Tempo</label><input required type="text" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ex.reps} onChange={(e) => handleExercicioChange(idx, "reps", e.target.value)} /></div>
+                          </div>
+                          <div><label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Observação</label><input type="text" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ex.obs || ""} onChange={(e) => handleExercicioChange(idx, "obs", e.target.value)} /></div>
+                        </div>
+                      ));
+                    })()}
                   </div>
                 </div>
 
@@ -579,13 +749,50 @@ function App() {
             </div>
           )}
 
+          {/* ✅ TELA DO CALENDÁRIO PARA O ALUNO VISUALIZAR O TREINO */}
           <div className="space-y-3">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 mb-2">Treino Prescrito</p>
-            {!alunoLogado?.treinoPrescrito || alunoLogado.treinoPrescrito.length === 0 ? (
-              <div className="bg-[#16171d] border border-neutral-800 p-8 rounded-xl text-center"><p className="text-xs text-neutral-400 font-semibold uppercase font-mono">Nenhum treino ativo.</p></div>
-            ) : (
-              alunoLogado.treinoPrescrito.map((ex, i) => {
-                const estaconcluido = exerciciosConcluidos.includes(i);
+            <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 mb-2">Calendário de Treinos Semanal</p>
+
+            {/* Seletor Visual de Dias da Semana (Mobile Friendly) */}
+            <div className="flex gap-1.5 overflow-x-auto pb-2 scrollbar-none">
+              {DIAS_SEMANA.map((dia) => {
+                const diaAtualSistema = new Date().toLocaleDateString("pt-BR", { weekday: 'long' });
+                const ehHoje = diaAtualSistema.toLowerCase().includes(dia.toLowerCase().slice(0, 4));
+                const ativo = diaAbaAluno === dia;
+
+                return (
+                  <button
+                    key={dia}
+                    type="button"
+                    onClick={() => setDiaAbaAluno(dia)}
+                    className={`px-3 py-2 rounded-lg text-[11px] font-bold uppercase transition-all flex-shrink-0 border ${ativo
+                        ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-600/10'
+                        : ehHoje
+                          ? 'bg-neutral-900 border-blue-500/40 text-blue-400'
+                          : 'bg-[#16171d] border-neutral-800 text-neutral-400 hover:bg-neutral-800'
+                      }`}
+                  >
+                    {dia.slice(0, 3)} {ehHoje && "•"}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Renderização do treino do dia escolhido na aba */}
+            {(() => {
+              const rotinaDoDia = alunoLogado?.treinoSemanal?.find(t => t.dia === diaAbaAluno);
+
+              if (!rotinaDoDia || !rotinaDoDia.exercicios || rotinaDoDia.exercicios.length === 0) {
+                return (
+                  <div className="bg-[#16171d] border border-neutral-800 p-8 rounded-xl text-center shadow-xl">
+                    <p className="text-xs text-neutral-500 font-semibold uppercase font-mono">Nenhum treino para {diaAbaAluno}. Descanso! 🧘‍♂️</p>
+                  </div>
+                );
+              }
+
+              return rotinaDoDia.exercicios.map((ex, i) => {
+                const chaveUnica = `${diaAbaAluno}-${i}`; // Garante que o checkbox do exercício não misture com outro dia
+                const estaconcluido = exerciciosConcluidos.includes(chaveUnica);
                 return (
                   <div key={i} className={`bg-[#16171d] border transition-all rounded-xl overflow-hidden shadow-xl ${estaconcluido ? 'border-blue-500/30 opacity-60' : 'border-neutral-800'}`}>
                     <div className="p-5 flex items-start justify-between gap-4">
@@ -594,12 +801,12 @@ function App() {
                         <span className="bg-blue-500/10 text-blue-400 font-mono text-[10px] font-bold uppercase px-2 py-0.5 rounded">{ex.series} Séries × {ex.reps} Reps</span>
                         {ex.obs && <p className="text-xs text-neutral-400 mt-2 bg-[#0d0e12] border border-neutral-800 p-2 rounded-lg font-sans">📌 Obs: {ex.obs}</p>}
                       </div>
-                      <button type="button" onClick={() => alternarConclusaoExercicio(i)} className={`w-6 h-6 rounded-md border flex items-center justify-center font-bold text-xs transition-colors ${estaconcluido ? 'bg-blue-600 border-blue-500 text-white' : 'border-neutral-700 bg-transparent text-transparent hover:border-neutral-500'}`}>✓</button>
+                      <button type="button" onClick={() => alternarConclusaoExercicio(chaveUnica)} className={`w-6 h-6 rounded-md border flex items-center justify-center font-bold text-xs transition-colors ${estaconcluido ? 'bg-blue-600 border-blue-500 text-white' : 'border-neutral-700 bg-transparent text-transparent hover:border-neutral-500'}`}>✓</button>
                     </div>
                   </div>
                 );
-              })
-            )}
+              });
+            })()}
           </div>
         </main>
       </div>
