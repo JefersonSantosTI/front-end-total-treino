@@ -24,7 +24,7 @@ function App() {
 
   const [alunoEmEdicao, setAlunoEmEdicao] = useState(null);
   const [treinoForm, setTreinoForm] = useState([]);
-  const [dietaForm, setDietaForm] = useState([]); // ✅ NOVO ESTADO DA DIETA
+  const [dietaForm, setDietaForm] = useState([]);
 
   const [modalNovoAluno, setModalNovoAluno] = useState(false);
   const [novoAlunoForm, setNovoAlunoForm] = useState({ nome: "", whatsapp: "", objetivo: "Emagrecimento" });
@@ -174,7 +174,7 @@ function App() {
   const abrirGeradorTreino = (aluno) => {
     setAlunoEmEdicao(aluno);
     setTreinoForm(aluno.treinoPrescrito || []);
-    setDietaForm(aluno.dietaPrescrita || []); // ✅ Carrega a dieta existente do banco
+    setDietaForm(aluno.dietaPrescrita || []);
   };
 
   const adicionarExercicioForm = () => setTreinoForm([...treinoForm, { nome: "", series: 4, reps: "10", obs: "" }]);
@@ -183,7 +183,6 @@ function App() {
     const novoTreino = [...treinoForm]; novoTreino[index][campo] = valor; setTreinoForm(novoTreino);
   };
 
-  // ✅ Funções de formulário da Dieta
   const adicionarDietaForm = () => setDietaForm([...dietaForm, { refeicao: "", itens: "" }]);
   const removerDietaForm = (index) => setDietaForm(dietaForm.filter((_, i) => i !== index));
   const handleDietaChange = (index, campo, valor) => {
@@ -198,7 +197,7 @@ function App() {
     try {
       const response = await fetch(`${API_URL}/aluno/${alunoId}/prescrever`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ treinoPrescrito: treinoForm, dietaPrescrita: dietaForm }) // ✅ Envia Treino e Dieta
+        body: JSON.stringify({ treinoPrescrito: treinoForm, dietaPrescrita: dietaForm })
       });
 
       if (response.ok) {
@@ -350,16 +349,17 @@ function App() {
     );
   }
 
+  // --- RENDER DO PAINEL DO PERSONAL ---
   if (etapa === "personal") {
     const hojeDataStr = new Date().toLocaleDateString("pt-BR", { day: '2-digit', month: '2-digit' });
     return (
-      <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col p-6 overflow-y-auto font-sans z-40">
+      <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col p-4 md:p-6 overflow-y-auto font-sans z-40">
         <header className="w-full max-w-5xl mx-auto flex justify-between items-center border-b border-neutral-800 pb-4 mb-6">
           <div className="flex items-center gap-3"><div className="w-7 h-7 bg-neutral-800 border border-neutral-700 rounded flex items-center justify-center text-emerald-500 font-mono text-xs font-bold">TF</div><div><h2 className="text-sm font-bold text-white uppercase tracking-tight">{personalLogado?.nome}</h2><p className="text-[10px] text-neutral-500 font-mono">{personalLogado?.cref} • Assessoria Conectada</p></div></div>
-          <button type="button" onClick={() => setEtapa("triagem")} className="px-3 py-1.5 bg-neutral-900 border border-neutral-800 rounded-md hover:bg-neutral-800 text-[10px] text-neutral-400 font-bold uppercase transition-colors">Desconectar</button>
+          <button type="button" onClick={() => setEtapa("triagem")} className="px-3 py-1.5 bg-neutral-900 border border-neutral-800 rounded-md hover:bg-neutral-800 text-[10px] text-neutral-400 font-bold uppercase transition-colors">Sair</button>
         </header>
 
-        <main className="w-full max-w-5xl mx-auto flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+        <main className="w-full max-w-5xl mx-auto flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 items-start pb-10">
           <div className="md:col-span-1 bg-[#16171d] border border-neutral-800 rounded-xl p-5 shadow-xl">
             <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-4">Métricas da Assessoria</h3>
             <div className="grid grid-cols-3 gap-2 text-center">
@@ -369,48 +369,106 @@ function App() {
             </div>
           </div>
 
-          <div className="md:col-span-2 bg-[#16171d] border border-neutral-800 rounded-xl p-5 shadow-xl overflow-x-auto">
-            <div className="flex justify-between items-center mb-4">
+          <div className="md:col-span-2 bg-[#16171d] border border-neutral-800 rounded-xl p-4 md:p-5 shadow-xl">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
               <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400">Carteira de Clientes</h3>
-              <div>
+              <div className="flex gap-2">
                 <button type="button" onClick={() => {
                   const link = `${window.location.origin}?ref=${personalLogado?.cref?.replace(/\D/g, "") || "treinador"}`;
                   navigator.clipboard.writeText(link);
                   alert(`🔗 Link copiado com sucesso!\n\nEnvie este link no WhatsApp do seu aluno para ele realizar o auto-cadastro pela Inteligência Artificial:\n\n${link}`);
-                }} className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold px-3 py-1.5 rounded transition-colors uppercase mr-2 shadow-lg">🔗 Copiar Link IA</button>
-                <button type="button" onClick={() => setModalNovoAluno(true)} className="bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold px-3 py-1.5 rounded transition-colors uppercase shadow-lg">+ Novo Manual</button>
+                }} className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold px-3 py-2 sm:py-1.5 rounded transition-colors uppercase flex-1 sm:flex-none text-center shadow-lg">🔗 Link IA</button>
+                <button type="button" onClick={() => setModalNovoAluno(true)} className="bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold px-3 py-2 sm:py-1.5 rounded transition-colors uppercase flex-1 sm:flex-none text-center shadow-lg">+ Novo Manual</button>
               </div>
             </div>
 
-            <table className="w-full text-left border-collapse min-w-[600px]">
-              <thead>
-                <tr className="border-b border-neutral-800 text-[10px] uppercase text-neutral-500 tracking-wider">
-                  <th className="pb-3 font-semibold">Nome do Aluno</th><th className="pb-3 font-semibold">Objetivo</th><th className="pb-3 font-semibold">Status Planilha</th><th className="pb-3 font-semibold">Último Treino</th><th className="pb-3 font-semibold text-right">Ações Gerenciais</th>
-                </tr>
-              </thead>
-              <tbody className="text-xs divide-y divide-neutral-800/40">
-                {alunosPersonal.map((aluno) => {
-                  const idUnico = aluno.id || aluno._id;
-                  const fezCheckinHoje = aluno.checkins?.some(c => c.data === hojeDataStr);
-                  return (
-                    <tr key={idUnico} className={`hover:bg-neutral-800/20 transition-colors ${aluno.statusConta === 'Off' ? 'opacity-40' : ''}`}>
-                      <td className="py-3.5 font-medium text-white"><div>{aluno.nome}</div><div className="text-[10px] text-neutral-500 font-mono mt-0.5">{aluno.whatsapp}</div></td>
-                      <td className="py-3.5 text-neutral-400">{aluno.objetivo}</td>
-                      <td className="py-3.5"><span className={`px-2 py-0.5 rounded text-[9px] font-bold font-mono uppercase ${aluno.statusTreino === 'Rascunho IA' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : aluno.statusTreino === 'Enviado' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-neutral-800 text-neutral-400'}`}>{aluno.statusTreino}</span></td>
-                      <td className="py-3.5">{fezCheckinHoje ? <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded animate-pulse">🔥 Treinou Hoje!</span> : aluno.checkins && aluno.checkins.length > 0 ? <span className="text-[10px] font-mono text-neutral-400">Check-in: {aluno.checkins[0].data}</span> : <span className="text-[10px] text-neutral-600 font-mono">Nenhum treino</span>}</td>
-                      <td className="py-3.5 text-right space-x-2">
-                        <button type="button" onClick={() => abrirGeradorTreino(aluno)} className="bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase">{aluno.statusTreino === "Rascunho IA" ? "Revisar IA" : "Montar Treino"}</button>
-                        <button type="button" onClick={() => alterStatusContaAluno(idUnico, aluno.statusConta === "Ativo" ? "Off" : "Ativo")} className="border border-neutral-800 text-neutral-400 hover:bg-neutral-800 text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase">{aluno.statusConta === "Ativo" ? "Arquivar" : "Ativar"}</button>
-                        <button type="button" onClick={() => deletarAluno(idUnico)} className="text-red-500/70 hover:text-red-400 border border-neutral-800 hover:border-red-500/20 rounded font-bold text-[9px] py-1 px-2 uppercase">Excluir</button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            {/* ✅ VERSÃO DESKTOP: TABELA NORMAL (SÓ APARECE NO PC) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[600px]">
+                <thead>
+                  <tr className="border-b border-neutral-800 text-[10px] uppercase text-neutral-500 tracking-wider">
+                    <th className="pb-3 font-semibold">Nome do Aluno</th><th className="pb-3 font-semibold">Objetivo</th><th className="pb-3 font-semibold">Status Planilha</th><th className="pb-3 font-semibold">Último Treino</th><th className="pb-3 font-semibold text-right">Ações Gerenciais</th>
+                  </tr>
+                </thead>
+                <tbody className="text-xs divide-y divide-neutral-800/40">
+                  {alunosPersonal.map((aluno) => {
+                    const idUnico = aluno.id || aluno._id;
+                    const fezCheckinHoje = aluno.checkins?.some(c => c.data === hojeDataStr);
+                    return (
+                      <tr key={idUnico} className={`hover:bg-neutral-800/20 transition-colors ${aluno.statusConta === 'Off' ? 'opacity-40' : ''}`}>
+                        <td className="py-3.5 font-medium text-white"><div>{aluno.nome}</div><div className="text-[10px] text-neutral-500 font-mono mt-0.5">{aluno.whatsapp}</div></td>
+                        <td className="py-3.5 text-neutral-400">{aluno.objetivo}</td>
+                        <td className="py-3.5"><span className={`px-2 py-0.5 rounded text-[9px] font-bold font-mono uppercase ${aluno.statusTreino === 'Rascunho IA' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : aluno.statusTreino === 'Enviado' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-neutral-800 text-neutral-400'}`}>{aluno.statusTreino}</span></td>
+                        <td className="py-3.5">{fezCheckinHoje ? <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded animate-pulse">🔥 Treinou Hoje!</span> : aluno.checkins && aluno.checkins.length > 0 ? <span className="text-[10px] font-mono text-neutral-400">Check-in: {aluno.checkins[0].data}</span> : <span className="text-[10px] text-neutral-600 font-mono">Nenhum treino</span>}</td>
+                        <td className="py-3.5 text-right space-x-2">
+                          <button type="button" onClick={() => abrirGeradorTreino(aluno)} className="bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase">{aluno.statusTreino === "Rascunho IA" ? "Revisar IA" : "Montar Treino"}</button>
+                          <button type="button" onClick={() => alterStatusContaAluno(idUnico, aluno.statusConta === "Ativo" ? "Off" : "Ativo")} className="border border-neutral-800 text-neutral-400 hover:bg-neutral-800 text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase">{aluno.statusConta === "Ativo" ? "Arquivar" : "Ativar"}</button>
+                          <button type="button" onClick={() => deletarAluno(idUnico)} className="text-red-500/70 hover:text-red-400 border border-neutral-800 hover:border-red-500/20 rounded font-bold text-[9px] py-1 px-2 uppercase">Excluir</button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* ✅ VERSÃO MOBILE: CARDS RESPONSIVOS (SÓ APARECE NO CELULAR) */}
+            <div className="md:hidden flex flex-col space-y-4">
+              {alunosPersonal.map((aluno) => {
+                const idUnico = aluno.id || aluno._id;
+                const fezCheckinHoje = aluno.checkins?.some(c => c.data === hojeDataStr);
+                return (
+                  <div key={idUnico} className={`bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl flex flex-col space-y-3 ${aluno.statusConta === 'Off' ? 'opacity-50' : ''}`}>
+                    {/* Topo do Card Mobile */}
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-bold text-white text-sm">{aluno.nome}</p>
+                        <p className="text-[10px] text-neutral-500 font-mono mt-0.5">{aluno.whatsapp}</p>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded text-[9px] font-bold font-mono uppercase text-center ${aluno.statusTreino === 'Rascunho IA' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : aluno.statusTreino === 'Enviado' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-neutral-800 text-neutral-400'}`}>
+                        {aluno.statusTreino}
+                      </span>
+                    </div>
+
+                    {/* Meio: Infos do Aluno */}
+                    <div className="grid grid-cols-2 gap-2 bg-[#16171d] p-2.5 rounded-lg border border-neutral-800/50">
+                      <div>
+                        <p className="text-[9px] uppercase text-neutral-500 font-bold mb-0.5">Objetivo</p>
+                        <p className="text-xs text-neutral-300 truncate">{aluno.objetivo}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] uppercase text-neutral-500 font-bold mb-0.5">Último Treino</p>
+                        {fezCheckinHoje ? (
+                          <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded animate-pulse">🔥 Hoje!</span>
+                        ) : aluno.checkins && aluno.checkins.length > 0 ? (
+                          <span className="text-[10px] font-mono text-neutral-400">{aluno.checkins[0].data}</span>
+                        ) : (
+                          <span className="text-[10px] text-neutral-600 font-mono">Nenhum</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Base: Botões Acessíveis no Mobile */}
+                    <div className="pt-1 flex gap-2">
+                      <button type="button" onClick={() => abrirGeradorTreino(aluno)} className="bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold py-2 rounded transition-colors uppercase flex-1 shadow-lg text-center">
+                        {aluno.statusTreino === "Rascunho IA" ? "Revisar IA" : "Editar Plano"}
+                      </button>
+                      <button type="button" onClick={() => alterStatusContaAluno(idUnico, aluno.statusConta === "Ativo" ? "Off" : "Ativo")} className="border border-neutral-800 text-neutral-400 hover:bg-neutral-800 text-[10px] font-bold py-2 rounded transition-colors uppercase flex-1 text-center">
+                        {aluno.statusConta === "Ativo" ? "Arquivar" : "Ativar"}
+                      </button>
+                      <button type="button" onClick={() => deletarAluno(idUnico)} className="text-red-500/70 hover:text-red-400 border border-neutral-800 hover:border-red-500/20 rounded font-bold text-[11px] py-2 px-3 uppercase transition-colors text-center">
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
           </div>
         </main>
 
+        {/* --- MODAIS CONTINUAM INTACTOS AQUI --- */}
         {modalNovoAluno && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="w-full max-w-sm bg-[#16171d] border border-neutral-800 rounded-2xl shadow-2xl p-6">
@@ -432,17 +490,17 @@ function App() {
         {alunoEmEdicao && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="w-full max-w-3xl bg-[#16171d] border border-neutral-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-              <header className="p-5 border-b border-neutral-800 flex justify-between items-center bg-[#1c1d26]"><div><span className="text-[10px] text-emerald-500 font-mono font-bold uppercase tracking-wider">Prescrevendo Plano Pro</span><h3 className="text-base font-bold text-white uppercase">{alunoEmEdicao.nome}</h3></div><button type="button" onClick={() => setAlunoEmEdicao(null)} className="text-neutral-400 hover:text-white text-sm uppercase font-mono font-bold">Fechar ✕</button></header>
-              <form onSubmit={salvarTreinoPersonal} className="flex-1 overflow-y-auto p-6 space-y-6">
+              <header className="p-4 md:p-5 border-b border-neutral-800 flex justify-between items-center bg-[#1c1d26]"><div><span className="text-[10px] text-emerald-500 font-mono font-bold uppercase tracking-wider">Prescrevendo Plano Pro</span><h3 className="text-base font-bold text-white uppercase">{alunoEmEdicao.nome}</h3></div><button type="button" onClick={() => setAlunoEmEdicao(null)} className="text-neutral-400 hover:text-white text-sm uppercase font-mono font-bold">Fechar ✕</button></header>
+              <form onSubmit={salvarTreinoPersonal} className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
 
                 {/* ÁREA DE TREINO */}
                 <div>
-                  <div className="flex justify-between items-center pb-2 border-b border-neutral-800/60 mb-3"><p className="text-xs font-bold uppercase tracking-wider text-neutral-400">Estrutura de Exercícios</p><button type="button" onClick={adicionarExercicioForm} className="bg-emerald-600/10 text-emerald-500 border border-emerald-500/20 text-[10px] font-bold px-3 py-1.5 rounded hover:bg-emerald-600/20 transition-all uppercase">+ Adicionar Exercício</button></div>
+                  <div className="flex justify-between items-center pb-2 border-b border-neutral-800/60 mb-3"><p className="text-xs font-bold uppercase tracking-wider text-neutral-400">Estrutura de Exercícios</p><button type="button" onClick={adicionarExercicioForm} className="bg-emerald-600/10 text-emerald-500 border border-emerald-500/20 text-[10px] font-bold px-3 py-1.5 rounded hover:bg-emerald-600/20 transition-all uppercase">+ Exercício</button></div>
                   <div className="space-y-3">
                     {treinoForm.map((ex, idx) => (
                       <div key={idx} className="bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl space-y-3 relative group">
                         <button type="button" onClick={() => removerExercicioForm(idx)} className="absolute top-3 right-3 text-neutral-600 hover:text-red-400 text-[10px] uppercase font-mono tracking-wider transition-colors">Remover</button>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 sm:pt-0">
                           <div className="sm:col-span-1"><label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Movimento</label><input required type="text" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ex.nome} onChange={(e) => handleExercicioChange(idx, "nome", e.target.value)} /></div>
                           <div><label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Séries</label><input required type="number" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ex.series} onChange={(e) => handleExercicioChange(idx, "series", Number(e.target.value))} /></div>
                           <div><label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Repetições/Tempo</label><input required type="text" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ex.reps} onChange={(e) => handleExercicioChange(idx, "reps", e.target.value)} /></div>
@@ -453,21 +511,21 @@ function App() {
                   </div>
                 </div>
 
-                {/* ✅ NOVO: ÁREA DE DIETA (Personal edita aqui) */}
+                {/* ÁREA DE DIETA */}
                 <div className="pt-4 border-t border-neutral-800/60">
-                  <div className="flex justify-between items-center pb-2 border-b border-neutral-800/60 mb-3"><p className="text-xs font-bold uppercase tracking-wider text-neutral-400">Planejamento Nutricional</p><button type="button" onClick={adicionarDietaForm} className="bg-blue-600/10 text-blue-500 border border-blue-500/20 text-[10px] font-bold px-3 py-1.5 rounded hover:bg-blue-600/20 transition-all uppercase">+ Adicionar Refeição</button></div>
+                  <div className="flex justify-between items-center pb-2 border-b border-neutral-800/60 mb-3"><p className="text-xs font-bold uppercase tracking-wider text-neutral-400">Planejamento Nutricional</p><button type="button" onClick={adicionarDietaForm} className="bg-blue-600/10 text-blue-500 border border-blue-500/20 text-[10px] font-bold px-3 py-1.5 rounded hover:bg-blue-600/20 transition-all uppercase">+ Refeição</button></div>
                   <div className="space-y-3">
                     {dietaForm.map((ref, idx) => (
-                      <div key={idx} className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl flex gap-3 relative items-center">
-                        <div className="w-1/3"><label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Horário/Refeição</label><input required type="text" placeholder="Ex: Almoço" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ref.refeicao} onChange={(e) => handleDietaChange(idx, "refeicao", e.target.value)} /></div>
-                        <div className="w-2/3"><label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Alimentos e Gramas</label><input required type="text" placeholder="Ex: 100g Frango + 100g Arroz + Salada" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ref.itens} onChange={(e) => handleDietaChange(idx, "itens", e.target.value)} /></div>
-                        <button type="button" onClick={() => removerDietaForm(idx)} className="text-neutral-600 hover:text-red-400 font-bold text-sm ml-1">✕</button>
+                      <div key={idx} className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl flex flex-col sm:flex-row gap-3 relative sm:items-center">
+                        <div className="w-full sm:w-1/3"><label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Horário/Refeição</label><input required type="text" placeholder="Ex: Almoço" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ref.refeicao} onChange={(e) => handleDietaChange(idx, "refeicao", e.target.value)} /></div>
+                        <div className="w-full sm:w-2/3"><label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Alimentos e Gramas</label><input required type="text" placeholder="Ex: 100g Frango + 100g Arroz + Salada" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ref.itens} onChange={(e) => handleDietaChange(idx, "itens", e.target.value)} /></div>
+                        <button type="button" onClick={() => removerDietaForm(idx)} className="absolute top-2 right-2 sm:static sm:mt-4 text-neutral-600 hover:text-red-400 font-bold text-sm ml-1">✕</button>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <footer className="pt-4 border-t border-neutral-800 flex gap-3 justify-end text-xs font-bold"><button type="button" onClick={() => setAlunoEmEdicao(null)} className="bg-transparent border border-neutral-800 text-neutral-400 p-3 rounded-xl uppercase tracking-wider hover:bg-neutral-800 transition-colors">Cancelar</button><button type="submit" className="bg-emerald-600 hover:bg-emerald-500 text-white p-3 rounded-xl uppercase tracking-wider transition-colors shadow-lg px-6">Salvar e Enviar Plano</button></footer>
+                <footer className="pt-4 border-t border-neutral-800 flex gap-3 justify-end text-xs font-bold"><button type="button" onClick={() => setAlunoEmEdicao(null)} className="bg-transparent border border-neutral-800 text-neutral-400 p-3 rounded-xl uppercase tracking-wider hover:bg-neutral-800 transition-colors">Cancelar</button><button type="submit" className="bg-emerald-600 hover:bg-emerald-500 text-white p-3 rounded-xl uppercase tracking-wider transition-colors shadow-lg px-6">Salvar e Enviar</button></footer>
               </form>
             </div>
           </div>
@@ -491,7 +549,6 @@ function App() {
             <button type="button" onClick={ejecutarCheckin} className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-3 rounded-lg text-xs uppercase tracking-wider transition-colors shadow-lg">Confirmar Treino Hoje</button>
           </div>
 
-          {/* ✅ NOVO: EXIBIR DIETA PARA O ALUNO */}
           {alunoLogado?.dietaPrescrita && alunoLogado.dietaPrescrita.length > 0 && (
             <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl space-y-3">
               <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400 mb-2">🍽️ Seu Plano Alimentar</p>
@@ -533,7 +590,6 @@ function App() {
     );
   }
 
-  // --- RENDER DO USUÁRIO FINAL E MÓDULO CONSULTORIA (INALTERADO) ---
   if (etapa === "home") {
     return (
       <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col overflow-hidden font-sans z-30">
@@ -583,7 +639,6 @@ function App() {
     );
   }
 
-  // ✅ TELA DO LINK DO ALUNO (VIA IA)
   if (etapa === "matricula_externa") {
     return (
       <div className="fixed inset-0 bg-[#0d0e12] flex flex-col items-center justify-center p-6 text-white font-sans z-50 overflow-y-auto">
