@@ -40,8 +40,11 @@ function App() {
   const [modalNovoAluno, setModalNovoAluno] = useState(false);
   const [novoAlunoForm, setNovoAlunoForm] = useState({ nome: "", whatsapp: "", objetivo: "Emagrecimento" });
 
+  // ✅ ATUALIZADO: O estado perfil agora recebe as variáveis da Anamnese de Elite
   const [perfil, setPerfil] = useState({
-    nome: "Guerreiro(a)", peso: "0", altura: "0", idade: "0", meta: "Emagrecimento", imc: "0", tmb: "0", faltam: "0"
+    nome: "Guerreiro(a)", peso: "0", altura: "0", idade: "0", meta: "Emagrecimento",
+    genero: "Masculino", nivel: "Intermediário", diasTreino: "5", restricoes: "", lesoes: "",
+    imc: "0", tmb: "0", faltam: "0"
   });
 
   const API_URL = "https://api-backend-treino-fit.onrender.com/api";
@@ -112,7 +115,19 @@ function App() {
           setEtapa("onboarding");
         } else {
           const saude = calcularSaude(dados.peso, dados.altura, dados.idade);
-          setPerfil({ nome: dados.nome || "Guerreiro(a)", peso: String(dados.peso), altura: String(dados.altura), idade: String(dados.idade || 25), meta: dados.meta || "Emagrecimento", ...saude });
+          setPerfil({
+            nome: dados.nome || "Guerreiro(a)",
+            peso: String(dados.peso),
+            altura: String(dados.altura),
+            idade: String(dados.idade || 25),
+            meta: dados.meta || "Emagrecimento",
+            genero: dados.genero || "Masculino",
+            nivel: dados.nivel || "Intermediário",
+            diasTreino: dados.diasTreino || "5",
+            restricoes: dados.restricoes || "",
+            lesoes: dados.lesoes || "",
+            ...saude
+          });
           setIsVip(dados.pago === true);
           setTreinoIAPescado(dados.treinoIA || null);
           setEtapa("home");
@@ -233,27 +248,24 @@ function App() {
     } catch { alert("Erro ao alterar status no servidor."); }
   };
 
-  // ✅ ATUALIZADO: Carrega a estrutura de calendário semanal
   const abrirGeradorTreino = (aluno) => {
     setAlunoEmEdicao(aluno);
 
     if (aluno.treinoSemanal && aluno.treinoSemanal.length > 0) {
       setTreinoForm(aluno.treinoSemanal);
     } else {
-      // Cria a estrutura vazia de Segunda a Domingo para o Personal preencher
       const estruturaSemanal = DIAS_SEMANA.map(dia => ({
         dia,
-        exercicios: dia === "Segunda" ? (aluno.treinoPrescrito || []) : [] // Mantém os exercícios antigos na segunda por segurança
+        exercicios: dia === "Segunda" ? (aluno.treinoPrescrito || []) : []
       }));
       setTreinoForm(estruturaSemanal);
     }
 
     setDietaForm(aluno.dietaPrescrita || []);
     setAguaForm(aluno.metaAgua || "");
-    setDiaAbaPersonal("Segunda"); // Sempre abre na aba da segunda
+    setDiaAbaPersonal("Segunda");
   };
 
-  // ✅ ATUALIZADO: Manipulação de exercícios agora foca APENAS no dia selecionado (diaAbaPersonal)
   const adicionarExercicioForm = () => {
     setTreinoForm(prev => prev.map(diaObj => {
       if (diaObj.dia === diaAbaPersonal) {
@@ -289,7 +301,6 @@ function App() {
     const novaDieta = [...dietaForm]; novaDieta[index][campo] = valor; setDietaForm(novaDieta);
   };
 
-  // ✅ ATUALIZADO: Salva o Treino Semanal na Nuvem
   const salvarTreinoPersonal = async (e) => {
     e.preventDefault();
     const alunoId = alunoEmEdicao.id || alunoEmEdicao._id;
@@ -338,7 +349,6 @@ function App() {
     } catch { alert("Erro ao conectar com o portal da assessoria."); }
   };
 
-  // ✅ ATUALIZADO: Lida com conclusão de exercícios baseado na chave (Dia + Index)
   const alternarConclusaoExercicio = (chaveUnica) => {
     if (exerciciosConcluidos.includes(chaveUnica)) {
       setExerciciosConcluidos(exerciciosConcluidos.filter(id => id !== chaveUnica));
@@ -370,13 +380,26 @@ function App() {
     } catch { alert("Erro ao enviar check-in para o servidor."); }
   };
 
+  // ✅ ATUALIZADO: Salva o onboarding com os novos dados de Elite
   const salvarOnboarding = async (e) => {
     e.preventDefault();
     if (!perfil.nome || !perfil.peso || !perfil.altura || !perfil.idade) { alert("Preencha todos os campos!"); return; }
     try {
       const response = await fetch(`${API_URL}/usuarios/atualizar`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ whatsapp: usuario, nome: perfil.nome, peso: Number(perfil.peso), altura: Number(perfil.altura), meta: perfil.meta, idade: Number(perfil.idade) })
+        body: JSON.stringify({
+          whatsapp: usuario,
+          nome: perfil.nome,
+          peso: Number(perfil.peso),
+          altura: Number(perfil.altura),
+          meta: perfil.meta,
+          idade: Number(perfil.idade),
+          genero: perfil.genero,
+          nivel: perfil.nivel,
+          diasTreino: perfil.diasTreino,
+          restricoes: perfil.restricoes,
+          lesoes: perfil.lesoes
+        })
       });
       if (response.ok) {
         const saude = calcularSaude(perfil.peso, perfil.altura, perfil.idade);
@@ -425,32 +448,21 @@ function App() {
   }
 
   if (etapa === "login_personal") {
-    // ✅ Chave oficial do Google configurada com sucesso!
     const GOOGLE_CLIENT_ID = "588566756758-75ic5m03ser1af56tr26gkeenh8qn9nc.apps.googleusercontent.com";
-
     return (
       <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
         <div className="fixed inset-0 bg-[#0d0e12] flex flex-col items-center justify-center p-6 text-white font-sans z-50">
           <div className="w-full max-w-sm bg-[#16171d] border border-neutral-800 p-8 rounded-2xl shadow-2xl">
-
-            {/* ESTADO 1: A pessoa AINDA NÃO clicou no botão do Google */}
             {!googleUser ? (
               <>
                 <h2 className="text-md font-bold uppercase tracking-tight text-neutral-200 mb-1">Acesso Técnico</h2>
                 <p className="text-neutral-500 text-xs mb-8">Autentique-se com sua conta Google profissional.</p>
                 <div className="flex justify-center mb-6">
-                  <GoogleLogin
-                    onSuccess={handleGoogleSuccess}
-                    onError={() => alert('Falha no Login do Google')}
-                    theme="filled_black"
-                    text="continue_with"
-                  />
+                  <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => alert('Falha no Login do Google')} theme="filled_black" text="continue_with" />
                 </div>
                 <button type="button" onClick={() => setEtapa("triagem")} className="w-full bg-transparent border border-neutral-800 hover:bg-neutral-800 p-4 rounded-xl text-xs uppercase tracking-wider text-neutral-400 transition-colors font-bold">Voltar</button>
               </>
             ) : (
-
-              /* ESTADO 2: O Google confirmou quem é, mas é o primeiro acesso (Falta o CREF) */
               <>
                 <div className="flex items-center gap-3 mb-4">
                   <img src={googleUser.foto} alt="Perfil" className="w-10 h-10 rounded-full border border-emerald-500" />
@@ -460,7 +472,6 @@ function App() {
                   </div>
                 </div>
                 <p className="text-neutral-400 text-[11px] mb-5 leading-relaxed">Este é o seu primeiro acesso. Para ativar a sua licença no sistema Treino Fit, insira o seu registo profissional.</p>
-
                 <form onSubmit={handleCadastrarCref} className="space-y-4">
                   <input required type="text" placeholder="Registro CREF (Ex: 123456-G/SP)" className="w-full bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl text-sm font-medium outline-none focus:border-neutral-700 text-white" value={cref} onChange={(e) => setCref(e.target.value)} />
                   <div className="flex gap-3 text-xs font-bold">
@@ -470,7 +481,6 @@ function App() {
                 </form>
               </>
             )}
-
           </div>
         </div>
       </GoogleOAuthProvider>
@@ -491,7 +501,6 @@ function App() {
     );
   }
 
-  // --- RENDER DO PAINEL DO PERSONAL ---
   if (etapa === "personal") {
     const hojeDataStr = new Date().toLocaleDateString("pt-BR", { day: '2-digit', month: '2-digit' });
     return (
@@ -524,7 +533,6 @@ function App() {
               </div>
             </div>
 
-            {/* ✅ VERSÃO DESKTOP: TABELA NORMAL (SÓ APARECE NO PC) */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left border-collapse min-w-[600px]">
                 <thead>
@@ -554,14 +562,12 @@ function App() {
               </table>
             </div>
 
-            {/* ✅ VERSÃO MOBILE: CARDS RESPONSIVOS (SÓ APARECE NO CELULAR) */}
             <div className="md:hidden flex flex-col space-y-4">
               {alunosPersonal.map((aluno) => {
                 const idUnico = aluno.id || aluno._id;
                 const fezCheckinHoje = aluno.checkins?.some(c => c.data === hojeDataStr);
                 return (
                   <div key={idUnico} className={`bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl flex flex-col space-y-3 ${aluno.statusConta === 'Off' ? 'opacity-50' : ''}`}>
-                    {/* Topo do Card Mobile */}
                     <div className="flex justify-between items-start">
                       <div>
                         <p className="font-bold text-white text-sm">{aluno.nome}</p>
@@ -572,7 +578,6 @@ function App() {
                       </span>
                     </div>
 
-                    {/* Meio: Infos do Aluno */}
                     <div className="grid grid-cols-2 gap-2 bg-[#16171d] p-2.5 rounded-lg border border-neutral-800/50">
                       <div>
                         <p className="text-[9px] uppercase text-neutral-500 font-bold mb-0.5">Objetivo</p>
@@ -590,7 +595,6 @@ function App() {
                       </div>
                     </div>
 
-                    {/* Base: Botões Acessíveis no Mobile */}
                     <div className="pt-1 flex gap-2">
                       <button type="button" onClick={() => abrirGeradorTreino(aluno)} className="bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold py-2 rounded transition-colors uppercase flex-1 shadow-lg text-center">
                         {aluno.statusTreino === "Rascunho IA" ? "Revisar IA" : "Editar Plano"}
@@ -610,7 +614,6 @@ function App() {
           </div>
         </main>
 
-        {/* --- MODAIS CONTINUAM INTACTOS AQUI --- */}
         {modalNovoAluno && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="w-full max-w-sm bg-[#16171d] border border-neutral-800 rounded-2xl shadow-2xl p-6">
@@ -635,17 +638,14 @@ function App() {
               <header className="p-4 md:p-5 border-b border-neutral-800 flex justify-between items-center bg-[#1c1d26]"><div><span className="text-[10px] text-emerald-500 font-mono font-bold uppercase tracking-wider">Prescrevendo Plano Pro</span><h3 className="text-base font-bold text-white uppercase">{alunoEmEdicao.nome}</h3></div><button type="button" onClick={() => setAlunoEmEdicao(null)} className="text-neutral-400 hover:text-white text-sm uppercase font-mono font-bold">Fechar ✕</button></header>
               <form onSubmit={salvarTreinoPersonal} className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
 
-                {/* ✅ INPUT DA ÁGUA EDITÁVEL PELO PERSONAL */}
                 <div className="bg-[#0d0e12] p-4 rounded-xl border border-blue-500/20">
                   <label className="text-[10px] uppercase font-bold text-blue-400 block mb-2">💧 Meta de Hidratação Diária (Calculada pela IA)</label>
                   <input required type="text" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-sm text-white font-bold" value={aguaForm} onChange={(e) => setAguaForm(e.target.value)} />
                 </div>
 
-                {/* ✅ ÁREA DE TREINO COM ABAS SEMANAIS (PERSONAL) */}
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-3 border-b border-neutral-800/60 pb-2">Estrutura de Exercícios Semanal</p>
 
-                  {/* ABAS DOS DIAS DA SEMANA */}
                   <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-neutral-800/40 mb-4">
                     {DIAS_SEMANA.map(dia => (
                       <button
@@ -689,7 +689,6 @@ function App() {
                   </div>
                 </div>
 
-                {/* ÁREA DE DIETA */}
                 <div className="pt-4 border-t border-neutral-800/60">
                   <div className="flex justify-between items-center pb-2 border-b border-neutral-800/60 mb-3"><p className="text-xs font-bold uppercase tracking-wider text-neutral-400">Planejamento Nutricional</p><button type="button" onClick={adicionarDietaForm} className="bg-blue-600/10 text-blue-500 border border-blue-500/20 text-[10px] font-bold px-3 py-1.5 rounded hover:bg-blue-600/20 transition-all uppercase">+ Refeição</button></div>
                   <div className="space-y-3">
@@ -712,7 +711,6 @@ function App() {
     );
   }
 
-  // --- RENDER DO PORTAL DO ALUNO PRO ---
   if (etapa === "aluno") {
     return (
       <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col p-6 overflow-y-auto font-sans z-40">
@@ -727,7 +725,6 @@ function App() {
             <button type="button" onClick={ejecutarCheckin} className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-3 rounded-lg text-xs uppercase tracking-wider transition-colors shadow-lg">Confirmar Treino Hoje</button>
           </div>
 
-          {/* ✅ CARD DA ÁGUA PARA O ALUNO VER */}
           {alunoLogado?.metaAgua && (
             <div className="bg-blue-600/10 border border-blue-500/20 p-5 rounded-xl shadow-xl flex items-center justify-between">
               <div><p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">💧 Hidratação Diária</p><h3 className="text-xl font-bold text-white mt-1">{alunoLogado.metaAgua}</h3></div>
@@ -749,11 +746,9 @@ function App() {
             </div>
           )}
 
-          {/* ✅ TELA DO CALENDÁRIO PARA O ALUNO VISUALIZAR O TREINO */}
           <div className="space-y-3">
             <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 mb-2">Calendário de Treinos Semanal</p>
 
-            {/* Seletor Visual de Dias da Semana (Mobile Friendly) */}
             <div className="flex gap-1.5 overflow-x-auto pb-2 scrollbar-none">
               {DIAS_SEMANA.map((dia) => {
                 const diaAtualSistema = new Date().toLocaleDateString("pt-BR", { weekday: 'long' });
@@ -778,7 +773,6 @@ function App() {
               })}
             </div>
 
-            {/* Renderização do treino do dia escolhido na aba */}
             {(() => {
               const rotinaDoDia = alunoLogado?.treinoSemanal?.find(t => t.dia === diaAbaAluno);
 
@@ -791,7 +785,7 @@ function App() {
               }
 
               return rotinaDoDia.exercicios.map((ex, i) => {
-                const chaveUnica = `${diaAbaAluno}-${i}`; // Garante que o checkbox do exercício não misture com outro dia
+                const chaveUnica = `${diaAbaAluno}-${i}`;
                 const estaconcluido = exerciciosConcluidos.includes(chaveUnica);
                 return (
                   <div key={i} className={`bg-[#16171d] border transition-all rounded-xl overflow-hidden shadow-xl ${estaconcluido ? 'border-blue-500/30 opacity-60' : 'border-neutral-800'}`}>
@@ -862,10 +856,11 @@ function App() {
     );
   }
 
+  // ✅ ATUALIZADO: Tela de matrícula via LINK DA IA
   if (etapa === "matricula_externa") {
     return (
       <div className="fixed inset-0 bg-[#0d0e12] flex flex-col items-center justify-center p-6 text-white font-sans z-50 overflow-y-auto">
-        <div className="w-full max-w-md bg-[#16171d] border border-neutral-800 p-8 rounded-2xl shadow-2xl">
+        <div className="w-full max-w-md bg-[#16171d] border border-neutral-800 p-8 rounded-2xl shadow-2xl my-auto">
           <div className="text-center mb-6"><span className="text-4xl mb-3 block">🤖</span><h2 className="text-lg font-bold uppercase tracking-tight text-emerald-500">Auto-Avaliação IA</h2><p className="text-neutral-400 text-[11px] mt-2">Preencha sua biometria para a Inteligência Artificial estruturar a base do seu treino e dieta.</p></div>
           <form onSubmit={async (e) => {
             e.preventDefault();
@@ -880,11 +875,37 @@ function App() {
           }} className="space-y-4">
             <input required type="text" placeholder="Nome Completo" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, nome: e.target.value })} />
             <input required type="text" placeholder="WhatsApp (Apenas Números)" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setNovoAlunoForm({ ...novoAlunoForm, whatsapp: e.target.value })} />
-            <div className="grid grid-cols-2 gap-3"><input required type="number" step="0.1" placeholder="Peso (kg)" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, peso: e.target.value })} /><input required type="number" step="0.01" placeholder="Altura (m)" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, altura: e.target.value })} /></div>
-            <div className="grid grid-cols-2 gap-3">
+
+            {/* Linha 1: Peso, Altura, Idade */}
+            <div className="grid grid-cols-3 gap-3">
+              <input required type="number" step="0.1" placeholder="Peso (kg)" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, peso: e.target.value })} />
+              <input required type="number" step="0.01" placeholder="Altura (m)" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, altura: e.target.value })} />
               <input required type="number" placeholder="Idade" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, idade: e.target.value })} />
-              <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none text-neutral-400 focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, meta: e.target.value })}><option value="">Selecione a Meta</option><option value="Emagrecimento">Emagrecimento</option><option value="Hipertrofia">Hipertrofia</option><option value="Performance">Performance</option></select>
             </div>
+
+            {/* Linha 2: Gênero e Meta */}
+            <div className="grid grid-cols-2 gap-3">
+              <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none text-neutral-400 focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, genero: e.target.value })}>
+                <option value="">Gênero Biológico</option><option value="Masculino">Masculino</option><option value="Feminino">Feminino</option>
+              </select>
+              <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none text-neutral-400 focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, meta: e.target.value })}>
+                <option value="">Objetivo Principal</option><option value="Emagrecimento">Emagrecimento</option><option value="Hipertrofia">Hipertrofia</option><option value="Performance">Performance</option>
+              </select>
+            </div>
+
+            {/* Linha 3: Nível e Dias de Treino */}
+            <div className="grid grid-cols-2 gap-3">
+              <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none text-neutral-400 focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, nivel: e.target.value })}>
+                <option value="">Nível de Treino</option><option value="Iniciante">Iniciante</option><option value="Intermediário">Intermediário</option><option value="Avançado">Avançado</option>
+              </select>
+              <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none text-neutral-400 focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, diasTreino: e.target.value })}>
+                <option value="">Dias de Treino/Semana</option><option value="3">3 Dias</option><option value="4">4 Dias</option><option value="5">5 Dias</option><option value="6">6 Dias</option>
+              </select>
+            </div>
+
+            <input type="text" placeholder="Restrições Alimentares? (Ex: Vegano, Lactose...)" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, restricoes: e.target.value })} />
+            <input type="text" placeholder="Lesões ou Dores? (Ex: Dor na lombar, Joelho...)" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, lesoes: e.target.value })} />
+
             <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-xl uppercase tracking-wider font-bold text-xs shadow-lg mt-4 transition-all">⚡ Gerar Diagnóstico com IA</button>
           </form>
         </div>
@@ -892,15 +913,51 @@ function App() {
     );
   }
 
+  // ✅ ATUALIZADO: Tela de Onboarding manual
   if (etapa === "onboarding") {
     return (
       <div className="fixed inset-0 bg-[#0d0e12] flex flex-col items-center justify-center p-8 text-white z-50 overflow-y-auto font-sans">
-        <div className="w-full max-w-sm bg-[#16171d] border border-neutral-800 p-8 rounded-2xl shadow-2xl">
-          <h2 className="text-md font-bold mb-1 uppercase tracking-tight text-neutral-200">Parâmetros Iniciais</h2><p className="text-neutral-500 text-xs mb-5">Monte seu perfil básico para a Inteligência Artificial.</p>
+        <div className="w-full max-w-sm bg-[#16171d] border border-neutral-800 p-8 rounded-2xl shadow-2xl my-auto">
+          <h2 className="text-md font-bold mb-1 uppercase tracking-tight text-neutral-200">Parâmetros Iniciais</h2><p className="text-neutral-500 text-xs mb-5">Monte seu perfil para a Inteligência Artificial.</p>
           <form onSubmit={salvarOnboarding} className="space-y-4">
+
             <div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Nome Completo</label><input required type="text" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.nome} onChange={(e) => setPerfil({ ...perfil, nome: e.target.value })} /></div>
-            <div className="grid grid-cols-2 gap-3"><div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Peso (kg)</label><input required type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.peso} onChange={(e) => setPerfil({ ...perfil, peso: e.target.value })} /></div><div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Altura (m)</label><input required type="number" step="0.01" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.altura} onChange={(e) => setPerfil({ ...perfil, altura: e.target.value })} /></div></div>
-            <div className="grid grid-cols-2 gap-3"><div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Idade</label><input required type="number" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.idade} onChange={(e) => setPerfil({ ...perfil, idade: e.target.value })} /></div><div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Objetivo</label><select className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.meta} onChange={(e) => setPerfil({ ...perfil, meta: e.target.value })}><option value="Emagrecimento">Emagrecimento</option><option value="Hipertrofia">Hipertrofia</option><option value="Definição">Definição Muscular</option><option value="Performance">Performance Esportiva</option></select></div></div>
+
+            <div className="grid grid-cols-3 gap-3">
+              <div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Peso(kg)</label><input required type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.peso} onChange={(e) => setPerfil({ ...perfil, peso: e.target.value })} /></div>
+              <div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Altura(m)</label><input required type="number" step="0.01" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.altura} onChange={(e) => setPerfil({ ...perfil, altura: e.target.value })} /></div>
+              <div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Idade</label><input required type="number" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.idade} onChange={(e) => setPerfil({ ...perfil, idade: e.target.value })} /></div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Gênero</label>
+                <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.genero} onChange={(e) => setPerfil({ ...perfil, genero: e.target.value })}>
+                  <option value="Masculino">Masculino</option><option value="Feminino">Feminino</option>
+                </select>
+              </div>
+              <div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Objetivo</label>
+                <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.meta} onChange={(e) => setPerfil({ ...perfil, meta: e.target.value })}>
+                  <option value="Emagrecimento">Emagrecimento</option><option value="Hipertrofia">Hipertrofia</option><option value="Performance">Performance</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Nível</label>
+                <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.nivel} onChange={(e) => setPerfil({ ...perfil, nivel: e.target.value })}>
+                  <option value="Iniciante">Iniciante</option><option value="Intermediário">Intermediário</option><option value="Avançado">Avançado</option>
+                </select>
+              </div>
+              <div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Dias Treino</label>
+                <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.diasTreino} onChange={(e) => setPerfil({ ...perfil, diasTreino: e.target.value })}>
+                  <option value="3">3 Dias</option><option value="4">4 Dias</option><option value="5">5 Dias</option><option value="6">6 Dias</option>
+                </select>
+              </div>
+            </div>
+
+            <div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Restrições Alimentares?</label><input type="text" placeholder="Ex: Vegano, Sem Lactose..." className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.restricoes} onChange={(e) => setPerfil({ ...perfil, restricoes: e.target.value })} /></div>
+            <div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Lesões ou Dores?</label><input type="text" placeholder="Ex: Dor no Joelho, Lombar..." className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.lesoes} onChange={(e) => setPerfil({ ...perfil, lesoes: e.target.value })} /></div>
+
             <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-xl uppercase tracking-wider font-bold text-xs transition-colors shadow-lg mt-2">Salvar e Entrar</button>
           </form>
         </div>
