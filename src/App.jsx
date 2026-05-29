@@ -8,14 +8,12 @@ function App() {
   const [usuario, setUsuario] = useState(() => localStorage.getItem("usuario_whatsapp"));
   const [etapa, setEtapa] = useState("verificando");
 
-  // --- ESTADOS DA IA E MONETIZAÇÃO ---
   const [abaAtiva, setAbaAtiva] = useState("home");
   const [isVip, setIsVip] = useState(false);
   const [treinoIAPescado, setTreinoIAPescado] = useState(null);
   const [bloqueado, setBloqueado] = useState(false);
   const [modalidadeAberta, setModalidadeAberta] = useState(null);
 
-  // --- ESTADOS PORTAL DO PERSONAL E ALUNO ---
   const [personalLogado, setPersonalLogado] = useState(null);
   const [cref, setCref] = useState("");
 
@@ -26,20 +24,13 @@ function App() {
 
   const [alunoEmEdicao, setAlunoEmEdicao] = useState(null);
   const [treinoForm, setTreinoForm] = useState([]);
+  const [dietaForm, setDietaForm] = useState([]); // ✅ NOVO ESTADO DA DIETA
 
-  // Estados para o Personal cadastrar aluno manualmente e a IA capturar o WhatsApp
   const [modalNovoAluno, setModalNovoAluno] = useState(false);
   const [novoAlunoForm, setNovoAlunoForm] = useState({ nome: "", whatsapp: "", objetivo: "Emagrecimento" });
 
   const [perfil, setPerfil] = useState({
-    nome: "Guerreiro(a)",
-    peso: "0",
-    altura: "0",
-    idade: "0",
-    meta: "Emagrecimento",
-    imc: "0",
-    tmb: "0",
-    faltam: "0"
+    nome: "Guerreiro(a)", peso: "0", altura: "0", idade: "0", meta: "Emagrecimento", imc: "0", tmb: "0", faltam: "0"
   });
 
   const API_URL = "https://api-backend-treino-fit.onrender.com/api";
@@ -58,9 +49,7 @@ function App() {
   }, [API_URL]);
 
   useEffect(() => {
-    if (etapa === "personal") {
-      carregarAlunosAssessoria();
-    }
+    if (etapa === "personal") carregarAlunosAssessoria();
   }, [etapa, carregarAlunosAssessoria]);
 
   const calcularSaude = useCallback((peso, altura, idade) => {
@@ -85,22 +74,12 @@ function App() {
         const dados = await response.json();
         setIsVip(dados.pago === true);
         if (dados.treinoIA) setTreinoIAPescado(dados.treinoIA);
-
         if (dados.peso) {
           const saude = calcularSaude(dados.peso, dados.altura, dados.idade);
-          setPerfil(prev => ({
-            ...prev,
-            nome: dados.nome || prev.nome,
-            peso: String(dados.peso),
-            altura: String(dados.altura),
-            meta: dados.meta || prev.meta,
-            ...saude
-          }));
+          setPerfil(prev => ({ ...prev, nome: dados.nome || prev.nome, peso: String(dados.peso), altura: String(dados.altura), meta: dados.meta || prev.meta, ...saude }));
         }
       }
-    } catch (err) {
-      console.error("Erro ao sincronizar VIP:", err);
-    }
+    } catch (err) { console.error("Erro ao sincronizar VIP:", err); }
   }, [usuario, API_URL, calcularSaude]);
 
   const sincronizarComBanco = useCallback(async (whatsappId) => {
@@ -115,14 +94,7 @@ function App() {
           setEtapa("onboarding");
         } else {
           const saude = calcularSaude(dados.peso, dados.altura, dados.idade);
-          setPerfil({
-            nome: dados.nome || "Guerreiro(a)",
-            peso: String(dados.peso),
-            altura: String(dados.altura),
-            idade: String(dados.idade || 25),
-            meta: dados.meta || "Emagrecimento",
-            ...saude
-          });
+          setPerfil({ nome: dados.nome || "Guerreiro(a)", peso: String(dados.peso), altura: String(dados.altura), idade: String(dados.idade || 25), meta: dados.meta || "Emagrecimento", ...saude });
           setIsVip(dados.pago === true);
           setTreinoIAPescado(dados.treinoIA || null);
           setEtapa("home");
@@ -137,7 +109,6 @@ function App() {
     }
   }, [API_URL, calcularSaude]);
 
-  // ✅ NOVO: Intercetar URL de Matrícula (Verifica o link de convite)
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const refPersonal = urlParams.get('ref');
@@ -147,9 +118,7 @@ function App() {
     } else if (usuario) {
       if (etapa === "verificando") sincronizarComBanco(usuario);
     } else {
-      if (etapa === "verificando") {
-        setEtapa("triagem");
-      }
+      if (etapa === "verificando") setEtapa("triagem");
     }
   }, [usuario, etapa, sincronizarComBanco]);
 
@@ -173,14 +142,11 @@ function App() {
     setEtapa("personal");
   };
 
-  // Função para o Personal cadastrar aluno manualmente
   const cadastrarNovoAluno = async (e) => {
     e.preventDefault();
     try {
       const response = await fetch(`${API_URL}/aluno`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(novoAlunoForm)
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(novoAlunoForm)
       });
       const data = await response.json();
       if (response.ok) {
@@ -191,43 +157,37 @@ function App() {
       } else {
         alert(data.mensagem || "Erro ao cadastrar aluno.");
       }
-    } catch {
-      alert("Erro ao comunicar com o banco de dados.");
-    }
+    } catch { alert("Erro ao comunicar com o banco de dados."); }
   };
 
   const alterStatusContaAluno = async (id, novoStatus) => {
     try {
       const response = await fetch(`${API_URL}/aluno/${id}/status`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ statusConta: novoStatus })
+        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ statusConta: novoStatus })
       });
       if (response.ok) {
         setAlunosPersonal(prev => prev.map(a => a.id === id || a._id === id ? { ...a, statusConta: novoStatus } : a));
       }
-    } catch {
-      alert("Erro ao alterar status no servidor.");
-    }
+    } catch { alert("Erro ao alterar status no servidor."); }
   };
 
   const abrirGeradorTreino = (aluno) => {
     setAlunoEmEdicao(aluno);
     setTreinoForm(aluno.treinoPrescrito || []);
+    setDietaForm(aluno.dietaPrescrita || []); // ✅ Carrega a dieta existente do banco
   };
 
-  const adicionarExercicioForm = () => {
-    setTreinoForm([...treinoForm, { nome: "", series: 4, reps: "10", obs: "" }]);
-  };
-
-  const removerExercicioForm = (index) => {
-    setTreinoForm(treinoForm.filter((_, i) => i !== index));
-  };
-
+  const adicionarExercicioForm = () => setTreinoForm([...treinoForm, { nome: "", series: 4, reps: "10", obs: "" }]);
+  const removerExercicioForm = (index) => setTreinoForm(treinoForm.filter((_, i) => i !== index));
   const handleExercicioChange = (index, campo, valor) => {
-    const novoTreino = [...treinoForm];
-    novoTreino[index][campo] = valor;
-    setTreinoForm(novoTreino);
+    const novoTreino = [...treinoForm]; novoTreino[index][campo] = valor; setTreinoForm(novoTreino);
+  };
+
+  // ✅ Funções de formulário da Dieta
+  const adicionarDietaForm = () => setDietaForm([...dietaForm, { refeicao: "", itens: "" }]);
+  const removerDietaForm = (index) => setDietaForm(dietaForm.filter((_, i) => i !== index));
+  const handleDietaChange = (index, campo, valor) => {
+    const novaDieta = [...dietaForm]; novaDieta[index][campo] = valor; setDietaForm(novaDieta);
   };
 
   const salvarTreinoPersonal = async (e) => {
@@ -237,23 +197,20 @@ function App() {
     const alunoId = alunoEmEdicao.id || alunoEmEdicao._id;
     try {
       const response = await fetch(`${API_URL}/aluno/${alunoId}/prescrever`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ treinoPrescrito: treinoForm })
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ treinoPrescrito: treinoForm, dietaPrescrita: dietaForm }) // ✅ Envia Treino e Dieta
       });
 
       if (response.ok) {
         setAlunosPersonal(prev => prev.map(a =>
           (a.id === alunoId || a._id === alunoId)
-            ? { ...a, statusTreino: "Enviado", treinoPrescrito: treinoForm }
+            ? { ...a, statusTreino: "Enviado", treinoPrescrito: treinoForm, dietaPrescrita: dietaForm }
             : a
         ));
-        alert(`Planilha aplicada com sucesso na nuvem para ${alunoEmEdicao.nome}!`);
+        alert(`Plano completo aplicado com sucesso na nuvem para ${alunoEmEdicao.nome}!`);
         setAlunoEmEdicao(null);
       }
-    } catch {
-      alert("Erro de conexão ao salvar treino no banco.");
-    }
+    } catch { alert("Erro de conexão ao salvar plano no banco."); }
   };
 
   const deletarAluno = async (id) => {
@@ -263,41 +220,29 @@ function App() {
       if (response.ok) {
         setAlunosPersonal(prev => prev.filter(a => a.id !== id && a._id !== id));
       }
-    } catch {
-      alert("Erro ao deletar aluno.");
-    }
+    } catch { alert("Erro ao deletar aluno."); }
   };
 
   const handleLoginAluno = async (e) => {
     e.preventDefault();
     const termoBusca = codigoAcessoAluno.trim();
-
     try {
       const response = await fetch(`${API_URL}/aluno/login?nome=${encodeURIComponent(termoBusca)}`);
       if (response.ok) {
         const alunoEncontrado = await response.json();
-
-        if (alunoEncontrado.statusConta === "Off") {
-          return alert("Acesso suspenso! Entre em contato com seu Personal Trainer.");
-        }
-
+        if (alunoEncontrado.statusConta === "Off") return alert("Acesso suspenso! Entre em contato com seu Personal Trainer.");
         setAlunoLogado(alunoEncontrado);
         setExerciciosConcluidos([]);
         setEtapa("aluno");
       } else {
-        alert("Aluno não encontrado na assessoria. Verifique se digitou o código/nome exatamente como o Personal cadastrou.");
+        alert("Aluno não encontrado na assessoria.");
       }
-    } catch {
-      alert("Erro ao conectar com o portal da assessoria.");
-    }
+    } catch { alert("Erro ao conectar com o portal da assessoria."); }
   };
 
   const alternarConclusaoExercicio = (index) => {
-    if (exerciciosConcluidos.includes(index)) {
-      setExerciciosConcluidos(exerciciosConcluidos.filter(i => i !== index));
-    } else {
-      setExerciciosConcluidos([...exerciciosConcluidos, index]);
-    }
+    if (exerciciosConcluidos.includes(index)) { setExerciciosConcluidos(exerciciosConcluidos.filter(i => i !== index)); }
+    else { setExerciciosConcluidos([...exerciciosConcluidos, index]); }
   };
 
   const ejecutarCheckin = async () => {
@@ -314,50 +259,29 @@ function App() {
 
     try {
       const response = await fetch(`${API_URL}/aluno/${alunoId}/checkin`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(novoCheckin)
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(novoCheckin)
       });
-
       if (response.ok) {
-        setAlunoLogado(prev => ({
-          ...prev,
-          checkins: [novoCheckin, ...(prev.checkins || [])]
-        }));
+        setAlunoLogado(prev => ({ ...prev, checkins: [novoCheckin, ...(prev.checkins || [])] }));
         alert("🔥 Check-in persistido com sucesso no banco de dados da assessoria!");
       }
-    } catch {
-      alert("Erro ao enviar check-in para o servidor.");
-    }
+    } catch { alert("Erro ao enviar check-in para o servidor."); }
   };
 
   const salvarOnboarding = async (e) => {
     e.preventDefault();
-    if (!perfil.nome || !perfil.peso || !perfil.altura || !perfil.idade) {
-      alert("Preencha todos os campos!");
-      return;
-    }
+    if (!perfil.nome || !perfil.peso || !perfil.altura || !perfil.idade) { alert("Preencha todos os campos!"); return; }
     try {
       const response = await fetch(`${API_URL}/usuarios/atualizar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          whatsapp: usuario,
-          nome: perfil.nome,
-          peso: Number(perfil.peso),
-          altura: Number(perfil.altura),
-          meta: perfil.meta,
-          idade: Number(perfil.idade)
-        })
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ whatsapp: usuario, nome: perfil.nome, peso: Number(perfil.peso), altura: Number(perfil.altura), meta: perfil.meta, idade: Number(perfil.idade) })
       });
       if (response.ok) {
         const saude = calcularSaude(perfil.peso, perfil.altura, perfil.idade);
         setPerfil(prev => ({ ...prev, ...saude }));
         setEtapa("home");
       }
-    } catch {
-      alert("Erro de conexão ao salvar dados iniciais.");
-    }
+    } catch { alert("Erro de conexão ao salvar dados iniciais."); }
   };
 
   if (etapa === "verificando") {
@@ -384,25 +308,13 @@ function App() {
           </div>
           <div className="space-y-3">
             <button type="button" onClick={() => setEtapa(usuario ? "home" : "login")} className="w-full bg-[#1e2029] hover:bg-[#252834] border border-neutral-800 text-left p-4 rounded-xl flex items-center justify-between transition-all group">
-              <div>
-                <p className="text-[10px] uppercase font-bold text-emerald-500 tracking-wider">Módulo Consultoria</p>
-                <p className="text-sm font-semibold text-neutral-200">Acessar Chat Inteligência Artificial</p>
-              </div>
-              <span className="text-neutral-500 group-hover:text-emerald-500 transition-colors text-sm">→</span>
+              <div><p className="text-[10px] uppercase font-bold text-emerald-500 tracking-wider">Módulo Consultoria</p><p className="text-sm font-semibold text-neutral-200">Acessar Chat Inteligência Artificial</p></div><span className="text-neutral-500 group-hover:text-emerald-500 transition-colors text-sm">→</span>
             </button>
             <button type="button" onClick={() => setEtapa("login_personal")} className="w-full bg-[#1e2029] hover:bg-[#252834] border border-neutral-800 text-left p-4 rounded-xl flex items-center justify-between transition-all group">
-              <div>
-                <p className="text-[10px] uppercase font-bold text-neutral-400 tracking-wider">Módulo Treinador</p>
-                <p className="text-sm font-semibold text-neutral-200">Painel Geral do Personal Trainer</p>
-              </div>
-              <span className="text-neutral-500 group-hover:text-white transition-colors text-sm">→</span>
+              <div><p className="text-[10px] uppercase font-bold text-neutral-400 tracking-wider">Módulo Treinador</p><p className="text-sm font-semibold text-neutral-200">Painel Geral do Personal Trainer</p></div><span className="text-neutral-500 group-hover:text-white transition-colors text-sm">→</span>
             </button>
             <button type="button" onClick={() => setEtapa("login_aluno")} className="w-full bg-[#1e2029] hover:bg-[#252834] border border-neutral-800 text-left p-4 rounded-xl flex items-center justify-between transition-all group">
-              <div>
-                <p className="text-[10px] uppercase font-bold text-blue-400 tracking-wider">Módulo Aluno</p>
-                <p className="text-sm font-semibold text-neutral-200">Portal de Planilhas e Treinos Pro</p>
-              </div>
-              <span className="text-neutral-500 group-hover:text-blue-400 transition-colors text-sm">→</span>
+              <div><p className="text-[10px] uppercase font-bold text-blue-400 tracking-wider">Módulo Aluno</p><p className="text-sm font-semibold text-neutral-200">Portal de Planilhas e Treinos Pro</p></div><span className="text-neutral-500 group-hover:text-blue-400 transition-colors text-sm">→</span>
             </button>
           </div>
         </div>
@@ -414,14 +326,10 @@ function App() {
     return (
       <div className="fixed inset-0 bg-[#0d0e12] flex flex-col items-center justify-center p-6 text-white font-sans z-50">
         <div className="w-full max-w-sm bg-[#16171d] border border-neutral-800 p-8 rounded-2xl shadow-2xl">
-          <h2 className="text-md font-bold uppercase tracking-tight text-neutral-200 mb-1">Acesso Técnico</h2>
-          <p className="text-neutral-500 text-xs mb-5">Insira seu registro para autenticação profissional.</p>
+          <h2 className="text-md font-bold uppercase tracking-tight text-neutral-200 mb-1">Acesso Técnico</h2><p className="text-neutral-500 text-xs mb-5">Insira seu registro para autenticação profissional.</p>
           <form onSubmit={handleLoginPersonal} className="space-y-4">
             <input required type="text" placeholder="Registro CREF (Ex: 123456-G/SP)" className="w-full bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl text-sm font-medium outline-none focus:border-neutral-700 text-white" value={cref} onChange={(e) => setCref(e.target.value)} />
-            <div className="flex gap-3 text-xs font-bold">
-              <button type="button" onClick={() => setEtapa("triagem")} className="w-1/3 bg-transparent border border-neutral-800 hover:bg-neutral-800 p-4 rounded-xl uppercase tracking-wider text-neutral-400 transition-colors">Voltar</button>
-              <button type="submit" className="w-2/3 bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-xl uppercase tracking-wider transition-colors shadow-lg">Validar Acesso</button>
-            </div>
+            <div className="flex gap-3 text-xs font-bold"><button type="button" onClick={() => setEtapa("triagem")} className="w-1/3 bg-transparent border border-neutral-800 hover:bg-neutral-800 p-4 rounded-xl uppercase tracking-wider text-neutral-400 transition-colors">Voltar</button><button type="submit" className="w-2/3 bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-xl uppercase tracking-wider transition-colors shadow-lg">Validar Acesso</button></div>
           </form>
         </div>
       </div>
@@ -432,14 +340,10 @@ function App() {
     return (
       <div className="fixed inset-0 bg-[#0d0e12] flex flex-col items-center justify-center p-6 text-white font-sans z-50">
         <div className="w-full max-w-sm bg-[#16171d] border border-neutral-800 p-8 rounded-2xl shadow-2xl">
-          <h2 className="text-md font-bold uppercase tracking-tight text-neutral-200 mb-1">Portal do Aluno</h2>
-          <p className="text-neutral-500 text-xs mb-5">Insira o código de acesso fornecido pelo seu Personal.</p>
+          <h2 className="text-md font-bold uppercase tracking-tight text-neutral-200 mb-1">Portal do Aluno</h2><p className="text-neutral-500 text-xs mb-5">Insira o código de acesso fornecido pelo seu Personal.</p>
           <form onSubmit={handleLoginAluno} className="space-y-4">
             <input required type="text" placeholder="Código de Acesso (Ex: Nome Completo)" className="w-full bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl text-sm font-medium outline-none focus:border-neutral-700 text-white" value={codigoAcessoAluno} onChange={(e) => setCodigoAcessoAluno(e.target.value)} />
-            <div className="flex gap-3 text-xs font-bold">
-              <button type="button" onClick={() => setEtapa("triagem")} className="w-1/3 bg-transparent border border-neutral-800 hover:bg-neutral-800 p-4 rounded-xl uppercase tracking-wider text-neutral-400 transition-colors">Voltar</button>
-              <button type="submit" className="w-2/3 bg-blue-600 hover:bg-blue-500 text-white p-4 rounded-xl uppercase tracking-wider transition-colors shadow-lg">Entrar</button>
-            </div>
+            <div className="flex gap-3 text-xs font-bold"><button type="button" onClick={() => setEtapa("triagem")} className="w-1/3 bg-transparent border border-neutral-800 hover:bg-neutral-800 p-4 rounded-xl uppercase tracking-wider text-neutral-400 transition-colors">Voltar</button><button type="submit" className="w-2/3 bg-blue-600 hover:bg-blue-500 text-white p-4 rounded-xl uppercase tracking-wider transition-colors shadow-lg">Entrar</button></div>
           </form>
         </div>
       </div>
@@ -451,13 +355,7 @@ function App() {
     return (
       <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col p-6 overflow-y-auto font-sans z-40">
         <header className="w-full max-w-5xl mx-auto flex justify-between items-center border-b border-neutral-800 pb-4 mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-7 h-7 bg-neutral-800 border border-neutral-700 rounded flex items-center justify-center text-emerald-500 font-mono text-xs font-bold">TF</div>
-            <div>
-              <h2 className="text-sm font-bold text-white uppercase tracking-tight">{personalLogado?.nome}</h2>
-              <p className="text-[10px] text-neutral-500 font-mono">{personalLogado?.cref} • Assessoria Conectada</p>
-            </div>
-          </div>
+          <div className="flex items-center gap-3"><div className="w-7 h-7 bg-neutral-800 border border-neutral-700 rounded flex items-center justify-center text-emerald-500 font-mono text-xs font-bold">TF</div><div><h2 className="text-sm font-bold text-white uppercase tracking-tight">{personalLogado?.nome}</h2><p className="text-[10px] text-neutral-500 font-mono">{personalLogado?.cref} • Assessoria Conectada</p></div></div>
           <button type="button" onClick={() => setEtapa("triagem")} className="px-3 py-1.5 bg-neutral-900 border border-neutral-800 rounded-md hover:bg-neutral-800 text-[10px] text-neutral-400 font-bold uppercase transition-colors">Desconectar</button>
         </header>
 
@@ -472,22 +370,14 @@ function App() {
           </div>
 
           <div className="md:col-span-2 bg-[#16171d] border border-neutral-800 rounded-xl p-5 shadow-xl overflow-x-auto">
-
-            {/* ✅ NOVO: Botão de Copiar Link da IA ao lado do Botão Manual */}
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400">Carteira de Clientes</h3>
               <div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const link = `${window.location.origin}?ref=${personalLogado?.cref?.replace(/\D/g, "") || "treinador"}`;
-                    navigator.clipboard.writeText(link);
-                    alert(`🔗 Link copiado com sucesso!\n\nEnvie este link no WhatsApp do seu aluno para ele realizar o auto-cadastro pela Inteligência Artificial:\n\n${link}`);
-                  }}
-                  className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold px-3 py-1.5 rounded transition-colors uppercase mr-2 shadow-lg"
-                >
-                  🔗 Copiar Link IA
-                </button>
+                <button type="button" onClick={() => {
+                  const link = `${window.location.origin}?ref=${personalLogado?.cref?.replace(/\D/g, "") || "treinador"}`;
+                  navigator.clipboard.writeText(link);
+                  alert(`🔗 Link copiado com sucesso!\n\nEnvie este link no WhatsApp do seu aluno para ele realizar o auto-cadastro pela Inteligência Artificial:\n\n${link}`);
+                }} className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold px-3 py-1.5 rounded transition-colors uppercase mr-2 shadow-lg">🔗 Copiar Link IA</button>
                 <button type="button" onClick={() => setModalNovoAluno(true)} className="bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold px-3 py-1.5 rounded transition-colors uppercase shadow-lg">+ Novo Manual</button>
               </div>
             </div>
@@ -495,11 +385,7 @@ function App() {
             <table className="w-full text-left border-collapse min-w-[600px]">
               <thead>
                 <tr className="border-b border-neutral-800 text-[10px] uppercase text-neutral-500 tracking-wider">
-                  <th className="pb-3 font-semibold">Nome do Aluno</th>
-                  <th className="pb-3 font-semibold">Objetivo</th>
-                  <th className="pb-3 font-semibold">Status Planilha</th>
-                  <th className="pb-3 font-semibold">Último Treino</th>
-                  <th className="pb-3 font-semibold text-right">Ações Gerenciais</th>
+                  <th className="pb-3 font-semibold">Nome do Aluno</th><th className="pb-3 font-semibold">Objetivo</th><th className="pb-3 font-semibold">Status Planilha</th><th className="pb-3 font-semibold">Último Treino</th><th className="pb-3 font-semibold text-right">Ações Gerenciais</th>
                 </tr>
               </thead>
               <tbody className="text-xs divide-y divide-neutral-800/40">
@@ -511,15 +397,7 @@ function App() {
                       <td className="py-3.5 font-medium text-white"><div>{aluno.nome}</div><div className="text-[10px] text-neutral-500 font-mono mt-0.5">{aluno.whatsapp}</div></td>
                       <td className="py-3.5 text-neutral-400">{aluno.objetivo}</td>
                       <td className="py-3.5"><span className={`px-2 py-0.5 rounded text-[9px] font-bold font-mono uppercase ${aluno.statusTreino === 'Rascunho IA' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : aluno.statusTreino === 'Enviado' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-neutral-800 text-neutral-400'}`}>{aluno.statusTreino}</span></td>
-                      <td className="py-3.5">
-                        {fezCheckinHoje ? (
-                          <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded animate-pulse">🔥 Treinou Hoje!</span>
-                        ) : aluno.checkins && aluno.checkins.length > 0 ? (
-                          <span className="text-[10px] font-mono text-neutral-400">Check-in: {aluno.checkins[0].data}</span>
-                        ) : (
-                          <span className="text-[10px] text-neutral-600 font-mono">Nenhum treino</span>
-                        )}
-                      </td>
+                      <td className="py-3.5">{fezCheckinHoje ? <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded animate-pulse">🔥 Treinou Hoje!</span> : aluno.checkins && aluno.checkins.length > 0 ? <span className="text-[10px] font-mono text-neutral-400">Check-in: {aluno.checkins[0].data}</span> : <span className="text-[10px] text-neutral-600 font-mono">Nenhum treino</span>}</td>
                       <td className="py-3.5 text-right space-x-2">
                         <button type="button" onClick={() => abrirGeradorTreino(aluno)} className="bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase">{aluno.statusTreino === "Rascunho IA" ? "Revisar IA" : "Montar Treino"}</button>
                         <button type="button" onClick={() => alterStatusContaAluno(idUnico, aluno.statusConta === "Ativo" ? "Off" : "Ativo")} className="border border-neutral-800 text-neutral-400 hover:bg-neutral-800 text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase">{aluno.statusConta === "Ativo" ? "Arquivar" : "Ativar"}</button>
@@ -553,24 +431,43 @@ function App() {
 
         {alunoEmEdicao && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="w-full max-w-2xl bg-[#16171d] border border-neutral-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-              <header className="p-5 border-b border-neutral-800 flex justify-between items-center bg-[#1c1d26]"><div><span className="text-[10px] text-emerald-500 font-mono font-bold uppercase tracking-wider">Prescrevendo Planilha Pro</span><h3 className="text-base font-bold text-white uppercase">{alunoEmEdicao.nome}</h3></div><button type="button" onClick={() => setAlunoEmEdicao(null)} className="text-neutral-400 hover:text-white text-sm uppercase font-mono font-bold">Fechar ✕</button></header>
-              <form onSubmit={salvarTreinoPersonal} className="flex-1 overflow-y-auto p-6 space-y-4">
-                <div className="flex justify-between items-center pb-2 border-b border-neutral-800/60"><p className="text-xs font-bold uppercase tracking-wider text-neutral-400">Estrutura de Exercícios</p><button type="button" onClick={adicionarExercicioForm} className="bg-emerald-600/10 text-emerald-500 border border-emerald-500/20 text-[10px] font-bold px-3 py-1.5 rounded hover:bg-emerald-600/20 transition-all uppercase">+ Adicionar Linha</button></div>
-                <div className="space-y-3">
-                  {treinoForm.map((ex, idx) => (
-                    <div key={idx} className="bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl space-y-3 relative group">
-                      <button type="button" onClick={() => removerExercicioForm(idx)} className="absolute top-3 right-3 text-neutral-600 hover:text-red-400 text-[10px] uppercase font-mono tracking-wider transition-colors">Remover</button>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div className="sm:col-span-1"><label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Nome do Movimento</label><input required type="text" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ex.nome} onChange={(e) => handleExercicioChange(idx, "nome", e.target.value)} /></div>
-                        <div><label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Séries</label><input required type="number" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ex.series} onChange={(e) => handleExercicioChange(idx, "series", Number(e.target.value))} /></div>
-                        <div><label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Repetições / Tempo</label><input required type="text" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ex.reps} onChange={(e) => handleExercicioChange(idx, "reps", e.target.value)} /></div>
+            <div className="w-full max-w-3xl bg-[#16171d] border border-neutral-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+              <header className="p-5 border-b border-neutral-800 flex justify-between items-center bg-[#1c1d26]"><div><span className="text-[10px] text-emerald-500 font-mono font-bold uppercase tracking-wider">Prescrevendo Plano Pro</span><h3 className="text-base font-bold text-white uppercase">{alunoEmEdicao.nome}</h3></div><button type="button" onClick={() => setAlunoEmEdicao(null)} className="text-neutral-400 hover:text-white text-sm uppercase font-mono font-bold">Fechar ✕</button></header>
+              <form onSubmit={salvarTreinoPersonal} className="flex-1 overflow-y-auto p-6 space-y-6">
+
+                {/* ÁREA DE TREINO */}
+                <div>
+                  <div className="flex justify-between items-center pb-2 border-b border-neutral-800/60 mb-3"><p className="text-xs font-bold uppercase tracking-wider text-neutral-400">Estrutura de Exercícios</p><button type="button" onClick={adicionarExercicioForm} className="bg-emerald-600/10 text-emerald-500 border border-emerald-500/20 text-[10px] font-bold px-3 py-1.5 rounded hover:bg-emerald-600/20 transition-all uppercase">+ Adicionar Exercício</button></div>
+                  <div className="space-y-3">
+                    {treinoForm.map((ex, idx) => (
+                      <div key={idx} className="bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl space-y-3 relative group">
+                        <button type="button" onClick={() => removerExercicioForm(idx)} className="absolute top-3 right-3 text-neutral-600 hover:text-red-400 text-[10px] uppercase font-mono tracking-wider transition-colors">Remover</button>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <div className="sm:col-span-1"><label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Movimento</label><input required type="text" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ex.nome} onChange={(e) => handleExercicioChange(idx, "nome", e.target.value)} /></div>
+                          <div><label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Séries</label><input required type="number" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ex.series} onChange={(e) => handleExercicioChange(idx, "series", Number(e.target.value))} /></div>
+                          <div><label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Repetições/Tempo</label><input required type="text" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ex.reps} onChange={(e) => handleExercicioChange(idx, "reps", e.target.value)} /></div>
+                        </div>
+                        <div><label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Observação</label><input type="text" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ex.obs || ""} onChange={(e) => handleExercicioChange(idx, "obs", e.target.value)} /></div>
                       </div>
-                      <div><label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Diretriz Técnica / Observação</label><input type="text" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ex.obs || ""} onChange={(e) => handleExercicioChange(idx, "obs", e.target.value)} /></div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-                <footer className="pt-4 border-t border-neutral-800 flex gap-3 justify-end text-xs font-bold"><button type="button" onClick={() => setAlunoEmEdicao(null)} className="bg-transparent border border-neutral-800 text-neutral-400 p-3 rounded-xl uppercase tracking-wider hover:bg-neutral-800 transition-colors">Cancelar</button><button type="submit" className="bg-emerald-600 hover:bg-emerald-500 text-white p-3 rounded-xl uppercase tracking-wider transition-colors shadow-lg px-6">Aplicar Treino Pro</button></footer>
+
+                {/* ✅ NOVO: ÁREA DE DIETA (Personal edita aqui) */}
+                <div className="pt-4 border-t border-neutral-800/60">
+                  <div className="flex justify-between items-center pb-2 border-b border-neutral-800/60 mb-3"><p className="text-xs font-bold uppercase tracking-wider text-neutral-400">Planejamento Nutricional</p><button type="button" onClick={adicionarDietaForm} className="bg-blue-600/10 text-blue-500 border border-blue-500/20 text-[10px] font-bold px-3 py-1.5 rounded hover:bg-blue-600/20 transition-all uppercase">+ Adicionar Refeição</button></div>
+                  <div className="space-y-3">
+                    {dietaForm.map((ref, idx) => (
+                      <div key={idx} className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl flex gap-3 relative items-center">
+                        <div className="w-1/3"><label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Horário/Refeição</label><input required type="text" placeholder="Ex: Almoço" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ref.refeicao} onChange={(e) => handleDietaChange(idx, "refeicao", e.target.value)} /></div>
+                        <div className="w-2/3"><label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Alimentos e Gramas</label><input required type="text" placeholder="Ex: 100g Frango + 100g Arroz + Salada" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ref.itens} onChange={(e) => handleDietaChange(idx, "itens", e.target.value)} /></div>
+                        <button type="button" onClick={() => removerDietaForm(idx)} className="text-neutral-600 hover:text-red-400 font-bold text-sm ml-1">✕</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <footer className="pt-4 border-t border-neutral-800 flex gap-3 justify-end text-xs font-bold"><button type="button" onClick={() => setAlunoEmEdicao(null)} className="bg-transparent border border-neutral-800 text-neutral-400 p-3 rounded-xl uppercase tracking-wider hover:bg-neutral-800 transition-colors">Cancelar</button><button type="submit" className="bg-emerald-600 hover:bg-emerald-500 text-white p-3 rounded-xl uppercase tracking-wider transition-colors shadow-lg px-6">Salvar e Enviar Plano</button></footer>
               </form>
             </div>
           </div>
@@ -588,25 +485,29 @@ function App() {
           <button type="button" onClick={() => { setEtapa("triagem"); setAlunoLogado(null); }} className="px-3 py-1.5 bg-neutral-900 border border-neutral-800 rounded-md text-[10px] font-bold uppercase tracking-wider text-neutral-400 transition-colors">Sair</button>
         </header>
         <main className="w-full max-w-md mx-auto flex-1 space-y-6 pb-10">
+
           <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl flex items-center justify-between">
             <div><p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Check-ins Validados</p><h3 className="text-3xl font-bold text-white mt-1">{alunoLogado?.checkins?.length || 0}</h3></div>
-            <button type="button" onClick={ejecutarCheckin} className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-3 rounded-lg text-xs uppercase tracking-wider transition-colors shadow-lg">Confirmar Treino de Hoje</button>
+            <button type="button" onClick={ejecutarCheckin} className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-3 rounded-lg text-xs uppercase tracking-wider transition-colors shadow-lg">Confirmar Treino Hoje</button>
           </div>
 
-          <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl space-y-3">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Histórico de Consistência</p>
-            {!alunoLogado?.checkins || alunoLogado.checkins.length === 0 ? (
-              <p className="text-[11px] text-neutral-500 uppercase font-mono">Nenhum treino registrado esta semana.</p>
-            ) : (
-              <div className="grid grid-cols-2 gap-2">
-                {alunoLogado.checkins.map((ch, idx) => (
-                  <div key={idx} className="bg-[#0d0e12] border border-neutral-850 p-2.5 rounded-lg flex items-center justify-between"><div><p className="text-[11px] font-bold text-white tracking-tight">{ch.diaSemana}</p><p className="text-[9px] text-neutral-500 font-mono mt-0.5">Data: {ch.data}</p></div><span className="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded font-mono font-bold uppercase">🔥 OK</span></div>
+          {/* ✅ NOVO: EXIBIR DIETA PARA O ALUNO */}
+          {alunoLogado?.dietaPrescrita && alunoLogado.dietaPrescrita.length > 0 && (
+            <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl space-y-3">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400 mb-2">🍽️ Seu Plano Alimentar</p>
+              <div className="space-y-2">
+                {alunoLogado.dietaPrescrita.map((ref, idx) => (
+                  <div key={idx} className="bg-[#0d0e12] border border-neutral-850 p-3 rounded-lg">
+                    <p className="text-[11px] font-bold text-white tracking-tight uppercase mb-1">{ref.refeicao}</p>
+                    <p className="text-[10px] text-neutral-400">{ref.itens}</p>
+                  </div>
                 ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           <div className="space-y-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 mb-2">Treino Prescrito</p>
             {!alunoLogado?.treinoPrescrito || alunoLogado.treinoPrescrito.length === 0 ? (
               <div className="bg-[#16171d] border border-neutral-800 p-8 rounded-xl text-center"><p className="text-xs text-neutral-400 font-semibold uppercase font-mono">Nenhum treino ativo.</p></div>
             ) : (
@@ -632,75 +533,33 @@ function App() {
     );
   }
 
-  // --- RENDER DO USUÁRIO FINAL E MÓDULO CONSULTORIA ---
+  // --- RENDER DO USUÁRIO FINAL E MÓDULO CONSULTORIA (INALTERADO) ---
   if (etapa === "home") {
     return (
       <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col overflow-hidden font-sans z-30">
         {abaAtiva === "home" && (
           <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center">
             <header className="w-full max-w-4xl flex justify-between items-center border-b border-neutral-800 pb-4 mb-6">
-              <div className="flex items-center space-x-3">
-                <div className="w-7 h-7 bg-neutral-800 border border-neutral-700 rounded flex items-center justify-center text-emerald-500 font-mono text-xs font-bold">TF</div>
-                <div>
-                  <h2 className="text-sm font-bold text-white uppercase tracking-tight">{perfil.nome}</h2>
-                  <p className="text-[10px] text-neutral-500 font-mono uppercase tracking-wider">Conta {isVip ? 'Premium Elite' : 'Free Tier'}</p>
-                </div>
-              </div>
-              <button type="button" onClick={() => !isVip && setBloqueado(true)} className={`px-3 py-1.5 rounded text-[10px] font-bold uppercase font-mono border ${isVip ? 'border-emerald-500/20 text-emerald-500 bg-emerald-500/5' : 'border-amber-500/20 text-amber-500 bg-amber-500/5 animate-pulse'}`}>
-                {isVip ? "✓ Assinatura Sincronizada" : "Upgrade para Enterprise"}
-              </button>
+              <div className="flex items-center space-x-3"><div className="w-7 h-7 bg-neutral-800 border border-neutral-700 rounded flex items-center justify-center text-emerald-500 font-mono text-xs font-bold">TF</div><div><h2 className="text-sm font-bold text-white uppercase tracking-tight">{perfil.nome}</h2><p className="text-[10px] text-neutral-500 font-mono uppercase tracking-wider">Conta {isVip ? 'Premium Elite' : 'Free Tier'}</p></div></div>
+              <button type="button" onClick={() => !isVip && setBloqueado(true)} className={`px-3 py-1.5 rounded text-[10px] font-bold uppercase font-mono border ${isVip ? 'border-emerald-500/20 text-emerald-500 bg-emerald-500/5' : 'border-amber-500/20 text-amber-500 bg-amber-500/5 animate-pulse'}`}>{isVip ? "✓ Assinatura Sincronizada" : "Upgrade para Enterprise"}</button>
             </header>
 
             <main className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-6 items-start pb-10">
               <div className="md:col-span-1 space-y-4">
                 <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl">
                   <p className="text-neutral-500 text-[10px] font-bold uppercase tracking-wider mb-2">Composição Corporal</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-[#0d0e12] p-3 border border-neutral-850 rounded-lg">
-                      <span className="text-[9px] text-neutral-500 uppercase block">Massa Global</span>
-                      <span className="text-2xl font-semibold text-white">{perfil.peso}<span className="text-xs text-neutral-500 font-normal ml-0.5">kg</span></span>
-                    </div>
-                    <div className="bg-[#0d0e12] p-3 border border-neutral-850 rounded-lg">
-                      <span className="text-[9px] text-neutral-500 uppercase block">Estatura</span>
-                      <span className="text-2xl font-semibold text-white">{perfil.altura}<span className="text-xs text-neutral-500 font-normal ml-0.5">m</span></span>
-                    </div>
-                  </div>
-                  <div className="mt-3 text-[10px] text-neutral-400 font-mono flex justify-between border-t border-neutral-800/60 pt-2">
-                    <span>Planejamento:</span>
-                    <span className="text-emerald-500 font-bold uppercase">{perfil.meta}</span>
-                  </div>
+                  <div className="grid grid-cols-2 gap-3"><div className="bg-[#0d0e12] p-3 border border-neutral-850 rounded-lg"><span className="text-[9px] text-neutral-500 uppercase block">Massa Global</span><span className="text-2xl font-semibold text-white">{perfil.peso}<span className="text-xs text-neutral-500 font-normal ml-0.5">kg</span></span></div><div className="bg-[#0d0e12] p-3 border border-neutral-850 rounded-lg"><span className="text-[9px] text-neutral-500 uppercase block">Estatura</span><span className="text-2xl font-semibold text-white">{perfil.altura}<span className="text-xs text-neutral-500 font-normal ml-0.5">m</span></span></div></div>
+                  <div className="mt-3 text-[10px] text-neutral-400 font-mono flex justify-between border-t border-neutral-800/60 pt-2"><span>Planejamento:</span><span className="text-emerald-500 font-bold uppercase">{perfil.meta}</span></div>
                 </div>
-
-                <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl text-center">
-                  <p className="text-neutral-500 text-[10px] font-bold uppercase tracking-wider text-left mb-4">Meta Metabólica Diária</p>
-                  <div className="inline-flex flex-col items-center justify-center p-6 border border-neutral-800 bg-[#0d0e12] rounded-full w-28 h-28 mx-auto mb-4 border-t-emerald-600">
-                    <span className="text-xl font-bold text-white">{perfil.tmb}</span>
-                    <span className="text-[9px] font-mono text-neutral-500 uppercase">kcal/dia</span>
-                  </div>
-                </div>
+                <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl text-center"><p className="text-neutral-500 text-[10px] font-bold uppercase tracking-wider text-left mb-4">Meta Metabólica Diária</p><div className="inline-flex flex-col items-center justify-center p-6 border border-neutral-800 bg-[#0d0e12] rounded-full w-28 h-28 mx-auto mb-4 border-t-emerald-600"><span className="text-xl font-bold text-white">{perfil.tmb}</span><span className="text-[9px] font-mono text-neutral-500 uppercase">kcal/dia</span></div></div>
               </div>
 
               <div className="md:col-span-2 space-y-4">
-                <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl">
-                  <p className="text-emerald-500 text-[10px] font-bold uppercase tracking-wider font-mono mb-2">⚡ Diretriz Técnica Operacional</p>
-                  <p className="text-xs font-medium text-neutral-300 leading-relaxed">
-                    "{perfil.nome}, seus parâmetros apontam foco em oxidação de gordura ativa. Otimize a ingestão proteinada."
-                  </p>
-                </div>
-
+                <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl"><p className="text-emerald-500 text-[10px] font-bold uppercase tracking-wider font-mono mb-2">⚡ Diretriz Técnica Operacional</p><p className="text-xs font-medium text-neutral-300 leading-relaxed">"{perfil.nome}, seus parâmetros apontam foco em oxidação de gordura ativa. Otimize a ingestão proteinada."</p></div>
                 <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl space-y-3">
                   <p className="text-neutral-500 text-[10px] font-bold uppercase tracking-wider mb-2">Terminais de Execução</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <button type="button" onClick={() => setAbaAtiva("chat")} className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 px-4 rounded-lg text-xs uppercase tracking-wider text-center transition-all shadow-lg">
-                      Abrir Chat IA & Consultoria
-                    </button>
-                    <button type="button" onClick={() => setAbaAtiva("treino")} className="bg-transparent hover:bg-neutral-800 border border-neutral-800 text-neutral-200 font-bold py-3.5 px-4 rounded-lg text-xs uppercase tracking-wider text-center transition-all">
-                      Acessar Biblioteca de Treinos
-                    </button>
-                  </div>
-                  <div className="text-center pt-3 border-t border-neutral-800/40">
-                    <button type="button" onClick={handleSair} className="text-[10px] font-mono uppercase text-neutral-600 hover:text-red-400 transition-colors">Encerrar sessão de dados</button>
-                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3"><button type="button" onClick={() => setAbaAtiva("chat")} className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 px-4 rounded-lg text-xs uppercase tracking-wider text-center transition-all shadow-lg">Abrir Chat IA & Consultoria</button><button type="button" onClick={() => setAbaAtiva("treino")} className="bg-transparent hover:bg-neutral-800 border border-neutral-800 text-neutral-200 font-bold py-3.5 px-4 rounded-lg text-xs uppercase tracking-wider text-center transition-all">Acessar Biblioteca de Treinos</button></div>
+                  <div className="text-center pt-3 border-t border-neutral-800/40"><button type="button" onClick={handleSair} className="text-[10px] font-mono uppercase text-neutral-600 hover:text-red-400 transition-colors">Encerrar sessão de dados</button></div>
                 </div>
               </div>
             </main>
@@ -708,117 +567,47 @@ function App() {
         )}
 
         {abaAtiva === "chat" && (
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <header className="p-4 flex items-center justify-between border-b border-neutral-800 bg-[#16171d]">
-              <button type="button" onClick={() => { setAbaAtiva("home"); atualizarStatusVIP(); }} className="text-emerald-500 font-bold text-[10px] uppercase font-mono flex items-center gap-2">← Voltar para o Dashboard</button>
-              <span className="text-[10px] font-mono uppercase text-neutral-500">Módulo Consultoria de Nutrição</span>
-            </header>
-            <ChatReceitas whatsapp={usuario} isVip={isVip} aoPedirUpgrade={() => setBloqueado(true)} perfil={perfil} setTreinoIAPescado={setTreinoIAPescado} aoAtualizarPerfil={atualizarStatusVIP} />
-          </div>
+          <div className="flex-1 flex flex-col overflow-hidden"><header className="p-4 flex items-center justify-between border-b border-neutral-800 bg-[#16171d]"><button type="button" onClick={() => { setAbaAtiva("home"); atualizarStatusVIP(); }} className="text-emerald-500 font-bold text-[10px] uppercase font-mono flex items-center gap-2">← Voltar para o Dashboard</button><span className="text-[10px] font-mono uppercase text-neutral-500">Módulo Consultoria de Nutrição</span></header><ChatReceitas whatsapp={usuario} isVip={isVip} aoPedirUpgrade={() => setBloqueado(true)} perfil={perfil} setTreinoIAPescado={setTreinoIAPescado} aoAtualizarPerfil={atualizarStatusVIP} /></div>
         )}
 
         {abaAtiva === "treino" && (
           <div className="flex-1 flex flex-col bg-[#0d0e12] p-6 overflow-y-auto">
-            <header className="w-full max-w-4xl mx-auto flex justify-between items-center border-b border-neutral-800 pb-4 mb-6">
-              <button type="button" onClick={() => { setAbaAtiva("home"); atualizarStatusVIP(); }} className="text-emerald-500 font-bold text-[10px] uppercase font-mono flex items-center gap-2">← Retornar</button>
-              <span className="text-white font-bold uppercase text-xs tracking-wider">Módulo de Planilhas</span>
-            </header>
-
-            <div className="w-full max-w-4xl grid grid-cols-1 sm:grid-cols-2 gap-4 mx-auto">
-              <button type="button" onClick={() => isVip ? setModalidadeAberta('ia') : setBloqueado(true)} className="bg-[#16171d] hover:bg-[#1e2029] border border-neutral-800 p-6 rounded-xl flex items-center justify-between transition-all text-left">
-                <div>
-                  <p className="font-bold uppercase text-sm text-white">Treino Inteligência Artificial</p>
-                  <p className="text-[9px] text-neutral-500 font-mono mt-0.5 uppercase tracking-wider">{!isVip ? "Status: Bloqueado corporativo" : "Acesso Elite Ativado"}</p>
-                </div>
-                <span className="text-xl">🤖</span>
-              </button>
-              <button type="button" onClick={() => setModalidadeAberta('academia')} className="bg-[#16171d] hover:bg-[#1e2029] border border-neutral-800 p-6 rounded-xl flex items-center justify-between transition-all text-left">
-                <div>
-                  <p className="font-bold uppercase text-sm text-white">Metodologia Tradicional (ABC)</p>
-                  <p className="text-[9px] text-neutral-500 font-mono mt-0.5 uppercase tracking-wider">Acesso Livre</p>
-                </div>
-                <span className="text-xl">🏋️‍♂️</span>
-              </button>
-            </div>
-            {modalidadeAberta && (
-              <ListaExercicios modalidade={modalidadeAberta} whatsapp={usuario} API_URL={API_URL} perfil={perfil} treinoIA={treinoIAPescado} aoFechar={() => { setModalidadeAberta(null); atualizarStatusVIP(); }} />
-            )}
+            <header className="w-full max-w-4xl mx-auto flex justify-between items-center border-b border-neutral-800 pb-4 mb-6"><button type="button" onClick={() => { setAbaAtiva("home"); atualizarStatusVIP(); }} className="text-emerald-500 font-bold text-[10px] uppercase font-mono flex items-center gap-2">← Retornar</button><span className="text-white font-bold uppercase text-xs tracking-wider">Módulo de Planilhas</span></header>
+            <div className="w-full max-w-4xl grid grid-cols-1 sm:grid-cols-2 gap-4 mx-auto"><button type="button" onClick={() => isVip ? setModalidadeAberta('ia') : setBloqueado(true)} className="bg-[#16171d] hover:bg-[#1e2029] border border-neutral-800 p-6 rounded-xl flex items-center justify-between transition-all text-left"><div><p className="font-bold uppercase text-sm text-white">Treino Inteligência Artificial</p><p className="text-[9px] text-neutral-500 font-mono mt-0.5 uppercase tracking-wider">{!isVip ? "Status: Bloqueado corporativo" : "Acesso Elite Ativado"}</p></div><span className="text-xl">🤖</span></button><button type="button" onClick={() => setModalidadeAberta('academia')} className="bg-[#16171d] hover:bg-[#1e2029] border border-neutral-800 p-6 rounded-xl flex items-center justify-between transition-all text-left"><div><p className="font-bold uppercase text-sm text-white">Metodologia Tradicional (ABC)</p><p className="text-[9px] text-neutral-500 font-mono mt-0.5 uppercase tracking-wider">Acesso Livre</p></div><span className="text-xl">🏋️‍♂️</span></button></div>
+            {modalidadeAberta && <ListaExercicios modalidade={modalidadeAberta} whatsapp={usuario} API_URL={API_URL} perfil={perfil} treinoIA={treinoIAPescado} aoFechar={() => { setModalidadeAberta(null); atualizarStatusVIP(); }} />}
           </div>
         )}
 
-        {bloqueado && (
-          <div className="fixed inset-0 z-[500] bg-[#0d0e12]/95 backdrop-blur-sm flex flex-col items-center p-6 overflow-y-auto">
-            <button type="button" onClick={() => { setBloqueado(false); atualizarStatusVIP(); }} className="absolute top-6 right-6 text-neutral-400 hover:text-white bg-neutral-900 border border-neutral-800 w-8 h-8 rounded flex items-center justify-center text-xs">✕</button>
-            <TelaPlanos />
-          </div>
-        )}
+        {bloqueado && <div className="fixed inset-0 z-[500] bg-[#0d0e12]/95 backdrop-blur-sm flex flex-col items-center p-6 overflow-y-auto"><button type="button" onClick={() => { setBloqueado(false); atualizarStatusVIP(); }} className="absolute top-6 right-6 text-neutral-400 hover:text-white bg-neutral-900 border border-neutral-800 w-8 h-8 rounded flex items-center justify-center text-xs">✕</button><TelaPlanos /></div>}
       </div>
     );
   }
 
-  // ✅ NOVO: TELA DO LINK DO ALUNO (VIA IA)
+  // ✅ TELA DO LINK DO ALUNO (VIA IA)
   if (etapa === "matricula_externa") {
     return (
       <div className="fixed inset-0 bg-[#0d0e12] flex flex-col items-center justify-center p-6 text-white font-sans z-50 overflow-y-auto">
         <div className="w-full max-w-md bg-[#16171d] border border-neutral-800 p-8 rounded-2xl shadow-2xl">
-          <div className="text-center mb-6">
-            <span className="text-4xl mb-3 block">🤖</span>
-            <h2 className="text-lg font-bold uppercase tracking-tight text-emerald-500">Auto-Avaliação IA</h2>
-            <p className="text-neutral-400 text-[11px] mt-2">Preencha sua biometria para a Inteligência Artificial estruturar a base do seu treino.</p>
-          </div>
-
+          <div className="text-center mb-6"><span className="text-4xl mb-3 block">🤖</span><h2 className="text-lg font-bold uppercase tracking-tight text-emerald-500">Auto-Avaliação IA</h2><p className="text-neutral-400 text-[11px] mt-2">Preencha sua biometria para a Inteligência Artificial estruturar a base do seu treino e dieta.</p></div>
           <form onSubmit={async (e) => {
             e.preventDefault();
             setEtapa("verificando");
             try {
               const urlParams = new URLSearchParams(window.location.search);
               const refPersonal = urlParams.get('ref');
-
-              const res = await fetch(`${API_URL}/aluno/matricula-ia`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  ...perfil,
-                  whatsapp: novoAlunoForm.whatsapp, // Coleta o whatsapp isolado deste formulário
-                  objetivo: perfil.meta,
-                  personalRef: refPersonal
-                })
-              });
-              if (res.ok) {
-                alert("🎉 Análise concluída! Sua ficha já está na mesa do Personal. Aguarde a liberação e acesse pelo 'Módulo Aluno' com o seu nome.");
-                window.location.href = window.location.origin; // Volta pra home limpa
-              } else {
-                const data = await res.json();
-                alert(data.mensagem || "Erro na análise.");
-                setEtapa("matricula_externa");
-              }
-            } catch {
-              alert("Erro de conexão.");
-              setEtapa("matricula_externa");
-            }
+              const res = await fetch(`${API_URL}/aluno/matricula-ia`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...perfil, whatsapp: novoAlunoForm.whatsapp, objetivo: perfil.meta, personalRef: refPersonal }) });
+              if (res.ok) { alert("🎉 Análise concluída! Sua ficha já está na mesa do Personal. Aguarde a liberação e acesse pelo 'Módulo Aluno'."); window.location.href = window.location.origin; }
+              else { const data = await res.json(); alert(data.mensagem || "Erro na análise."); setEtapa("matricula_externa"); }
+            } catch { alert("Erro de conexão."); setEtapa("matricula_externa"); }
           }} className="space-y-4">
-
             <input required type="text" placeholder="Nome Completo" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, nome: e.target.value })} />
             <input required type="text" placeholder="WhatsApp (Apenas Números)" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setNovoAlunoForm({ ...novoAlunoForm, whatsapp: e.target.value })} />
-
-            <div className="grid grid-cols-2 gap-3">
-              <input required type="number" step="0.1" placeholder="Peso (kg)" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, peso: e.target.value })} />
-              <input required type="number" step="0.01" placeholder="Altura (m)" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, altura: e.target.value })} />
-            </div>
-
+            <div className="grid grid-cols-2 gap-3"><input required type="number" step="0.1" placeholder="Peso (kg)" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, peso: e.target.value })} /><input required type="number" step="0.01" placeholder="Altura (m)" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, altura: e.target.value })} /></div>
             <div className="grid grid-cols-2 gap-3">
               <input required type="number" placeholder="Idade" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, idade: e.target.value })} />
-              <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none text-neutral-400 focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, meta: e.target.value })}>
-                <option value="">Selecione a Meta</option>
-                <option value="Emagrecimento">Emagrecimento</option>
-                <option value="Hipertrofia">Hipertrofia</option>
-                <option value="Performance">Performance</option>
-              </select>
+              <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none text-neutral-400 focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, meta: e.target.value })}><option value="">Selecione a Meta</option><option value="Emagrecimento">Emagrecimento</option><option value="Hipertrofia">Hipertrofia</option><option value="Performance">Performance</option></select>
             </div>
-
-            <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-xl uppercase tracking-wider font-bold text-xs shadow-lg mt-4 transition-all">
-              ⚡ Gerar Diagnóstico com IA
-            </button>
+            <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-xl uppercase tracking-wider font-bold text-xs shadow-lg mt-4 transition-all">⚡ Gerar Diagnóstico com IA</button>
           </form>
         </div>
       </div>
@@ -829,41 +618,12 @@ function App() {
     return (
       <div className="fixed inset-0 bg-[#0d0e12] flex flex-col items-center justify-center p-8 text-white z-50 overflow-y-auto font-sans">
         <div className="w-full max-w-sm bg-[#16171d] border border-neutral-800 p-8 rounded-2xl shadow-2xl">
-          <h2 className="text-md font-bold mb-1 uppercase tracking-tight text-neutral-200">Parâmetros Iniciais</h2>
-          <p className="text-neutral-500 text-xs mb-5">Monte seu perfil básico para a Inteligência Artificial.</p>
+          <h2 className="text-md font-bold mb-1 uppercase tracking-tight text-neutral-200">Parâmetros Iniciais</h2><p className="text-neutral-500 text-xs mb-5">Monte seu perfil básico para a Inteligência Artificial.</p>
           <form onSubmit={salvarOnboarding} className="space-y-4">
-            <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Nome Completo</label>
-              <input required type="text" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.nome} onChange={(e) => setPerfil({ ...perfil, nome: e.target.value })} />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Peso (kg)</label>
-                <input required type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.peso} onChange={(e) => setPerfil({ ...perfil, peso: e.target.value })} />
-              </div>
-              <div>
-                <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Altura (m)</label>
-                <input required type="number" step="0.01" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.altura} onChange={(e) => setPerfil({ ...perfil, altura: e.target.value })} />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Idade</label>
-                <input required type="number" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.idade} onChange={(e) => setPerfil({ ...perfil, idade: e.target.value })} />
-              </div>
-              <div>
-                <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Objetivo</label>
-                <select className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.meta} onChange={(e) => setPerfil({ ...perfil, meta: e.target.value })}>
-                  <option value="Emagrecimento">Emagrecimento</option>
-                  <option value="Hipertrofia">Hipertrofia</option>
-                  <option value="Definição">Definição Muscular</option>
-                  <option value="Performance">Performance Esportiva</option>
-                </select>
-              </div>
-            </div>
-            <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-xl uppercase tracking-wider font-bold text-xs transition-colors shadow-lg mt-2">
-              Salvar e Entrar
-            </button>
+            <div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Nome Completo</label><input required type="text" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.nome} onChange={(e) => setPerfil({ ...perfil, nome: e.target.value })} /></div>
+            <div className="grid grid-cols-2 gap-3"><div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Peso (kg)</label><input required type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.peso} onChange={(e) => setPerfil({ ...perfil, peso: e.target.value })} /></div><div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Altura (m)</label><input required type="number" step="0.01" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.altura} onChange={(e) => setPerfil({ ...perfil, altura: e.target.value })} /></div></div>
+            <div className="grid grid-cols-2 gap-3"><div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Idade</label><input required type="number" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.idade} onChange={(e) => setPerfil({ ...perfil, idade: e.target.value })} /></div><div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Objetivo</label><select className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.meta} onChange={(e) => setPerfil({ ...perfil, meta: e.target.value })}><option value="Emagrecimento">Emagrecimento</option><option value="Hipertrofia">Hipertrofia</option><option value="Definição">Definição Muscular</option><option value="Performance">Performance Esportiva</option></select></div></div>
+            <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-xl uppercase tracking-wider font-bold text-xs transition-colors shadow-lg mt-2">Salvar e Entrar</button>
           </form>
         </div>
       </div>
