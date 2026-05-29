@@ -425,8 +425,8 @@ function App() {
   }
 
   if (etapa === "login_personal") {
-    // Você vai precisar gerar o seu Client ID no console do Google Cloud gratuitamente
-    const GOOGLE_CLIENT_ID = "SEU_CLIENT_ID_AQUI.apps.googleusercontent.com";
+    // ✅ Chave oficial do Google configurada com sucesso!
+    const GOOGLE_CLIENT_ID = "588566756758-75ic5m03ser1af56tr26gkeenh8qn9nc.apps.googleusercontent.com";
 
     return (
       <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
@@ -653,8 +653,8 @@ function App() {
                         type="button"
                         onClick={() => setDiaAbaPersonal(dia)}
                         className={`px-4 py-2 rounded-t-lg text-[10px] font-bold uppercase transition-all flex-shrink-0 ${diaAbaPersonal === dia
-                            ? 'bg-neutral-800/50 border-b-2 border-emerald-500 text-emerald-500'
-                            : 'text-neutral-500 hover:text-neutral-300'
+                          ? 'bg-neutral-800/50 border-b-2 border-emerald-500 text-emerald-500'
+                          : 'text-neutral-500 hover:text-neutral-300'
                           }`}
                       >
                         {dia}
@@ -766,10 +766,10 @@ function App() {
                     type="button"
                     onClick={() => setDiaAbaAluno(dia)}
                     className={`px-3 py-2 rounded-lg text-[11px] font-bold uppercase transition-all flex-shrink-0 border ${ativo
-                        ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-600/10'
-                        : ehHoje
-                          ? 'bg-neutral-900 border-blue-500/40 text-blue-400'
-                          : 'bg-[#16171d] border-neutral-800 text-neutral-400 hover:bg-neutral-800'
+                      ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-600/10'
+                      : ehHoje
+                        ? 'bg-neutral-900 border-blue-500/40 text-blue-400'
+                        : 'bg-[#16171d] border-neutral-800 text-neutral-400 hover:bg-neutral-800'
                       }`}
                   >
                     {dia.slice(0, 3)} {ehHoje && "•"}
