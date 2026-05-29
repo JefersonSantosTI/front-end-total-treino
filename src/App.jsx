@@ -289,7 +289,7 @@ function App() {
     return (
       <div className="fixed inset-0 bg-[#0d0e12] flex flex-col items-center justify-center z-50">
         <div className="w-12 h-12 border-2 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin mb-4"></div>
-        <div className="text-xs text-neutral-400 font-bold uppercase tracking-widest">Sincronizando com Render...</div>
+        <div className="text-xs text-neutral-400 font-bold uppercase tracking-widest">Sincronizando Seu Perfil...</div>
       </div>
     );
   }
@@ -613,7 +613,7 @@ function App() {
           <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center">
             <header className="w-full max-w-4xl flex justify-between items-center border-b border-neutral-800 pb-4 mb-6">
               <div className="flex items-center space-x-3"><div className="w-7 h-7 bg-neutral-800 border border-neutral-700 rounded flex items-center justify-center text-emerald-500 font-mono text-xs font-bold">TF</div><div><h2 className="text-sm font-bold text-white uppercase tracking-tight">{perfil.nome}</h2><p className="text-[10px] text-neutral-500 font-mono uppercase tracking-wider">Conta {isVip ? 'Premium Elite' : 'Free Tier'}</p></div></div>
-              <button type="button" onClick={() => !isVip && setBloqueado(true)} className={`px-3 py-1.5 rounded text-[10px] font-bold uppercase font-mono border ${isVip ? 'border-emerald-500/20 text-emerald-500 bg-emerald-500/5' : 'border-amber-500/20 text-amber-500 bg-amber-500/5 animate-pulse'}`}>{isVip ? "✓ Assinatura Sincronizada" : "Upgrade para Enterprise"}</button>
+              <button type="button" onClick={() => !isVip && setBloqueado(true)} className={`px-3 py-1.5 rounded text-[10px] font-bold uppercase font-mono border ${isVip ? 'border-emerald-500/20 text-emerald-500 bg-emerald-500/5' : 'border-amber-500/20 text-amber-500 bg-amber-500/5 animate-pulse'}`}>{isVip ? "✓ Vip Ativado" : "Upgrade para Enterprise"}</button>
             </header>
 
             <main className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-6 items-start pb-10">
