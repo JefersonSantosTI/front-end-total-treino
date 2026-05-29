@@ -25,6 +25,7 @@ function App() {
   const [alunoEmEdicao, setAlunoEmEdicao] = useState(null);
   const [treinoForm, setTreinoForm] = useState([]);
   const [dietaForm, setDietaForm] = useState([]);
+  const [aguaForm, setAguaForm] = useState(""); // ✅ ADICIONADO: Estado para controlar a água
 
   const [modalNovoAluno, setModalNovoAluno] = useState(false);
   const [novoAlunoForm, setNovoAlunoForm] = useState({ nome: "", whatsapp: "", objetivo: "Emagrecimento" });
@@ -175,6 +176,7 @@ function App() {
     setAlunoEmEdicao(aluno);
     setTreinoForm(aluno.treinoPrescrito || []);
     setDietaForm(aluno.dietaPrescrita || []);
+    setAguaForm(aluno.metaAgua || ""); // ✅ ADICIONADO: Carrega a água do banco para o personal editar
   };
 
   const adicionarExercicioForm = () => setTreinoForm([...treinoForm, { nome: "", series: 4, reps: "10", obs: "" }]);
@@ -197,13 +199,13 @@ function App() {
     try {
       const response = await fetch(`${API_URL}/aluno/${alunoId}/prescrever`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ treinoPrescrito: treinoForm, dietaPrescrita: dietaForm })
+        body: JSON.stringify({ treinoPrescrito: treinoForm, dietaPrescrita: dietaForm, metaAgua: aguaForm }) // ✅ ADICIONADO: Envia a água para salvar no banco
       });
 
       if (response.ok) {
         setAlunosPersonal(prev => prev.map(a =>
           (a.id === alunoId || a._id === alunoId)
-            ? { ...a, statusTreino: "Enviado", treinoPrescrito: treinoForm, dietaPrescrita: dietaForm }
+            ? { ...a, statusTreino: "Enviado", treinoPrescrito: treinoForm, dietaPrescrita: dietaForm, metaAgua: aguaForm } // ✅ ADICIONADO: Atualiza estado local da água
             : a
         ));
         alert(`Plano completo aplicado com sucesso na nuvem para ${alunoEmEdicao.nome}!`);
@@ -493,6 +495,12 @@ function App() {
               <header className="p-4 md:p-5 border-b border-neutral-800 flex justify-between items-center bg-[#1c1d26]"><div><span className="text-[10px] text-emerald-500 font-mono font-bold uppercase tracking-wider">Prescrevendo Plano Pro</span><h3 className="text-base font-bold text-white uppercase">{alunoEmEdicao.nome}</h3></div><button type="button" onClick={() => setAlunoEmEdicao(null)} className="text-neutral-400 hover:text-white text-sm uppercase font-mono font-bold">Fechar ✕</button></header>
               <form onSubmit={salvarTreinoPersonal} className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
 
+                {/* ✅ INPUT DA ÁGUA EDITÁVEL PELO PERSONAL */}
+                <div className="bg-[#0d0e12] p-4 rounded-xl border border-blue-500/20">
+                  <label className="text-[10px] uppercase font-bold text-blue-400 block mb-2">💧 Meta de Hidratação Diária (Calculada pela IA)</label>
+                  <input required type="text" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-sm text-white font-bold" value={aguaForm} onChange={(e) => setAguaForm(e.target.value)} />
+                </div>
+
                 {/* ÁREA DE TREINO */}
                 <div>
                   <div className="flex justify-between items-center pb-2 border-b border-neutral-800/60 mb-3"><p className="text-xs font-bold uppercase tracking-wider text-neutral-400">Estrutura de Exercícios</p><button type="button" onClick={adicionarExercicioForm} className="bg-emerald-600/10 text-emerald-500 border border-emerald-500/20 text-[10px] font-bold px-3 py-1.5 rounded hover:bg-emerald-600/20 transition-all uppercase">+ Exercício</button></div>
@@ -548,6 +556,14 @@ function App() {
             <div><p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Check-ins Validados</p><h3 className="text-3xl font-bold text-white mt-1">{alunoLogado?.checkins?.length || 0}</h3></div>
             <button type="button" onClick={ejecutarCheckin} className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-3 rounded-lg text-xs uppercase tracking-wider transition-colors shadow-lg">Confirmar Treino Hoje</button>
           </div>
+
+          {/* ✅ CARD DA ÁGUA PARA O ALUNO VER */}
+          {alunoLogado?.metaAgua && (
+            <div className="bg-blue-600/10 border border-blue-500/20 p-5 rounded-xl shadow-xl flex items-center justify-between">
+              <div><p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">💧 Hidratação Diária</p><h3 className="text-xl font-bold text-white mt-1">{alunoLogado.metaAgua}</h3></div>
+              <span className="text-3xl">🚰</span>
+            </div>
+          )}
 
           {alunoLogado?.dietaPrescrita && alunoLogado.dietaPrescrita.length > 0 && (
             <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl space-y-3">
