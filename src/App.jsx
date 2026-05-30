@@ -6,41 +6,42 @@ import ChatReceitas from "./pages/ChatReceitas";
 import Login from "./components/Login";
 import TelaPlanos from "./components/TelaPlanos";
 
-// ✅ ADICIONADO: Constante com os dias da semana para o Calendário
+// ⚠️ COMENTADO TEMPORARIAMENTE PARA EVITAR ERROS NO VSCODE ATÉ VOCÊ USAR OS GIFS
+// import { abrirExercicioVisual } from "./components/visual";
+// const MAPA_GIFS = { ... };
+
 const DIAS_SEMANA = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 
 function App() {
   const [usuario, setUsuario] = useState(() => localStorage.getItem("usuario_whatsapp"));
   const [etapa, setEtapa] = useState("verificando");
-
-  const [abaAtiva, setAbaAtiva] = useState("home");
+  const [abaAtiva, setAbaAtiva] = useState(() => localStorage.getItem("treino_fit_aba") || "home"); // ✅ Persiste aba
   const [isVip, setIsVip] = useState(false);
   const [treinoIAPescado, setTreinoIAPescado] = useState(null);
   const [bloqueado, setBloqueado] = useState(false);
   const [modalidadeAberta, setModalidadeAberta] = useState(null);
 
-  const [personalLogado, setPersonalLogado] = useState(null);
+  // ✅ PERSISTÊNCIA DO PERSONAL LOGADO
+  const [personalLogado, setPersonalLogado] = useState(() => {
+    const salvo = localStorage.getItem("treino_fit_personal");
+    return salvo ? JSON.parse(salvo) : null;
+  });
+
   const [cref, setCref] = useState("");
   const [googleUser, setGoogleUser] = useState(null);
-
   const [alunoLogado, setAlunoLogado] = useState(null);
   const [codigoAcessoAluno, setCodigoAcessoAluno] = useState("");
   const [exerciciosConcluidos, setExerciciosConcluidos] = useState([]);
   const [alunosPersonal, setAlunosPersonal] = useState([]);
-
   const [alunoEmEdicao, setAlunoEmEdicao] = useState(null);
-  const [treinoForm, setTreinoForm] = useState([]); // Agora será um array de dias da semana
+  const [treinoForm, setTreinoForm] = useState([]);
   const [dietaForm, setDietaForm] = useState([]);
   const [aguaForm, setAguaForm] = useState("");
-
-  // ✅ ADICIONADO: Estados para controlar a aba do calendário selecionada
   const [diaAbaAluno, setDiaAbaAluno] = useState("Segunda");
   const [diaAbaPersonal, setDiaAbaPersonal] = useState("Segunda");
-
   const [modalNovoAluno, setModalNovoAluno] = useState(false);
   const [novoAlunoForm, setNovoAlunoForm] = useState({ nome: "", whatsapp: "", objetivo: "Emagrecimento" });
 
-  // ✅ ATUALIZADO: O estado perfil agora recebe as variáveis da Anamnese de Elite
   const [perfil, setPerfil] = useState({
     nome: "Guerreiro(a)", peso: "0", altura: "0", idade: "0", meta: "Emagrecimento",
     genero: "Masculino", nivel: "Intermediário", diasTreino: "5", restricoes: "", lesoes: "",
@@ -50,7 +51,6 @@ function App() {
   const API_URL = "https://api-backend-treino-fit.onrender.com/api";
   const verificandoRef = useRef(false);
 
-  // ✅ ADICIONADO: Descobre qual é o dia de hoje para abrir a aba certa no portal do aluno
   useEffect(() => {
     const diaAtualSistema = new Date().toLocaleDateString("pt-BR", { weekday: 'long' });
     const diaFormatado = DIAS_SEMANA.find(d => diaAtualSistema.toLowerCase().includes(d.toLowerCase().slice(0, 4))) || "Segunda";
@@ -142,18 +142,30 @@ function App() {
     }
   }, [API_URL, calcularSaude]);
 
+  // ✅ LOGICA DE INICIALIZAÇÃO UNIFICADA E BLINDADA (F5 DO PERSONAL E DO ALUNO)
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const refPersonal = urlParams.get('ref');
 
     if (refPersonal) {
       setEtapa("matricula_externa");
-    } else if (usuario) {
-      if (etapa === "verificando") sincronizarComBanco(usuario);
-    } else {
-      if (etapa === "verificando") setEtapa("triagem");
+      return;
     }
-  }, [usuario, etapa, sincronizarComBanco]);
+
+    if (etapa === "verificando") {
+      const personalSalvo = localStorage.getItem("treino_fit_personal");
+      const usuarioSalvo = localStorage.getItem("usuario_whatsapp");
+
+      if (personalSalvo) {
+        setPersonalLogado(JSON.parse(personalSalvo));
+        setEtapa("personal");
+      } else if (usuarioSalvo) {
+        sincronizarComBanco(usuarioSalvo);
+      } else {
+        setEtapa("triagem");
+      }
+    }
+  }, [etapa, sincronizarComBanco]);
 
   const handleLogin = (whatsapp) => {
     const limpo = String(whatsapp).replace(/\D/g, "");
@@ -163,8 +175,12 @@ function App() {
   };
 
   const handleSair = () => {
+    localStorage.removeItem("treino_fit_personal");
+    localStorage.removeItem("treino_fit_aba");
+    localStorage.removeItem("usuario_whatsapp");
     localStorage.clear();
     setUsuario(null);
+    setPersonalLogado(null);
     setEtapa("triagem");
   };
 
@@ -189,6 +205,7 @@ function App() {
 
       if (response.ok && !data.requerCref) {
         setPersonalLogado(data);
+        localStorage.setItem("treino_fit_personal", JSON.stringify(data)); // ✅ SALVA O LOGIN
         setEtapa("personal");
       } else if (data.requerCref) {
         // Aguarda a tela de CREF
@@ -212,6 +229,7 @@ function App() {
 
       if (response.ok) {
         setPersonalLogado(data);
+        localStorage.setItem("treino_fit_personal", JSON.stringify(data)); // ✅ SALVA O LOGIN
         setEtapa("personal");
       } else {
         alert(data.mensagem);
@@ -250,7 +268,6 @@ function App() {
 
   const abrirGeradorTreino = (aluno) => {
     setAlunoEmEdicao(aluno);
-
     if (aluno.treinoSemanal && aluno.treinoSemanal.length > 0) {
       setTreinoForm(aluno.treinoSemanal);
     } else {
@@ -260,7 +277,6 @@ function App() {
       }));
       setTreinoForm(estruturaSemanal);
     }
-
     setDietaForm(aluno.dietaPrescrita || []);
     setAguaForm(aluno.metaAgua || "");
     setDiaAbaPersonal("Segunda");
@@ -380,7 +396,6 @@ function App() {
     } catch { alert("Erro ao enviar check-in para o servidor."); }
   };
 
-  // ✅ ATUALIZADO: Salva o onboarding com os novos dados de Elite
   const salvarOnboarding = async (e) => {
     e.preventDefault();
     if (!perfil.nome || !perfil.peso || !perfil.altura || !perfil.idade) { alert("Preencha todos os campos!"); return; }
@@ -507,7 +522,7 @@ function App() {
       <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col p-4 md:p-6 overflow-y-auto font-sans z-40">
         <header className="w-full max-w-5xl mx-auto flex justify-between items-center border-b border-neutral-800 pb-4 mb-6">
           <div className="flex items-center gap-3"><div className="w-7 h-7 bg-neutral-800 border border-neutral-700 rounded flex items-center justify-center text-emerald-500 font-mono text-xs font-bold">TF</div><div><h2 className="text-sm font-bold text-white uppercase tracking-tight">{personalLogado?.nome}</h2><p className="text-[10px] text-neutral-500 font-mono">{personalLogado?.cref} • Assessoria Conectada</p></div></div>
-          <button type="button" onClick={() => setEtapa("triagem")} className="px-3 py-1.5 bg-neutral-900 border border-neutral-800 rounded-md hover:bg-neutral-800 text-[10px] text-neutral-400 font-bold uppercase transition-colors">Sair</button>
+          <button type="button" onClick={handleSair} className="px-3 py-1.5 bg-neutral-900 border border-neutral-800 rounded-md hover:bg-neutral-800 text-[10px] text-neutral-400 font-bold uppercase transition-colors">Sair</button>
         </header>
 
         <main className="w-full max-w-5xl mx-auto flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 items-start pb-10">
@@ -524,6 +539,8 @@ function App() {
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
               <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400">Carteira de Clientes</h3>
               <div className="flex gap-2">
+                {/* ✅ BOTÃO DE ATUALIZAR ADICIONADO AQUI */}
+                <button type="button" onClick={carregarAlunosAssessoria} className="bg-neutral-800 hover:bg-neutral-700 text-white text-[10px] font-bold px-3 py-2 sm:py-1.5 rounded transition-colors uppercase flex-1 sm:flex-none text-center shadow-lg border border-neutral-700">🔄 Atualizar</button>
                 <button type="button" onClick={() => {
                   const link = `${window.location.origin}?ref=${personalLogado?.cref?.replace(/\D/g, "") || "treinador"}`;
                   navigator.clipboard.writeText(link);
@@ -856,7 +873,6 @@ function App() {
     );
   }
 
-  // ✅ ATUALIZADO: Tela de matrícula via LINK DA IA
   if (etapa === "matricula_externa") {
     return (
       <div className="fixed inset-0 bg-[#0d0e12] flex flex-col items-center justify-center p-6 text-white font-sans z-50 overflow-y-auto">
@@ -876,14 +892,12 @@ function App() {
             <input required type="text" placeholder="Nome Completo" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, nome: e.target.value })} />
             <input required type="text" placeholder="WhatsApp (Apenas Números)" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setNovoAlunoForm({ ...novoAlunoForm, whatsapp: e.target.value })} />
 
-            {/* Linha 1: Peso, Altura, Idade */}
             <div className="grid grid-cols-3 gap-3">
               <input required type="number" step="0.1" placeholder="Peso (kg)" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, peso: e.target.value })} />
               <input required type="number" step="0.01" placeholder="Altura (m)" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, altura: e.target.value })} />
               <input required type="number" placeholder="Idade" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, idade: e.target.value })} />
             </div>
 
-            {/* Linha 2: Gênero e Meta */}
             <div className="grid grid-cols-2 gap-3">
               <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none text-neutral-400 focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, genero: e.target.value })}>
                 <option value="">Gênero Biológico</option><option value="Masculino">Masculino</option><option value="Feminino">Feminino</option>
@@ -893,7 +907,6 @@ function App() {
               </select>
             </div>
 
-            {/* Linha 3: Nível e Dias de Treino */}
             <div className="grid grid-cols-2 gap-3">
               <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none text-neutral-400 focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, nivel: e.target.value })}>
                 <option value="">Nível de Treino</option><option value="Iniciante">Iniciante</option><option value="Intermediário">Intermediário</option><option value="Avançado">Avançado</option>
@@ -913,7 +926,6 @@ function App() {
     );
   }
 
-  // ✅ ATUALIZADO: Tela de Onboarding manual
   if (etapa === "onboarding") {
     return (
       <div className="fixed inset-0 bg-[#0d0e12] flex flex-col items-center justify-center p-8 text-white z-50 overflow-y-auto font-sans">
