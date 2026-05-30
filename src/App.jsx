@@ -6,7 +6,8 @@ import ChatReceitas from "./pages/ChatReceitas";
 import Login from "./components/Login";
 import TelaPlanos from "./components/TelaPlanos";
 
-// import { abrirExercicioVisual } from "./components/visual";
+// ✅ 1. IMPORT DESCOMENTADO E ATIVADO
+import { abrirExercicioVisual } from "./components/visual";
 
 const DIAS_SEMANA = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 
@@ -34,7 +35,10 @@ function App() {
 
   const [alunoEmEdicao, setAlunoEmEdicao] = useState(null);
 
-  // ✅ NOVOS ESTADOS PARA A EDIÇÃO DE PERFIL E RECÁLCULO DA IA
+  // ✅ 2. ESTADO DO MODAL DE GIF ADICIONADO
+  const [modalGifAberto, setModalGifAberto] = useState(null);
+
+  // NOVOS ESTADOS PARA A EDIÇÃO DE PERFIL E RECÁLCULO DA IA
   const [alunoEditandoPerfil, setAlunoEditandoPerfil] = useState(null);
   const [isRecalculando, setIsRecalculando] = useState(false);
 
@@ -242,7 +246,6 @@ function App() {
     } catch { alert("Erro ao alterar status no servidor."); }
   };
 
-  // ✅ NOVA FUNÇÃO: ENVIA DADOS PARA O BACK-END RECALCULAR A IA
   const atualizarBiometriaAluno = async (e) => {
     e.preventDefault();
     setIsRecalculando(true);
@@ -525,7 +528,6 @@ function App() {
                         <td className="py-3.5"><span className={`px-2 py-0.5 rounded text-[9px] font-bold font-mono uppercase ${aluno.statusTreino === 'Rascunho IA' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : aluno.statusTreino === 'Enviado' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-neutral-800 text-neutral-400'}`}>{aluno.statusTreino}</span></td>
                         <td className="py-3.5">{fezCheckinHoje ? <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded animate-pulse">🔥 Treinou Hoje!</span> : aluno.checkins && aluno.checkins.length > 0 ? <span className="text-[10px] font-mono text-neutral-400">Check-in: {aluno.checkins[0].data}</span> : <span className="text-[10px] text-neutral-600 font-mono">Nenhum treino</span>}</td>
                         <td className="py-3.5 text-right space-x-2">
-                          {/* ✅ NOVO BOTÃO DE EDITAR PERFIL ADICIONADO AQUI */}
                           <button type="button" onClick={() => setAlunoEditandoPerfil(aluno)} className="bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase mr-1">Editar Perfil</button>
 
                           <button type="button" onClick={() => abrirGeradorTreino(aluno)} className="bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase">{aluno.statusTreino === "Rascunho IA" ? "Revisar IA" : "Montar Semanal"}</button>
@@ -573,7 +575,6 @@ function App() {
                     </div>
 
                     <div className="pt-1 flex flex-wrap gap-2">
-                      {/* ✅ NOVO BOTÃO DE EDITAR PERFIL NO MOBILE */}
                       <button type="button" onClick={() => setAlunoEditandoPerfil(aluno)} className="w-full bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 text-[10px] font-bold py-2 rounded transition-colors uppercase text-center mb-1">
                         ✏️ Editar Perfil do Aluno
                       </button>
@@ -595,7 +596,7 @@ function App() {
           </div>
         </main>
 
-        {/* ✅ NOVO MODAL: EDIÇÃO DE BIOMETRIA E RECÁLCULO IA */}
+        {/* MODAL: EDIÇÃO DE BIOMETRIA E RECÁLCULO IA */}
         {alunoEditandoPerfil && (
           <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="w-full max-w-md bg-[#16171d] border border-neutral-800 rounded-2xl shadow-2xl p-6 relative overflow-y-auto max-h-[90vh]">
@@ -827,7 +828,15 @@ function App() {
                     <div className="p-5 flex items-start justify-between gap-4">
                       <div className="flex-1">
                         <h4 className={`font-bold uppercase text-base tracking-tight text-white ${estaconcluido ? 'line-through text-neutral-500' : ''}`}>{ex.nome}</h4>
-                        <span className="bg-blue-500/10 text-blue-400 font-mono text-[10px] font-bold uppercase px-2 py-0.5 rounded">{ex.series} Séries × {ex.reps} Reps</span>
+
+                        {/* ✅ 3. NOVO BOTÃO DE VER GIF ADICIONADO AQUI */}
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="bg-blue-500/10 text-blue-400 font-mono text-[10px] font-bold uppercase px-2 py-0.5 rounded">{ex.series} Séries × {ex.reps} Reps</span>
+                          <button type="button" onClick={() => abrirExercicioVisual(ex, setModalGifAberto)} className="bg-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-700 text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase border border-neutral-700">
+                            ▶ Ver GIF
+                          </button>
+                        </div>
+
                         {ex.obs && <p className="text-xs text-neutral-400 mt-2 bg-[#0d0e12] border border-neutral-800 p-2 rounded-lg font-sans">📌 Obs: {ex.obs}</p>}
                       </div>
                       <button type="button" onClick={() => alternarConclusaoExercicio(chaveUnica)} className={`w-6 h-6 rounded-md border flex items-center justify-center font-bold text-xs transition-colors ${estaconcluido ? 'bg-blue-600 border-blue-500 text-white' : 'border-neutral-700 bg-transparent text-transparent hover:border-neutral-500'}`}>✓</button>
@@ -837,6 +846,22 @@ function App() {
               });
             })()}
           </div>
+
+          {/* ✅ 4. NOVO MODAL DE EXECUÇÃO DE GIF INJETADO AQUI */}
+          {modalGifAberto && (
+            <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setModalGifAberto(null)}>
+              <div className="w-full max-w-sm bg-[#16171d] border border-neutral-800 rounded-2xl overflow-hidden shadow-2xl relative" onClick={e => e.stopPropagation()}>
+                <button onClick={() => setModalGifAberto(null)} className="absolute top-3 right-3 z-10 w-8 h-8 bg-black/50 hover:bg-red-500 text-white rounded-full flex items-center justify-center text-xs transition-colors">✕</button>
+                <div className="p-4 bg-[#1c1d26] border-b border-neutral-800">
+                  <h3 className="font-bold text-white uppercase text-sm pr-8">{modalGifAberto.nome}</h3>
+                </div>
+                <div className="w-full bg-[#0d0e12] flex justify-center p-4 min-h-[200px] items-center">
+                  <img src={modalGifAberto.url} alt={modalGifAberto.nome} className="max-w-full rounded-lg shadow-lg border border-neutral-800" />
+                </div>
+              </div>
+            </div>
+          )}
+
         </main>
       </div>
     );
