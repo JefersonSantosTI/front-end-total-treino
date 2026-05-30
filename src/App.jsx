@@ -6,22 +6,20 @@ import ChatReceitas from "./pages/ChatReceitas";
 import Login from "./components/Login";
 import TelaPlanos from "./components/TelaPlanos";
 
-// ⚠️ COMENTADO TEMPORARIAMENTE PARA EVITAR ERROS NO VSCODE ATÉ VOCÊ USAR OS GIFS
 // import { abrirExercicioVisual } from "./components/visual";
-// const MAPA_GIFS = { ... };
 
 const DIAS_SEMANA = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 
 function App() {
   const [usuario, setUsuario] = useState(() => localStorage.getItem("usuario_whatsapp"));
   const [etapa, setEtapa] = useState("verificando");
-  const [abaAtiva, setAbaAtiva] = useState(() => localStorage.getItem("treino_fit_aba") || "home"); // ✅ Persiste aba
+  const [abaAtiva, setAbaAtiva] = useState(() => localStorage.getItem("treino_fit_aba") || "home");
   const [isVip, setIsVip] = useState(false);
   const [treinoIAPescado, setTreinoIAPescado] = useState(null);
   const [bloqueado, setBloqueado] = useState(false);
   const [modalidadeAberta, setModalidadeAberta] = useState(null);
 
-  // ✅ PERSISTÊNCIA DO PERSONAL LOGADO
+  // PERSISTÊNCIA DO PERSONAL LOGADO
   const [personalLogado, setPersonalLogado] = useState(() => {
     const salvo = localStorage.getItem("treino_fit_personal");
     return salvo ? JSON.parse(salvo) : null;
@@ -33,7 +31,13 @@ function App() {
   const [codigoAcessoAluno, setCodigoAcessoAluno] = useState("");
   const [exerciciosConcluidos, setExerciciosConcluidos] = useState([]);
   const [alunosPersonal, setAlunosPersonal] = useState([]);
+
   const [alunoEmEdicao, setAlunoEmEdicao] = useState(null);
+
+  // ✅ NOVOS ESTADOS PARA A EDIÇÃO DE PERFIL E RECÁLCULO DA IA
+  const [alunoEditandoPerfil, setAlunoEditandoPerfil] = useState(null);
+  const [isRecalculando, setIsRecalculando] = useState(false);
+
   const [treinoForm, setTreinoForm] = useState([]);
   const [dietaForm, setDietaForm] = useState([]);
   const [aguaForm, setAguaForm] = useState("");
@@ -116,17 +120,9 @@ function App() {
         } else {
           const saude = calcularSaude(dados.peso, dados.altura, dados.idade);
           setPerfil({
-            nome: dados.nome || "Guerreiro(a)",
-            peso: String(dados.peso),
-            altura: String(dados.altura),
-            idade: String(dados.idade || 25),
-            meta: dados.meta || "Emagrecimento",
-            genero: dados.genero || "Masculino",
-            nivel: dados.nivel || "Intermediário",
-            diasTreino: dados.diasTreino || "5",
-            restricoes: dados.restricoes || "",
-            lesoes: dados.lesoes || "",
-            ...saude
+            nome: dados.nome || "Guerreiro(a)", peso: String(dados.peso), altura: String(dados.altura), idade: String(dados.idade || 25),
+            meta: dados.meta || "Emagrecimento", genero: dados.genero || "Masculino", nivel: dados.nivel || "Intermediário",
+            diasTreino: dados.diasTreino || "5", restricoes: dados.restricoes || "", lesoes: dados.lesoes || "", ...saude
           });
           setIsVip(dados.pago === true);
           setTreinoIAPescado(dados.treinoIA || null);
@@ -142,7 +138,6 @@ function App() {
     }
   }, [API_URL, calcularSaude]);
 
-  // ✅ LOGICA DE INICIALIZAÇÃO UNIFICADA E BLINDADA (F5 DO PERSONAL E DO ALUNO)
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const refPersonal = urlParams.get('ref');
@@ -186,54 +181,37 @@ function App() {
 
   const handleGoogleSuccess = async (credentialResponse) => {
     const decoded = jwtDecode(credentialResponse.credential);
-    const dadosGoogle = {
-      nome: decoded.name,
-      email: decoded.email,
-      googleId: decoded.sub,
-      foto: decoded.picture
-    };
-
+    const dadosGoogle = { nome: decoded.name, email: decoded.email, googleId: decoded.sub, foto: decoded.picture };
     setGoogleUser(dadosGoogle);
 
     try {
       const response = await fetch(`${API_URL}/personal/auth`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dadosGoogle)
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dadosGoogle)
       });
       const data = await response.json();
-
       if (response.ok && !data.requerCref) {
         setPersonalLogado(data);
-        localStorage.setItem("treino_fit_personal", JSON.stringify(data)); // ✅ SALVA O LOGIN
+        localStorage.setItem("treino_fit_personal", JSON.stringify(data));
         setEtapa("personal");
       } else if (data.requerCref) {
         // Aguarda a tela de CREF
-      } else {
-        alert(data.mensagem);
-      }
+      } else { alert(data.mensagem); }
     } catch (err) { console.error("Erro na comunicação com o banco:", err); }
   };
 
   const handleCadastrarCref = async (e) => {
     e.preventDefault();
     if (!cref.trim()) return alert("Por favor, insira o seu CREF técnico.");
-
     try {
       const response = await fetch(`${API_URL}/personal/auth`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...googleUser, cref })
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...googleUser, cref })
       });
       const data = await response.json();
-
       if (response.ok) {
         setPersonalLogado(data);
-        localStorage.setItem("treino_fit_personal", JSON.stringify(data)); // ✅ SALVA O LOGIN
+        localStorage.setItem("treino_fit_personal", JSON.stringify(data));
         setEtapa("personal");
-      } else {
-        alert(data.mensagem);
-      }
+      } else { alert(data.mensagem); }
     } catch (err) { console.error("Erro ao salvar CREF:", err); }
   };
 
@@ -249,9 +227,7 @@ function App() {
         alert(`✅ Aluno Cadastrado!\n\nEnvie esta mensagem para o aluno:\n"Acesse https://treinofit.app.br, vá no Módulo Aluno e insira seu código de acesso:\nCódigo: ${data.nome}"`);
         setModalNovoAluno(false);
         setNovoAlunoForm({ nome: "", whatsapp: "", objetivo: "Emagrecimento" });
-      } else {
-        alert(data.mensagem || "Erro ao cadastrar aluno.");
-      }
+      } else { alert(data.mensagem || "Erro ao cadastrar aluno."); }
     } catch { alert("Erro ao comunicar com o banco de dados."); }
   };
 
@@ -266,15 +242,51 @@ function App() {
     } catch { alert("Erro ao alterar status no servidor."); }
   };
 
+  // ✅ NOVA FUNÇÃO: ENVIA DADOS PARA O BACK-END RECALCULAR A IA
+  const atualizarBiometriaAluno = async (e) => {
+    e.preventDefault();
+    setIsRecalculando(true);
+    const alunoId = alunoEditandoPerfil.id || alunoEditandoPerfil._id;
+
+    try {
+      const response = await fetch(`${API_URL}/aluno/${alunoId}/atualizar-biometria`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          peso: alunoEditandoPerfil.peso,
+          altura: alunoEditandoPerfil.altura,
+          idade: alunoEditandoPerfil.idade,
+          meta: alunoEditandoPerfil.objetivo, // Backend entende 'meta'
+          genero: alunoEditandoPerfil.genero,
+          nivel: alunoEditandoPerfil.nivel,
+          diasTreino: alunoEditandoPerfil.diasTreino,
+          restricoes: alunoEditandoPerfil.restricoes,
+          lesoes: alunoEditandoPerfil.lesoes
+        })
+      });
+
+      if (response.ok) {
+        const alunoAtualizado = await response.json();
+        setAlunosPersonal(prev => prev.map(a => (a.id === alunoId || a._id === alunoId) ? alunoAtualizado : a));
+        alert(`✅ Ficha de ${alunoAtualizado.nome} atualizada! A Inteligência Artificial já recalculou o treino e a dieta.`);
+        setAlunoEditandoPerfil(null);
+      } else {
+        const err = await response.json();
+        alert(err.mensagem || "Erro ao recriar plano.");
+      }
+    } catch {
+      alert("Erro de conexão ao comunicar com a IA.");
+    } finally {
+      setIsRecalculando(false);
+    }
+  };
+
   const abrirGeradorTreino = (aluno) => {
     setAlunoEmEdicao(aluno);
     if (aluno.treinoSemanal && aluno.treinoSemanal.length > 0) {
       setTreinoForm(aluno.treinoSemanal);
     } else {
-      const estruturaSemanal = DIAS_SEMANA.map(dia => ({
-        dia,
-        exercicios: dia === "Segunda" ? (aluno.treinoPrescrito || []) : []
-      }));
+      const estruturaSemanal = DIAS_SEMANA.map(dia => ({ dia, exercicios: dia === "Segunda" ? (aluno.treinoPrescrito || []) : [] }));
       setTreinoForm(estruturaSemanal);
     }
     setDietaForm(aluno.dietaPrescrita || []);
@@ -282,56 +294,23 @@ function App() {
     setDiaAbaPersonal("Segunda");
   };
 
-  const adicionarExercicioForm = () => {
-    setTreinoForm(prev => prev.map(diaObj => {
-      if (diaObj.dia === diaAbaPersonal) {
-        return { ...diaObj, exercicios: [...diaObj.exercicios, { nome: "", series: 4, reps: "10", obs: "" }] };
-      }
-      return diaObj;
-    }));
-  };
-
-  const removerExercicioForm = (indexExercicio) => {
-    setTreinoForm(prev => prev.map(diaObj => {
-      if (diaObj.dia === diaAbaPersonal) {
-        return { ...diaObj, exercicios: diaObj.exercicios.filter((_, i) => i !== indexExercicio) };
-      }
-      return diaObj;
-    }));
-  };
-
-  const handleExercicioChange = (indexExercicio, campo, valor) => {
-    setTreinoForm(prev => prev.map(diaObj => {
-      if (diaObj.dia === diaAbaPersonal) {
-        const novosExercicios = [...diaObj.exercicios];
-        novosExercicios[indexExercicio][campo] = valor;
-        return { ...diaObj, exercicios: novosExercicios };
-      }
-      return diaObj;
-    }));
-  };
+  const adicionarExercicioForm = () => setTreinoForm(prev => prev.map(diaObj => diaObj.dia === diaAbaPersonal ? { ...diaObj, exercicios: [...diaObj.exercicios, { nome: "", series: 4, reps: "10", obs: "" }] } : diaObj));
+  const removerExercicioForm = (indexExercicio) => setTreinoForm(prev => prev.map(diaObj => diaObj.dia === diaAbaPersonal ? { ...diaObj, exercicios: diaObj.exercicios.filter((_, i) => i !== indexExercicio) } : diaObj));
+  const handleExercicioChange = (indexExercicio, campo, valor) => setTreinoForm(prev => prev.map(diaObj => { if (diaObj.dia === diaAbaPersonal) { const novosExercicios = [...diaObj.exercicios]; novosExercicios[indexExercicio][campo] = valor; return { ...diaObj, exercicios: novosExercicios }; } return diaObj; }));
 
   const adicionarDietaForm = () => setDietaForm([...dietaForm, { refeicao: "", itens: "" }]);
   const removerDietaForm = (index) => setDietaForm(dietaForm.filter((_, i) => i !== index));
-  const handleDietaChange = (index, campo, valor) => {
-    const novaDieta = [...dietaForm]; novaDieta[index][campo] = valor; setDietaForm(novaDieta);
-  };
+  const handleDietaChange = (index, campo, valor) => { const novaDieta = [...dietaForm]; novaDieta[index][campo] = valor; setDietaForm(novaDieta); };
 
   const salvarTreinoPersonal = async (e) => {
     e.preventDefault();
     const alunoId = alunoEmEdicao.id || alunoEmEdicao._id;
     try {
       const response = await fetch(`${API_URL}/aluno/${alunoId}/prescrever`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ treinoSemanal: treinoForm, dietaPrescrita: dietaForm, metaAgua: aguaForm })
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ treinoSemanal: treinoForm, dietaPrescrita: dietaForm, metaAgua: aguaForm })
       });
-
       if (response.ok) {
-        setAlunosPersonal(prev => prev.map(a =>
-          (a.id === alunoId || a._id === alunoId)
-            ? { ...a, statusTreino: "Enviado", treinoSemanal: treinoForm, dietaPrescrita: dietaForm, metaAgua: aguaForm }
-            : a
-        ));
+        setAlunosPersonal(prev => prev.map(a => (a.id === alunoId || a._id === alunoId) ? { ...a, statusTreino: "Enviado", treinoSemanal: treinoForm, dietaPrescrita: dietaForm, metaAgua: aguaForm } : a));
         alert(`Plano Semanal aplicado com sucesso na nuvem para ${alunoEmEdicao.nome}!`);
         setAlunoEmEdicao(null);
       }
@@ -342,9 +321,7 @@ function App() {
     if (!confirm("Remover este aluno de forma permanente?")) return;
     try {
       const response = await fetch(`${API_URL}/aluno/${id}`, { method: "DELETE" });
-      if (response.ok) {
-        setAlunosPersonal(prev => prev.filter(a => a.id !== id && a._id !== id));
-      }
+      if (response.ok) setAlunosPersonal(prev => prev.filter(a => a.id !== id && a._id !== id));
     } catch { alert("Erro ao deletar aluno."); }
   };
 
@@ -359,29 +336,22 @@ function App() {
         setAlunoLogado(alunoEncontrado);
         setExerciciosConcluidos([]);
         setEtapa("aluno");
-      } else {
-        alert("Aluno não encontrado na assessoria.");
-      }
+      } else { alert("Aluno não encontrado na assessoria."); }
     } catch { alert("Erro ao conectar com o portal da assessoria."); }
   };
 
   const alternarConclusaoExercicio = (chaveUnica) => {
-    if (exerciciosConcluidos.includes(chaveUnica)) {
-      setExerciciosConcluidos(exerciciosConcluidos.filter(id => id !== chaveUnica));
-    } else {
-      setExerciciosConcluidos([...exerciciosConcluidos, chaveUnica]);
-    }
+    if (exerciciosConcluidos.includes(chaveUnica)) setExerciciosConcluidos(exerciciosConcluidos.filter(id => id !== chaveUnica));
+    else setExerciciosConcluidos([...exerciciosConcluidos, chaveUnica]);
   };
 
   const ejecutarCheckin = async () => {
     const hojeObj = new Date();
     const dataFormatada = hojeObj.toLocaleDateString("pt-BR", { day: '2-digit', month: '2-digit' });
-    const diaSemana = hojeObj.toLocaleDateString("pt-BR", { weekday: 'long' });
-    const diaSemanaFormatado = diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1);
-
+    const diaSemanaFormatado = hojeObj.toLocaleDateString("pt-BR", { weekday: 'long' }).charAt(0).toUpperCase() + hojeObj.toLocaleDateString("pt-BR", { weekday: 'long' }).slice(1);
     const jaFezCheckin = alunoLogado.checkins?.some(c => c.data === dataFormatada);
-    if (jaFezCheckin) return alert("Check-in de hoje já foi computado!");
 
+    if (jaFezCheckin) return alert("Check-in de hoje já foi computado!");
     const novoCheckin = { data: dataFormatada, diaSemana: diaSemanaFormatado };
     const alunoId = alunoLogado.id || alunoLogado._id;
 
@@ -402,19 +372,7 @@ function App() {
     try {
       const response = await fetch(`${API_URL}/usuarios/atualizar`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          whatsapp: usuario,
-          nome: perfil.nome,
-          peso: Number(perfil.peso),
-          altura: Number(perfil.altura),
-          meta: perfil.meta,
-          idade: Number(perfil.idade),
-          genero: perfil.genero,
-          nivel: perfil.nivel,
-          diasTreino: perfil.diasTreino,
-          restricoes: perfil.restricoes,
-          lesoes: perfil.lesoes
-        })
+        body: JSON.stringify({ whatsapp: usuario, nome: perfil.nome, peso: Number(perfil.peso), altura: Number(perfil.altura), meta: perfil.meta, idade: Number(perfil.idade), genero: perfil.genero, nivel: perfil.nivel, diasTreino: perfil.diasTreino, restricoes: perfil.restricoes, lesoes: perfil.lesoes })
       });
       if (response.ok) {
         const saude = calcularSaude(perfil.peso, perfil.altura, perfil.idade);
@@ -539,7 +497,6 @@ function App() {
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
               <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400">Carteira de Clientes</h3>
               <div className="flex gap-2">
-                {/* ✅ BOTÃO DE ATUALIZAR ADICIONADO AQUI */}
                 <button type="button" onClick={carregarAlunosAssessoria} className="bg-neutral-800 hover:bg-neutral-700 text-white text-[10px] font-bold px-3 py-2 sm:py-1.5 rounded transition-colors uppercase flex-1 sm:flex-none text-center shadow-lg border border-neutral-700">🔄 Atualizar</button>
                 <button type="button" onClick={() => {
                   const link = `${window.location.origin}?ref=${personalLogado?.cref?.replace(/\D/g, "") || "treinador"}`;
@@ -568,6 +525,9 @@ function App() {
                         <td className="py-3.5"><span className={`px-2 py-0.5 rounded text-[9px] font-bold font-mono uppercase ${aluno.statusTreino === 'Rascunho IA' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : aluno.statusTreino === 'Enviado' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-neutral-800 text-neutral-400'}`}>{aluno.statusTreino}</span></td>
                         <td className="py-3.5">{fezCheckinHoje ? <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded animate-pulse">🔥 Treinou Hoje!</span> : aluno.checkins && aluno.checkins.length > 0 ? <span className="text-[10px] font-mono text-neutral-400">Check-in: {aluno.checkins[0].data}</span> : <span className="text-[10px] text-neutral-600 font-mono">Nenhum treino</span>}</td>
                         <td className="py-3.5 text-right space-x-2">
+                          {/* ✅ NOVO BOTÃO DE EDITAR PERFIL ADICIONADO AQUI */}
+                          <button type="button" onClick={() => setAlunoEditandoPerfil(aluno)} className="bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase mr-1">Editar Perfil</button>
+
                           <button type="button" onClick={() => abrirGeradorTreino(aluno)} className="bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase">{aluno.statusTreino === "Rascunho IA" ? "Revisar IA" : "Montar Semanal"}</button>
                           <button type="button" onClick={() => alterStatusContaAluno(idUnico, aluno.statusConta === "Ativo" ? "Off" : "Ativo")} className="border border-neutral-800 text-neutral-400 hover:bg-neutral-800 text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase">{aluno.statusConta === "Ativo" ? "Arquivar" : "Ativar"}</button>
                           <button type="button" onClick={() => deletarAluno(idUnico)} className="text-red-500/70 hover:text-red-400 border border-neutral-800 hover:border-red-500/20 rounded font-bold text-[9px] py-1 px-2 uppercase">Excluir</button>
@@ -612,7 +572,12 @@ function App() {
                       </div>
                     </div>
 
-                    <div className="pt-1 flex gap-2">
+                    <div className="pt-1 flex flex-wrap gap-2">
+                      {/* ✅ NOVO BOTÃO DE EDITAR PERFIL NO MOBILE */}
+                      <button type="button" onClick={() => setAlunoEditandoPerfil(aluno)} className="w-full bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 text-[10px] font-bold py-2 rounded transition-colors uppercase text-center mb-1">
+                        ✏️ Editar Perfil do Aluno
+                      </button>
+
                       <button type="button" onClick={() => abrirGeradorTreino(aluno)} className="bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold py-2 rounded transition-colors uppercase flex-1 shadow-lg text-center">
                         {aluno.statusTreino === "Rascunho IA" ? "Revisar IA" : "Editar Plano"}
                       </button>
@@ -627,10 +592,62 @@ function App() {
                 );
               })}
             </div>
-
           </div>
         </main>
 
+        {/* ✅ NOVO MODAL: EDIÇÃO DE BIOMETRIA E RECÁLCULO IA */}
+        {alunoEditandoPerfil && (
+          <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="w-full max-w-md bg-[#16171d] border border-neutral-800 rounded-2xl shadow-2xl p-6 relative overflow-y-auto max-h-[90vh]">
+              <button onClick={() => !isRecalculando && setAlunoEditandoPerfil(null)} className="absolute top-4 right-4 text-neutral-500 hover:text-white font-bold">✕</button>
+              <h3 className="text-sm font-bold text-white uppercase mb-1">Editar Biometria</h3>
+              <p className="text-[10px] text-neutral-400 mb-5">Altere os dados de <span className="text-emerald-400 font-bold">{alunoEditandoPerfil.nome}</span>. A IA irá recalcular tudo automaticamente.</p>
+
+              <form onSubmit={atualizarBiometriaAluno} className="space-y-4">
+                <div className="grid grid-cols-3 gap-3">
+                  <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Peso(kg)</label><input required type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.peso || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, peso: e.target.value })} disabled={isRecalculando} /></div>
+                  <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Altura(m)</label><input required type="number" step="0.01" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.altura || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, altura: e.target.value })} disabled={isRecalculando} /></div>
+                  <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Idade</label><input required type="number" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.idade || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, idade: e.target.value })} disabled={isRecalculando} /></div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Gênero</label>
+                    <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.genero || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, genero: e.target.value })} disabled={isRecalculando}>
+                      <option value="Masculino">Masculino</option><option value="Feminino">Feminino</option>
+                    </select>
+                  </div>
+                  <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Objetivo</label>
+                    <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.objetivo || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, objetivo: e.target.value })} disabled={isRecalculando}>
+                      <option value="Emagrecimento">Emagrecimento</option><option value="Hipertrofia">Hipertrofia</option><option value="Performance">Performance</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Nível</label>
+                    <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.nivel || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, nivel: e.target.value })} disabled={isRecalculando}>
+                      <option value="Iniciante">Iniciante</option><option value="Intermediário">Intermediário</option><option value="Avançado">Avançado</option>
+                    </select>
+                  </div>
+                  <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Dias Treino</label>
+                    <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.diasTreino || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, diasTreino: e.target.value })} disabled={isRecalculando}>
+                      <option value="3">3 Dias</option><option value="4">4 Dias</option><option value="5">5 Dias</option><option value="6">6 Dias</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Restrições Alimentares</label><input type="text" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.restricoes || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, restricoes: e.target.value })} disabled={isRecalculando} /></div>
+                <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Lesões ou Dores</label><input type="text" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.lesoes || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, lesoes: e.target.value })} disabled={isRecalculando} /></div>
+
+                <button type="submit" disabled={isRecalculando} className={`w-full p-4 rounded-xl uppercase tracking-wider font-bold text-xs shadow-lg mt-4 transition-all ${isRecalculando ? 'bg-emerald-600/50 text-white/50 cursor-not-allowed animate-pulse' : 'bg-emerald-600 hover:bg-emerald-500 text-white'}`}>
+                  {isRecalculando ? "🤖 Recalculando na IA..." : "Salvar e Recalcular na IA"}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL NOVO ALUNO MANUAL */}
         {modalNovoAluno && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="w-full max-w-sm bg-[#16171d] border border-neutral-800 rounded-2xl shadow-2xl p-6">
@@ -649,6 +666,7 @@ function App() {
           </div>
         )}
 
+        {/* MODAL PRESCREVER TREINO MANUAL */}
         {alunoEmEdicao && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="w-full max-w-3xl bg-[#16171d] border border-neutral-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
