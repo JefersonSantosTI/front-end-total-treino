@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const ListaExercicios = ({ whatsapp, aoFechar, API_URL, modalidade, perfil, }) => {
+const ListaExercicios = ({ whatsapp, aoFechar, API_URL, modalidade, perfil }) => {
   const [etapaIA, setEtapaIA] = useState('escolher_objetivo');
   const [treinoFixosAtivo, setTreinoFixosAtivo] = useState('A');
   const [carregandoIA, setCarregandoIA] = useState(false);
@@ -80,37 +80,30 @@ const ListaExercicios = ({ whatsapp, aoFechar, API_URL, modalidade, perfil, }) =
         <h3 className="font-black italic text-orange-500 uppercase">{modalidade === 'ia' ? 'Mentor IA' : 'Treino Fixo'}</h3>
       </header>
 
-      {/* ✅ Exibindo a fase para não dar erro de variável não usada */}
       {faseTreino && <p className="text-[10px] text-gray-500 uppercase font-bold mb-4 italic">Fase: {faseTreino}</p>}
 
-      {/* MODAL GIF */}
+      {/* MODAL GIF COM Z-INDEX SUPERIOR */}
       {gifAtivo && (
-        <div className="fixed inset-0 z-[999] bg-black/95 flex flex-col items-center justify-center p-4" onClick={() => setGifAtivo(null)}>
-          <div className="w-full max-w-sm bg-gray-900 rounded-[2rem] p-4" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[9999] bg-black/95 flex flex-col items-center justify-center p-4" onClick={() => setGifAtivo(null)}>
+          <div className="w-full max-w-sm bg-gray-900 rounded-[2rem] p-4 border border-orange-500/50" onClick={e => e.stopPropagation()}>
             <h4 className="text-center font-black uppercase text-orange-500 mb-4">{gifAtivo.nome}</h4>
             <img
               src={`/exercicios/${gifAtivo.arquivo}.gif`}
               className="w-full rounded-xl"
-              onError={(e) => {
-                // Se der erro 404, ele tenta buscar uma imagem genérica ou avisa
-                console.error("GIF não encontrado:", e.target.src);
-                e.target.src = "https://media.giphy.com/media/3o7TKMGpxxS06DclhS/giphy.gif";
-              }}
+              onError={(e) => { e.target.src = "https://media.giphy.com/media/3o7TKMGpxxS06DclhS/giphy.gif"; }}
             />
-            <button onClick={() => setGifAtivo(null)} className="w-full mt-4 bg-white text-black py-3 rounded-xl font-black uppercase">Fechar</button>
+            <button onClick={() => setGifAtivo(null)} className="w-full mt-4 bg-white text-black py-3 rounded-xl font-black uppercase hover:bg-gray-200 transition-all">Fechar</button>
           </div>
         </div>
       )}
 
       {modalidade === 'ia' && etapaIA === 'escolher_objetivo' ? (
         <div className="flex-1 flex flex-col justify-center gap-6">
-          <button disabled={carregandoIA} onClick={() => gerarTreinoIA("Hipertrofia")} className="w-full bg-orange-600 p-8 rounded-[2.5rem] font-black uppercase italic shadow-xl">💪 Hipertrofia</button>
-          <button disabled={carregandoIA} onClick={() => gerarTreinoIA("Emagrecimento")} className="w-full bg-white/5 border p-8 rounded-[2.5rem] font-black uppercase italic">🔥 Emagrecimento</button>
+          <button disabled={carregandoIA} onClick={() => gerarTreinoIA("Hipertrofia")} className="w-full bg-orange-600 p-8 rounded-[2.5rem] font-black uppercase italic shadow-xl active:scale-95 transition-transform">💪 Hipertrofia</button>
+          <button disabled={carregandoIA} onClick={() => gerarTreinoIA("Emagrecimento")} className="w-full bg-white/5 border p-8 rounded-[2.5rem] font-black uppercase italic active:scale-95 transition-transform">🔥 Emagrecimento</button>
         </div>
       ) : (
         <div className="flex flex-col gap-5 pb-10">
-
-          {/* ✅ Se for treino fixo, mostramos os botões A, B, C para usar o estado */}
           {modalidade !== 'ia' && (
             <div className="flex gap-2 mb-4">
               {['A', 'B', 'C'].map(letra => (
@@ -124,7 +117,13 @@ const ListaExercicios = ({ whatsapp, aoFechar, API_URL, modalidade, perfil, }) =
               <h4 className="text-lg font-black uppercase italic text-white mb-2">{ex.nome}</h4>
               <div className="flex gap-2">
                 <span className="bg-orange-600 text-black text-[9px] font-black px-3 py-1 rounded-full uppercase">{ex.series} Séries</span>
-                <button onClick={() => setGifAtivo({ nome: ex.nome, arquivo: ex.arquivo || formatarNomeArquivo(ex.nome) })} className="bg-white/10 text-white text-[9px] font-black px-3 py-1 rounded-full uppercase">▶ Ver GIF</button>
+                {/* BOTÃO COM EFEITO DE CLICK */}
+                <button
+                  onClick={() => setGifAtivo({ nome: ex.nome, arquivo: ex.arquivo || formatarNomeArquivo(ex.nome) })}
+                  className="bg-white/10 text-white text-[9px] font-black px-3 py-1 rounded-full uppercase active:bg-white active:text-black transition-all"
+                >
+                  ▶ Ver GIF
+                </button>
               </div>
             </div>
           ))}
