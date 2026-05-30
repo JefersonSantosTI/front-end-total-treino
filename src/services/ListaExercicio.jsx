@@ -39,7 +39,7 @@ const ListaExercicios = ({ whatsapp, aoFechar, API_URL, modalidade, perfil, }) =
       { nome: "Rosca Direta", series: 3, reps: "12", arquivo: "rosca-direta" },
     ],
     C: [
-      { nome: "Agachamento", series: 4, reps: "10", arquivo: "agachamento" },
+      { nome: "Agachamento livre", series: 4, reps: "10", arquivo: "agachamento" },
       { nome: "Leg Press", series: 3, reps: "15", arquivo: "leg-press" },
     ]
   };
@@ -88,7 +88,15 @@ const ListaExercicios = ({ whatsapp, aoFechar, API_URL, modalidade, perfil, }) =
         <div className="fixed inset-0 z-[999] bg-black/95 flex flex-col items-center justify-center p-4" onClick={() => setGifAtivo(null)}>
           <div className="w-full max-w-sm bg-gray-900 rounded-[2rem] p-4" onClick={e => e.stopPropagation()}>
             <h4 className="text-center font-black uppercase text-orange-500 mb-4">{gifAtivo.nome}</h4>
-            <img src={`/exercicios/${gifAtivo.arquivo}.gif`} className="w-full rounded-xl" onError={(e) => e.target.src = "https://media.giphy.com/media/3o7TKMGpxxS06DclhS/giphy.gif"} />
+            <img
+              src={`/exercicios/${gifAtivo.arquivo}.gif`}
+              className="w-full rounded-xl"
+              onError={(e) => {
+                // Se der erro 404, ele tenta buscar uma imagem genérica ou avisa
+                console.error("GIF não encontrado:", e.target.src);
+                e.target.src = "https://media.giphy.com/media/3o7TKMGpxxS06DclhS/giphy.gif";
+              }}
+            />
             <button onClick={() => setGifAtivo(null)} className="w-full mt-4 bg-white text-black py-3 rounded-xl font-black uppercase">Fechar</button>
           </div>
         </div>
