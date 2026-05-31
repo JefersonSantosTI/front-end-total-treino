@@ -99,8 +99,27 @@ const ListaExercicios = ({ whatsapp, aoFechar, API_URL, modalidade, perfil }) =>
 
       {modalidade === 'ia' && etapaIA === 'escolher_objetivo' ? (
         <div className="flex-1 flex flex-col justify-center gap-6">
-          <button disabled={carregandoIA} onClick={() => gerarTreinoIA("Hipertrofia")} className="w-full bg-orange-600 p-8 rounded-[2.5rem] font-black uppercase italic shadow-xl active:scale-95 transition-transform">💪 Hipertrofia</button>
-          <button disabled={carregandoIA} onClick={() => gerarTreinoIA("Emagrecimento")} className="w-full bg-white/5 border p-8 rounded-[2.5rem] font-black uppercase italic active:scale-95 transition-transform">🔥 Emagrecimento</button>
+          <div className="text-center mb-4">
+            <div className="text-5xl mb-4 animate-pulse">🤖</div>
+            <h2 className="text-xl font-bold uppercase tracking-tighter text-white">
+              {carregandoIA ? "A IA ESTÁ CALCULANDO..." : "Defina seu Foco"}
+            </h2>
+
+            {/* ✅ AQUI A MENSAGEM EXTRA DE CARREGAMENTO */}
+            {carregandoIA && (
+              <p className="text-orange-500 text-[10px] font-black uppercase mt-2 animate-bounce">
+                Montando seu plano de elite...
+              </p>
+            )}
+          </div>
+
+          <button disabled={carregandoIA} onClick={() => gerarTreinoIA("Hipertrofia")} className="w-full bg-orange-600 p-8 rounded-[2.5rem] font-black uppercase italic shadow-xl disabled:opacity-50">
+            {carregandoIA ? "PROCESSANDO..." : "💪 Hipertrofia"}
+          </button>
+
+          <button disabled={carregandoIA} onClick={() => gerarTreinoIA("Emagrecimento")} className="w-full bg-white/5 border p-8 rounded-[2.5rem] font-black uppercase italic disabled:opacity-50">
+            {carregandoIA ? "PROCESSANDO..." : "🔥 Emagrecimento"}
+          </button>
         </div>
       ) : (
         <div className="flex flex-col gap-5 pb-10">
