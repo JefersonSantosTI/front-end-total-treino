@@ -207,7 +207,14 @@ function App() {
 
   const handleCadastrarCref = async (e) => {
     e.preventDefault();
-    if (!cref.trim()) return alert("Por favor, insira o seu CREF técnico.");
+
+    // ✅ TRAVA VISUAL NO APP: Barra o curioso na hora
+    const regexCref = /^\d{4,6}-[GgPp]\/[A-Za-z]{2}$/;
+
+    if (!regexCref.test(cref.trim())) {
+      return alert("🚫 Formato de CREF inválido!\n\nO formato correto deve ter os números, a categoria (G) e a sigla do seu Estado.\n\nExemplo correto: 123456-G/SP");
+    }
+
     try {
       const response = await fetch(`${API_URL}/personal/auth`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...googleUser, cref })
