@@ -42,6 +42,14 @@ function App() {
   const [alunoEditandoPerfil, setAlunoEditandoPerfil] = useState(null);
   const [isRecalculando, setIsRecalculando] = useState(false);
 
+  // ✅ 3. ESTADOS DO FEEDBACK DE TREINO (RPE)
+  const [modalFeedbackAberto, setModalFeedbackAberto] = useState(false);
+  const [feedbackTreino, setFeedbackTreino] = useState({
+    intensidade: "Moderado 🟡",
+    carga: "Na medida ✅",
+    comentario: ""
+  });
+
   const [treinoForm, setTreinoForm] = useState([]);
   const [dietaForm, setDietaForm] = useState([]);
   const [aguaForm, setAguaForm] = useState("");
@@ -348,14 +356,28 @@ function App() {
     else setExerciciosConcluidos([...exerciciosConcluidos, chaveUnica]);
   };
 
-  const ejecutarCheckin = async () => {
+  // ✅ 4. NOVAS FUNÇÕES DE CHECK-IN E FEEDBACK
+  const iniciarCheckin = () => {
+    const hojeObj = new Date();
+    const dataFormatada = hojeObj.toLocaleDateString("pt-BR", { day: '2-digit', month: '2-digit' });
+    const jaFezCheckin = alunoLogado.checkins?.some(c => c.data === dataFormatada);
+
+    if (jaFezCheckin) return alert("Check-in de hoje já foi computado! Descanse, guerreiro.");
+    setModalFeedbackAberto(true); // Abre o modal em vez de fechar o treino direto
+  };
+
+  const confirmarCheckinComFeedback = async (e) => {
+    e.preventDefault();
     const hojeObj = new Date();
     const dataFormatada = hojeObj.toLocaleDateString("pt-BR", { day: '2-digit', month: '2-digit' });
     const diaSemanaFormatado = hojeObj.toLocaleDateString("pt-BR", { weekday: 'long' }).charAt(0).toUpperCase() + hojeObj.toLocaleDateString("pt-BR", { weekday: 'long' }).slice(1);
-    const jaFezCheckin = alunoLogado.checkins?.some(c => c.data === dataFormatada);
 
-    if (jaFezCheckin) return alert("Check-in de hoje já foi computado!");
-    const novoCheckin = { data: dataFormatada, diaSemana: diaSemanaFormatado };
+    const novoCheckin = {
+      data: dataFormatada,
+      diaSemana: diaSemanaFormatado,
+      feedback: feedbackTreino // Enviando a percepção do aluno para o Back-end
+    };
+
     const alunoId = alunoLogado.id || alunoLogado._id;
 
     try {
@@ -364,7 +386,9 @@ function App() {
       });
       if (response.ok) {
         setAlunoLogado(prev => ({ ...prev, checkins: [novoCheckin, ...(prev.checkins || [])] }));
-        alert("🔥 Check-in persistido com sucesso no banco de dados da assessoria!");
+        setModalFeedbackAberto(false);
+        setFeedbackTreino({ intensidade: "Moderado 🟡", carga: "Na medida ✅", comentario: "" }); // Reseta
+        alert("🔥 Check-in e Feedback enviados para o seu Personal/IA com sucesso!");
       }
     } catch { alert("Erro ao enviar check-in para o servidor."); }
   };
@@ -526,10 +550,25 @@ function App() {
                         <td className="py-3.5 font-medium text-white"><div>{aluno.nome}</div><div className="text-[10px] text-neutral-500 font-mono mt-0.5">{aluno.whatsapp}</div></td>
                         <td className="py-3.5 text-neutral-400">{aluno.objetivo}</td>
                         <td className="py-3.5"><span className={`px-2 py-0.5 rounded text-[9px] font-bold font-mono uppercase ${aluno.statusTreino === 'Rascunho IA' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : aluno.statusTreino === 'Enviado' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-neutral-800 text-neutral-400'}`}>{aluno.statusTreino}</span></td>
-                        <td className="py-3.5">{fezCheckinHoje ? <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded animate-pulse">🔥 Treinou Hoje!</span> : aluno.checkins && aluno.checkins.length > 0 ? <span className="text-[10px] font-mono text-neutral-400">Check-in: {aluno.checkins[0].data}</span> : <span className="text-[10px] text-neutral-600 font-mono">Nenhum treino</span>}</td>
+                        {/* ✅ 5. TABELA ATUALIZADA COM FEEDBACK DO ALUNO */}
+                        <td className="py-3.5">
+                          {fezCheckinHoje ? (
+                            <div className="flex flex-col items-start gap-1">
+                              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded animate-pulse">🔥 Treinou Hoje!</span>
+                              {aluno.checkins[0]?.feedback && (
+                                <span className="text-[9px] text-neutral-400 font-mono">
+                                  RPE: {aluno.checkins[0].feedback.intensidade.split(" ")[0]} | Carga: {aluno.checkins[0].feedback.carga.split(" ")[0]}
+                                </span>
+                              )}
+                            </div>
+                          ) : aluno.checkins && aluno.checkins.length > 0 ? (
+                            <span className="text-[10px] font-mono text-neutral-400">Check-in: {aluno.checkins[0].data}</span>
+                          ) : (
+                            <span className="text-[10px] text-neutral-600 font-mono">Nenhum treino</span>
+                          )}
+                        </td>
                         <td className="py-3.5 text-right space-x-2">
                           <button type="button" onClick={() => setAlunoEditandoPerfil(aluno)} className="bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase mr-1">Editar Perfil</button>
-
                           <button type="button" onClick={() => abrirGeradorTreino(aluno)} className="bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase">{aluno.statusTreino === "Rascunho IA" ? "Revisar IA" : "Montar Semanal"}</button>
                           <button type="button" onClick={() => alterStatusContaAluno(idUnico, aluno.statusConta === "Ativo" ? "Off" : "Ativo")} className="border border-neutral-800 text-neutral-400 hover:bg-neutral-800 text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase">{aluno.statusConta === "Ativo" ? "Arquivar" : "Ativar"}</button>
                           <button type="button" onClick={() => deletarAluno(idUnico)} className="text-red-500/70 hover:text-red-400 border border-neutral-800 hover:border-red-500/20 rounded font-bold text-[9px] py-1 px-2 uppercase">Excluir</button>
@@ -564,8 +603,16 @@ function App() {
                       </div>
                       <div>
                         <p className="text-[9px] uppercase text-neutral-500 font-bold mb-0.5">Último Treino</p>
+                        {/* ✅ 6. CARD MOBILE ATUALIZADO COM FEEDBACK DO ALUNO */}
                         {fezCheckinHoje ? (
-                          <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded animate-pulse">🔥 Hoje!</span>
+                          <div className="flex flex-col items-start gap-1">
+                            <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded animate-pulse">🔥 Hoje!</span>
+                            {aluno.checkins[0]?.feedback && (
+                              <span className="text-[9px] text-neutral-400 font-mono">
+                                {aluno.checkins[0].feedback.intensidade.split(" ")[0]} | {aluno.checkins[0].feedback.carga.split(" ")[0]}
+                              </span>
+                            )}
+                          </div>
                         ) : aluno.checkins && aluno.checkins.length > 0 ? (
                           <span className="text-[10px] font-mono text-neutral-400">{aluno.checkins[0].data}</span>
                         ) : (
@@ -758,7 +805,8 @@ function App() {
 
           <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl flex items-center justify-between">
             <div><p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Check-ins Validados</p><h3 className="text-3xl font-bold text-white mt-1">{alunoLogado?.checkins?.length || 0}</h3></div>
-            <button type="button" onClick={ejecutarCheckin} className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-3 rounded-lg text-xs uppercase tracking-wider transition-colors shadow-lg">Confirmar Treino Hoje</button>
+            {/* ✅ 7. BOTÃO ATUALIZADO PARA ABRIR O MODAL DE FEEDBACK */}
+            <button type="button" onClick={iniciarCheckin} className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-3 rounded-lg text-xs uppercase tracking-wider transition-colors shadow-lg">Confirmar Treino Hoje</button>
           </div>
 
           {alunoLogado?.metaAgua && (
@@ -829,7 +877,6 @@ function App() {
                       <div className="flex-1">
                         <h4 className={`font-bold uppercase text-base tracking-tight text-white ${estaconcluido ? 'line-through text-neutral-500' : ''}`}>{ex.nome}</h4>
 
-                        {/* ✅ 3. NOVO BOTÃO DE VER GIF ADICIONADO AQUI */}
                         <div className="flex items-center gap-2 mt-1">
                           <span className="bg-blue-500/10 text-blue-400 font-mono text-[10px] font-bold uppercase px-2 py-0.5 rounded">{ex.series} Séries × {ex.reps} Reps</span>
                           <button type="button" onClick={() => abrirExercicioVisual(ex, setModalGifAberto)} className="bg-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-700 text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase border border-neutral-700">
@@ -847,7 +894,6 @@ function App() {
             })()}
           </div>
 
-          {/* ✅ 4. NOVO MODAL DE EXECUÇÃO DE GIF INJETADO AQUI */}
           {modalGifAberto && (
             <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setModalGifAberto(null)}>
               <div className="w-full max-w-sm bg-[#16171d] border border-neutral-800 rounded-2xl overflow-hidden shadow-2xl relative" onClick={e => e.stopPropagation()}>
@@ -858,6 +904,61 @@ function App() {
                 <div className="w-full bg-[#0d0e12] flex justify-center p-4 min-h-[200px] items-center">
                   <img src={modalGifAberto.url} alt={modalGifAberto.nome} className="max-w-full rounded-lg shadow-lg border border-neutral-800" />
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* ✅ 8. MODAL DE FEEDBACK PÓS-TREINO (RPE) */}
+          {modalFeedbackAberto && (
+            <div className="fixed inset-0 z-[999] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setModalFeedbackAberto(false)}>
+              <div className="w-full max-w-sm bg-[#16171d] border border-neutral-800 rounded-3xl p-6 shadow-2xl relative" onClick={e => e.stopPropagation()}>
+                <button onClick={() => setModalFeedbackAberto(false)} className="absolute top-4 right-4 text-neutral-500 font-bold hover:text-white">✕</button>
+                <div className="text-center mb-6">
+                  <span className="text-4xl mb-2 block">🔥</span>
+                  <h3 className="text-lg font-bold text-white uppercase tracking-tight">Treino Concluído!</h3>
+                  <p className="text-[10px] text-neutral-400 uppercase tracking-widest mt-1">Dê o feedback para seu treinador</p>
+                </div>
+
+                <form onSubmit={confirmarCheckinComFeedback} className="space-y-5">
+                  {/* Intensidade */}
+                  <div>
+                    <label className="text-[10px] font-bold uppercase text-neutral-500 block mb-2">Qual foi a Intensidade?</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {["Leve 🟢", "Moderado 🟡", "Intenso 🔴", "Extremo ☠️"].map(nivel => (
+                        <button key={nivel} type="button" onClick={() => setFeedbackTreino({ ...feedbackTreino, intensidade: nivel })} className={`py-2 rounded-xl text-xs font-bold uppercase transition-all ${feedbackTreino.intensidade === nivel ? 'bg-orange-600 text-white shadow-lg shadow-orange-600/20' : 'bg-[#0d0e12] border border-neutral-800 text-neutral-500'}`}>
+                          {nivel.split(" ")[0]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Carga */}
+                  <div>
+                    <label className="text-[10px] font-bold uppercase text-neutral-500 block mb-2">E os Pesos / Cargas?</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {["Pouca ⬇️", "Na medida ✅", "Pesado ⬆️"].map(peso => (
+                        <button key={peso} type="button" onClick={() => setFeedbackTreino({ ...feedbackTreino, carga: peso })} className={`py-2 rounded-xl text-[10px] font-bold uppercase transition-all ${feedbackTreino.carga === peso ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-[#0d0e12] border border-neutral-800 text-neutral-500'}`}>
+                          {peso.split(" ")[0]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Comentário Opcional */}
+                  <div>
+                    <label className="text-[10px] font-bold uppercase text-neutral-500 block mb-2">Observações (Opcional)</label>
+                    <textarea
+                      placeholder="Senti dor no joelho... Faltou fôlego... Bati PR no supino!"
+                      className="w-full bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl text-xs text-white outline-none focus:border-neutral-700 resize-none h-20"
+                      value={feedbackTreino.comentario}
+                      onChange={e => setFeedbackTreino({ ...feedbackTreino, comentario: e.target.value })}
+                    />
+                  </div>
+
+                  <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-4 rounded-xl font-bold uppercase tracking-wider transition-colors shadow-lg mt-2">
+                    Enviar e Registrar Check-in
+                  </button>
+                </form>
               </div>
             </div>
           )}
