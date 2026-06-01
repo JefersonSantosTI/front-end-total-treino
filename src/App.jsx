@@ -50,7 +50,7 @@ function App() {
     comentario: ""
   });
 
-  // ✅ ESTADO PARA O MODAL DE VER RELATÓRIO/FEEDBACK DO ALUNO
+  // ESTADO PARA O MODAL DE VER RELATÓRIO/FEEDBACK DO ALUNO
   const [alunoVerFeedback, setAlunoVerFeedback] = useState(null);
 
   const [treinoForm, setTreinoForm] = useState([]);
@@ -257,6 +257,7 @@ function App() {
     } catch { alert("Erro ao alterar status no servidor."); }
   };
 
+  // ✅ ENVIANDO AS MEDIDAS PARA O BACKEND
   const atualizarBiometriaAluno = async (e) => {
     e.preventDefault();
     setIsRecalculando(true);
@@ -275,14 +276,15 @@ function App() {
           nivel: alunoEditandoPerfil.nivel,
           diasTreino: alunoEditandoPerfil.diasTreino,
           restricoes: alunoEditandoPerfil.restricoes,
-          lesoes: alunoEditandoPerfil.lesoes
+          lesoes: alunoEditandoPerfil.lesoes,
+          medidas: alunoEditandoPerfil.medidas || {} // ENVIANDO MEDIDAS!
         })
       });
 
       if (response.ok) {
         const alunoAtualizado = await response.json();
         setAlunosPersonal(prev => prev.map(a => (a.id === alunoId || a._id === alunoId) ? alunoAtualizado : a));
-        alert(`✅ Ficha de ${alunoAtualizado.nome} atualizada! A Inteligência Artificial já recalculou o treino e a dieta.`);
+        alert(`✅ Ficha de ${alunoAtualizado.nome} atualizada! A Inteligência Artificial já recalculou o treino e a dieta com as novas medidas.`);
         setAlunoEditandoPerfil(null);
       } else {
         const err = await response.json();
@@ -644,7 +646,7 @@ function App() {
           </div>
         </main>
 
-        {/* ✅ MODAL DETALHES DO FEEDBACK (RPE) PARA O PERSONAL */}
+        {/* MODAL DETALHES DO FEEDBACK (RPE) PARA O PERSONAL */}
         {alunoVerFeedback && (
           <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setAlunoVerFeedback(null)}>
             <div className="w-full max-w-sm bg-[#16171d] border border-neutral-800 rounded-3xl p-6 relative shadow-2xl" onClick={e => e.stopPropagation()}>
@@ -701,7 +703,7 @@ function App() {
           </div>
         )}
 
-        {/* MODAL: EDIÇÃO DE BIOMETRIA E RECÁLCULO IA */}
+        {/* MODAL: EDIÇÃO DE BIOMETRIA E RECÁLCULO IA (COM MEDIDAS) */}
         {alunoEditandoPerfil && (
           <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="w-full max-w-md bg-[#16171d] border border-neutral-800 rounded-2xl shadow-2xl p-6 relative overflow-y-auto max-h-[90vh]">
@@ -744,6 +746,20 @@ function App() {
 
                 <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Restrições Alimentares</label><input type="text" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.restricoes || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, restricoes: e.target.value })} disabled={isRecalculando} /></div>
                 <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Lesões ou Dores</label><input type="text" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.lesoes || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, lesoes: e.target.value })} disabled={isRecalculando} /></div>
+
+                {/* ✅ NOVO BLOCO DE MEDIDAS (SÓ PARA O PERSONAL) */}
+                <div className="pt-3 border-t border-neutral-800 mt-4 mb-2">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-500 mb-3">📏 Medidas Corporais (Específico do Personal)</p>
+                  <div className="grid grid-cols-3 gap-3 mb-3">
+                    <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Braço (cm)</label><input type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.medidas?.braco || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), braco: e.target.value } })} disabled={isRecalculando} /></div>
+                    <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Perna (cm)</label><input type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.medidas?.perna || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), perna: e.target.value } })} disabled={isRecalculando} /></div>
+                    <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Glúteo (cm)</label><input type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.medidas?.gluteo || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), gluteo: e.target.value } })} disabled={isRecalculando} /></div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Tórax (cm)</label><input type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.medidas?.torax || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), torax: e.target.value } })} disabled={isRecalculando} /></div>
+                    <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Cintura (cm)</label><input type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.medidas?.cintura || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), cintura: e.target.value } })} disabled={isRecalculando} /></div>
+                  </div>
+                </div>
 
                 <button type="submit" disabled={isRecalculando} className={`w-full p-4 rounded-xl uppercase tracking-wider font-bold text-xs shadow-lg mt-4 transition-all ${isRecalculando ? 'bg-emerald-600/50 text-white/50 cursor-not-allowed animate-pulse' : 'bg-emerald-600 hover:bg-emerald-500 text-white'}`}>
                   {isRecalculando ? "🤖 Recalculando na IA..." : "Salvar e Recalcular na IA"}
@@ -863,7 +879,6 @@ function App() {
 
           <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl flex items-center justify-between">
             <div><p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Check-ins Validados</p><h3 className="text-3xl font-bold text-white mt-1">{alunoLogado?.checkins?.length || 0}</h3></div>
-            {/* BOTÃO ATUALIZADO PARA ABRIR O MODAL DE FEEDBACK */}
             <button type="button" onClick={iniciarCheckin} className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-3 rounded-lg text-xs uppercase tracking-wider transition-colors shadow-lg">Confirmar Treino Hoje</button>
           </div>
 
