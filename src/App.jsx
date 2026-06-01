@@ -35,20 +35,23 @@ function App() {
 
   const [alunoEmEdicao, setAlunoEmEdicao] = useState(null);
 
-  // ✅ 2. ESTADO DO MODAL DE GIF ADICIONADO
+  // ESTADO DO MODAL DE GIF ADICIONADO
   const [modalGifAberto, setModalGifAberto] = useState(null);
 
   // NOVOS ESTADOS PARA A EDIÇÃO DE PERFIL E RECÁLCULO DA IA
   const [alunoEditandoPerfil, setAlunoEditandoPerfil] = useState(null);
   const [isRecalculando, setIsRecalculando] = useState(false);
 
-  // ✅ 3. ESTADOS DO FEEDBACK DE TREINO (RPE)
+  // ESTADOS DO FEEDBACK DE TREINO (RPE)
   const [modalFeedbackAberto, setModalFeedbackAberto] = useState(false);
   const [feedbackTreino, setFeedbackTreino] = useState({
     intensidade: "Moderado 🟡",
     carga: "Na medida ✅",
     comentario: ""
   });
+
+  // ✅ ESTADO PARA O MODAL DE VER RELATÓRIO/FEEDBACK DO ALUNO
+  const [alunoVerFeedback, setAlunoVerFeedback] = useState(null);
 
   const [treinoForm, setTreinoForm] = useState([]);
   const [dietaForm, setDietaForm] = useState([]);
@@ -267,7 +270,7 @@ function App() {
           peso: alunoEditandoPerfil.peso,
           altura: alunoEditandoPerfil.altura,
           idade: alunoEditandoPerfil.idade,
-          meta: alunoEditandoPerfil.objetivo, // Backend entende 'meta'
+          meta: alunoEditandoPerfil.objetivo,
           genero: alunoEditandoPerfil.genero,
           nivel: alunoEditandoPerfil.nivel,
           diasTreino: alunoEditandoPerfil.diasTreino,
@@ -356,14 +359,13 @@ function App() {
     else setExerciciosConcluidos([...exerciciosConcluidos, chaveUnica]);
   };
 
-  // ✅ 4. NOVAS FUNÇÕES DE CHECK-IN E FEEDBACK
   const iniciarCheckin = () => {
     const hojeObj = new Date();
     const dataFormatada = hojeObj.toLocaleDateString("pt-BR", { day: '2-digit', month: '2-digit' });
     const jaFezCheckin = alunoLogado.checkins?.some(c => c.data === dataFormatada);
 
     if (jaFezCheckin) return alert("Check-in de hoje já foi computado! Descanse, guerreiro.");
-    setModalFeedbackAberto(true); // Abre o modal em vez de fechar o treino direto
+    setModalFeedbackAberto(true);
   };
 
   const confirmarCheckinComFeedback = async (e) => {
@@ -375,7 +377,7 @@ function App() {
     const novoCheckin = {
       data: dataFormatada,
       diaSemana: diaSemanaFormatado,
-      feedback: feedbackTreino // Enviando a percepção do aluno para o Back-end
+      feedback: feedbackTreino
     };
 
     const alunoId = alunoLogado.id || alunoLogado._id;
@@ -387,7 +389,7 @@ function App() {
       if (response.ok) {
         setAlunoLogado(prev => ({ ...prev, checkins: [novoCheckin, ...(prev.checkins || [])] }));
         setModalFeedbackAberto(false);
-        setFeedbackTreino({ intensidade: "Moderado 🟡", carga: "Na medida ✅", comentario: "" }); // Reseta
+        setFeedbackTreino({ intensidade: "Moderado 🟡", carga: "Na medida ✅", comentario: "" });
         alert("🔥 Check-in e Feedback enviados para o seu Personal/IA com sucesso!");
       }
     } catch { alert("Erro ao enviar check-in para o servidor."); }
@@ -544,25 +546,26 @@ function App() {
                 <tbody className="text-xs divide-y divide-neutral-800/40">
                   {alunosPersonal.map((aluno) => {
                     const idUnico = aluno.id || aluno._id;
-                    const fezCheckinHoje = aluno.checkins?.some(c => c.data === hojeDataStr);
+                    const checkinDeHoje = aluno.checkins?.find(c => c.data === hojeDataStr);
                     return (
                       <tr key={idUnico} className={`hover:bg-neutral-800/20 transition-colors ${aluno.statusConta === 'Off' ? 'opacity-40' : ''}`}>
-                        <td className="py-3.5 font-medium text-white"><div>{aluno.nome}</div><div className="text-[10px] text-neutral-500 font-mono mt-0.5">{aluno.whatsapp}</div></td>
+                        <td className="py-3.5 font-medium text-white">
+                          <div className="cursor-pointer hover:text-emerald-400 transition-colors inline-flex items-center gap-1" onClick={() => setAlunoVerFeedback(aluno)}>
+                            {aluno.nome} <span className="text-[10px] opacity-50">ℹ️</span>
+                          </div>
+                          <div className="text-[10px] text-neutral-500 font-mono mt-0.5">{aluno.whatsapp}</div>
+                        </td>
                         <td className="py-3.5 text-neutral-400">{aluno.objetivo}</td>
                         <td className="py-3.5"><span className={`px-2 py-0.5 rounded text-[9px] font-bold font-mono uppercase ${aluno.statusTreino === 'Rascunho IA' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : aluno.statusTreino === 'Enviado' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-neutral-800 text-neutral-400'}`}>{aluno.statusTreino}</span></td>
-                        {/* ✅ 5. TABELA ATUALIZADA COM FEEDBACK DO ALUNO */}
                         <td className="py-3.5">
-                          {fezCheckinHoje ? (
-                            <div className="flex flex-col items-start gap-1">
-                              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded animate-pulse">🔥 Treinou Hoje!</span>
-                              {aluno.checkins[0]?.feedback && (
-                                <span className="text-[9px] text-neutral-400 font-mono">
-                                  RPE: {aluno.checkins[0].feedback.intensidade.split(" ")[0]} | Carga: {aluno.checkins[0].feedback.carga.split(" ")[0]}
-                                </span>
-                              )}
-                            </div>
+                          {checkinDeHoje ? (
+                            <button type="button" onClick={() => setAlunoVerFeedback(aluno)} className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded animate-pulse hover:bg-emerald-500/20 transition-colors cursor-pointer">
+                              🔥 Treinou Hoje!
+                            </button>
                           ) : aluno.checkins && aluno.checkins.length > 0 ? (
-                            <span className="text-[10px] font-mono text-neutral-400">Check-in: {aluno.checkins[0].data}</span>
+                            <button type="button" onClick={() => setAlunoVerFeedback(aluno)} className="text-[10px] font-mono text-neutral-400 hover:text-white transition-colors cursor-pointer">
+                              Check-in: {aluno.checkins[0].data}
+                            </button>
                           ) : (
                             <span className="text-[10px] text-neutral-600 font-mono">Nenhum treino</span>
                           )}
@@ -583,12 +586,14 @@ function App() {
             <div className="md:hidden flex flex-col space-y-4">
               {alunosPersonal.map((aluno) => {
                 const idUnico = aluno.id || aluno._id;
-                const fezCheckinHoje = aluno.checkins?.some(c => c.data === hojeDataStr);
+                const checkinDeHoje = aluno.checkins?.find(c => c.data === hojeDataStr);
                 return (
                   <div key={idUnico} className={`bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl flex flex-col space-y-3 ${aluno.statusConta === 'Off' ? 'opacity-50' : ''}`}>
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="font-bold text-white text-sm">{aluno.nome}</p>
+                        <p className="font-bold text-white text-sm cursor-pointer hover:text-emerald-400 transition-colors inline-flex items-center gap-1" onClick={() => setAlunoVerFeedback(aluno)}>
+                          {aluno.nome} <span className="text-[10px] opacity-50">ℹ️</span>
+                        </p>
                         <p className="text-[10px] text-neutral-500 font-mono mt-0.5">{aluno.whatsapp}</p>
                       </div>
                       <span className={`px-2 py-0.5 rounded text-[9px] font-bold font-mono uppercase text-center ${aluno.statusTreino === 'Rascunho IA' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : aluno.statusTreino === 'Enviado' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-neutral-800 text-neutral-400'}`}>
@@ -603,18 +608,14 @@ function App() {
                       </div>
                       <div>
                         <p className="text-[9px] uppercase text-neutral-500 font-bold mb-0.5">Último Treino</p>
-                        {/* ✅ 6. CARD MOBILE ATUALIZADO COM FEEDBACK DO ALUNO */}
-                        {fezCheckinHoje ? (
-                          <div className="flex flex-col items-start gap-1">
-                            <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded animate-pulse">🔥 Hoje!</span>
-                            {aluno.checkins[0]?.feedback && (
-                              <span className="text-[9px] text-neutral-400 font-mono">
-                                {aluno.checkins[0].feedback.intensidade.split(" ")[0]} | {aluno.checkins[0].feedback.carga.split(" ")[0]}
-                              </span>
-                            )}
-                          </div>
+                        {checkinDeHoje ? (
+                          <button type="button" onClick={() => setAlunoVerFeedback(aluno)} className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded animate-pulse cursor-pointer">
+                            🔥 Hoje!
+                          </button>
                         ) : aluno.checkins && aluno.checkins.length > 0 ? (
-                          <span className="text-[10px] font-mono text-neutral-400">{aluno.checkins[0].data}</span>
+                          <button type="button" onClick={() => setAlunoVerFeedback(aluno)} className="text-[10px] font-mono text-neutral-400 cursor-pointer">
+                            {aluno.checkins[0].data}
+                          </button>
                         ) : (
                           <span className="text-[10px] text-neutral-600 font-mono">Nenhum</span>
                         )}
@@ -642,6 +643,63 @@ function App() {
             </div>
           </div>
         </main>
+
+        {/* ✅ MODAL DETALHES DO FEEDBACK (RPE) PARA O PERSONAL */}
+        {alunoVerFeedback && (
+          <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setAlunoVerFeedback(null)}>
+            <div className="w-full max-w-sm bg-[#16171d] border border-neutral-800 rounded-3xl p-6 relative shadow-2xl" onClick={e => e.stopPropagation()}>
+              <button onClick={() => setAlunoVerFeedback(null)} className="absolute top-4 right-4 text-neutral-500 hover:text-white font-bold">✕</button>
+
+              <div className="flex items-center gap-3 mb-6 border-b border-neutral-800 pb-4">
+                <div className="w-10 h-10 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center text-xl">📋</div>
+                <div>
+                  <h3 className="font-bold text-white uppercase text-sm tracking-tight">Relatório de Treino</h3>
+                  <p className="text-[10px] text-emerald-500 font-mono uppercase">{alunoVerFeedback.nome}</p>
+                </div>
+              </div>
+
+              {alunoVerFeedback.checkins && alunoVerFeedback.checkins.length > 0 ? (
+                <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-neutral-800">
+                  {alunoVerFeedback.checkins.slice(0, 3).map((checkin, index) => (
+                    <div key={index} className="bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl">
+                      <div className="flex justify-between items-center mb-3">
+                        <span className="text-xs font-bold text-white uppercase">{checkin.data} - {checkin.diaSemana}</span>
+                        {index === 0 && <span className="bg-emerald-500/20 text-emerald-400 text-[9px] font-bold px-2 py-0.5 rounded uppercase">Último</span>}
+                      </div>
+
+                      {checkin.feedback ? (
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="bg-[#16171d] p-2 rounded-lg border border-neutral-800/50">
+                              <p className="text-[9px] text-neutral-500 font-bold uppercase mb-1">Intensidade</p>
+                              <p className="text-xs text-white">{checkin.feedback.intensidade}</p>
+                            </div>
+                            <div className="bg-[#16171d] p-2 rounded-lg border border-neutral-800/50">
+                              <p className="text-[9px] text-neutral-500 font-bold uppercase mb-1">Carga</p>
+                              <p className="text-xs text-white">{checkin.feedback.carga}</p>
+                            </div>
+                          </div>
+                          {checkin.feedback.comentario && (
+                            <div className="bg-[#16171d] p-3 rounded-lg border border-neutral-800/50">
+                              <p className="text-[9px] text-neutral-500 font-bold uppercase mb-1">Observações do Aluno</p>
+                              <p className="text-xs text-neutral-300 italic">"{checkin.feedback.comentario}"</p>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-neutral-500 italic">Check-in simples (Sem feedback detalhado).</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center p-6 bg-[#0d0e12] rounded-xl border border-neutral-800">
+                  <p className="text-xs text-neutral-500 uppercase font-bold">Nenhum treino registrado ainda.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* MODAL: EDIÇÃO DE BIOMETRIA E RECÁLCULO IA */}
         {alunoEditandoPerfil && (
@@ -805,7 +863,7 @@ function App() {
 
           <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl flex items-center justify-between">
             <div><p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Check-ins Validados</p><h3 className="text-3xl font-bold text-white mt-1">{alunoLogado?.checkins?.length || 0}</h3></div>
-            {/* ✅ 7. BOTÃO ATUALIZADO PARA ABRIR O MODAL DE FEEDBACK */}
+            {/* BOTÃO ATUALIZADO PARA ABRIR O MODAL DE FEEDBACK */}
             <button type="button" onClick={iniciarCheckin} className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-3 rounded-lg text-xs uppercase tracking-wider transition-colors shadow-lg">Confirmar Treino Hoje</button>
           </div>
 
@@ -908,7 +966,7 @@ function App() {
             </div>
           )}
 
-          {/* ✅ 8. MODAL DE FEEDBACK PÓS-TREINO (RPE) */}
+          {/* MODAL DE FEEDBACK PÓS-TREINO (RPE) */}
           {modalFeedbackAberto && (
             <div className="fixed inset-0 z-[999] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setModalFeedbackAberto(false)}>
               <div className="w-full max-w-sm bg-[#16171d] border border-neutral-800 rounded-3xl p-6 shadow-2xl relative" onClick={e => e.stopPropagation()}>
