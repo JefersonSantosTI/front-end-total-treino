@@ -467,7 +467,7 @@ function App() {
                 </div>
                 <p className="text-neutral-400 text-[11px] mb-5 leading-relaxed">Este é o seu primeiro acesso. Para ativar a sua licença no sistema Treino Fit, insira o seu registo profissional.</p>
                 <form onSubmit={handleCadastrarCref} className="space-y-4">
-                  <input required type="text" placeholder="Registro CREF (Ex: 123456-G/SP)" className="w-full bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl text-sm font-medium outline-none focus:border-neutral-700 text-white" value={cref} onChange={(e) => setCref(e.target.value)} />
+                  <input required type="text" placeholder="Registro CREF " className="w-full bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl text-sm font-medium outline-none focus:border-neutral-700 text-white" value={cref} onChange={(e) => setCref(e.target.value)} />
                   <div className="flex gap-3 text-xs font-bold">
                     <button type="button" onClick={() => setGoogleUser(null)} className="w-1/3 bg-transparent border border-neutral-800 hover:bg-neutral-800 p-4 rounded-xl uppercase tracking-wider text-neutral-400 transition-colors">Cancelar</button>
                     <button type="submit" className="w-2/3 bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-xl uppercase tracking-wider transition-colors shadow-lg">Validar Licença</button>
