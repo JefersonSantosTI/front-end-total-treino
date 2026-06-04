@@ -10,6 +10,9 @@ import { abrirExercicioVisual } from "./components/visual";
 
 const DIAS_SEMANA = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 
+// Função para garantir que os números sejam salvos corretamente (evitando erros de vírgula)
+const parseNumeroSeguro = (val) => Number(String(val).replace(',', '.')) || 0;
+
 function App() {
   const [usuario, setUsuario] = useState(() => localStorage.getItem("usuario_whatsapp"));
   const [etapa, setEtapa] = useState("verificando");
@@ -41,7 +44,6 @@ function App() {
   const [alunoVerFeedback, setAlunoVerFeedback] = useState(null);
 
   const [modalPlanosPersonal, setModalPlanosPersonal] = useState(false);
-  // NOVO: Controle do modal de avaliação do aluno
   const [modalAvaliacaoAluno, setModalAvaliacaoAluno] = useState(false);
 
   const [treinoForm, setTreinoForm] = useState([]);
@@ -53,7 +55,7 @@ function App() {
   const [novoAlunoForm, setNovoAlunoForm] = useState({ nome: "", whatsapp: "", objetivo: "Emagrecimento" });
 
   const [perfil, setPerfil] = useState({
-    nome: "Guerreiro(a)", peso: "0", altura: "0", idade: "0", meta: "Emagrecimento",
+    nome: "Guerreiro(a)", peso: "", altura: "", idade: "", meta: "Emagrecimento",
     genero: "Masculino", nivel: "Intermediário", diasTreino: "5", restricoes: "", lesoes: "",
     imc: "0", tmb: "0", faltam: "0"
   });
@@ -70,7 +72,6 @@ function App() {
     setDiaAbaAluno(diaFormatado);
   }, []);
 
-  // ✅ 1. FETCH DE ALUNOS COM ISOLAMENTO (ENVIA O ID DO PERSONAL)
   const carregarAlunosAssessoria = useCallback(async () => {
     if (!personalLogado || !personalLogado._id) return;
     try {
@@ -87,8 +88,8 @@ function App() {
   }, [etapa, carregarAlunosAssessoria]);
 
   const calcularSaude = useCallback((peso, altura, idade) => {
-    const p = parseFloat(peso) || 0;
-    const a = parseFloat(altura) || 0;
+    const p = parseFloat(String(peso).replace(',', '.')) || 0;
+    const a = parseFloat(String(altura).replace(',', '.')) || 0;
     const i = parseInt(idade) || 25;
     if (p > 0 && a > 0) {
       const imc = (p / (a * a)).toFixed(1);
@@ -209,8 +210,6 @@ function App() {
 
   const handleCadastrarCref = async (e) => {
     e.preventDefault();
-
-    // ✅ TRAVA VISUAL NO APP: Barra o curioso na hora
     const regexCref = /^\d{4,6}-[GgPp]\/[A-Za-z]{2}$/;
 
     if (!regexCref.test(cref.trim())) {
@@ -230,11 +229,9 @@ function App() {
     } catch (err) { console.error("Erro CREF:", err); }
   };
 
-  // ✅ 2. CADASTRO DE ALUNO INJETA O ID DO PERSONAL
   const cadastrarNovoAluno = async (e) => {
     e.preventDefault();
     try {
-      // Injetando o carimbo de quem é o dono do aluno
       const payload = { ...novoAlunoForm, personalId: personalLogado._id };
 
       const response = await fetch(`${API_URL}/aluno`, {
@@ -271,10 +268,13 @@ function App() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          peso: alunoEditandoPerfil.peso,
-          altura: alunoEditandoPerfil.altura,
-          idade: alunoEditandoPerfil.idade,
+          // Garante que os números são processados de forma limpa pro banco de dados
+          ...alunoEditandoPerfil,
+          peso: parseNumeroSeguro(alunoEditandoPerfil.peso),
+          altura: parseNumeroSeguro(alunoEditandoPerfil.altura),
+          idade: parseInt(alunoEditandoPerfil.idade) || 0,
           meta: alunoEditandoPerfil.objetivo,
+          objetivo: alunoEditandoPerfil.objetivo,
           genero: alunoEditandoPerfil.genero,
           nivel: alunoEditandoPerfil.nivel,
           diasTreino: alunoEditandoPerfil.diasTreino,
@@ -395,7 +395,19 @@ function App() {
     try {
       const response = await fetch(`${API_URL}/usuarios/atualizar`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ whatsapp: usuario, nome: perfil.nome, peso: Number(perfil.peso), altura: Number(perfil.altura), meta: perfil.meta, idade: Number(perfil.idade), genero: perfil.genero, nivel: perfil.nivel, diasTreino: perfil.diasTreino, restricoes: perfil.restricoes, lesoes: perfil.lesoes })
+        body: JSON.stringify({
+          whatsapp: usuario,
+          nome: perfil.nome,
+          peso: parseNumeroSeguro(perfil.peso),
+          altura: parseNumeroSeguro(perfil.altura),
+          meta: perfil.meta,
+          idade: parseInt(perfil.idade) || 0,
+          genero: perfil.genero,
+          nivel: perfil.nivel,
+          diasTreino: perfil.diasTreino,
+          restricoes: perfil.restricoes,
+          lesoes: perfil.lesoes
+        })
       });
       if (response.ok) {
         const saude = calcularSaude(perfil.peso, perfil.altura, perfil.idade);
@@ -548,7 +560,6 @@ function App() {
                   if (!personalLogado?.assinaturaAtiva && alunosPersonal.length >= 2) {
                     return setModalPlanosPersonal(true);
                   }
-                  // ✅ 3. O LINK DA IA AGORA USA O _id DO PERSONAL COMO CHAVE SEGURA
                   const link = `${window.location.origin}?ref=${personalLogado?._id}`;
                   navigator.clipboard.writeText(link);
                   alert(`🔗 Link copiado com sucesso!\n\nEnvie este link no WhatsApp do seu aluno:\n\n${link}`);
@@ -598,7 +609,20 @@ function App() {
                           )}
                         </td>
                         <td className="py-3.5 text-right space-x-2">
-                          <button type="button" onClick={() => setAlunoEditandoPerfil(aluno)} className="bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase mr-1">Editar Perfil</button>
+                          {/* 🔥 AQUI PREPARAMOS OS DADOS PARA NÃO IR EM BRANCO PRO FORMULÁRIO 🔥 */}
+                          <button type="button" onClick={() => setAlunoEditandoPerfil({
+                            ...aluno,
+                            peso: aluno.peso || "",
+                            altura: aluno.altura || "",
+                            idade: aluno.idade || "",
+                            genero: aluno.genero || "Masculino",
+                            objetivo: aluno.objetivo || "Emagrecimento",
+                            nivel: aluno.nivel || "Intermediário",
+                            diasTreino: aluno.diasTreino || "5",
+                            restricoes: aluno.restricoes || "",
+                            lesoes: aluno.lesoes || "",
+                            medidas: aluno.medidas || {}
+                          })} className="bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase mr-1">Editar Perfil</button>
                           <button type="button" onClick={() => abrirGeradorTreino(aluno)} className="bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase">{aluno.statusTreino === "Rascunho IA" ? "Revisar IA" : "Montar Semanal"}</button>
                           <button type="button" onClick={() => alterStatusContaAluno(idUnico, aluno.statusConta === "Ativo" ? "Off" : "Ativo")} className="border border-neutral-800 text-neutral-400 hover:bg-neutral-800 text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase">{aluno.statusConta === "Ativo" ? "Arquivar" : "Ativar"}</button>
                           <button type="button" onClick={() => deletarAluno(idUnico)} className="text-red-500/70 hover:text-red-400 border border-neutral-800 hover:border-red-500/20 rounded font-bold text-[9px] py-1 px-2 uppercase">Excluir</button>
@@ -650,7 +674,19 @@ function App() {
                     </div>
 
                     <div className="pt-1 flex flex-wrap gap-2">
-                      <button type="button" onClick={() => setAlunoEditandoPerfil(aluno)} className="w-full bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 text-[10px] font-bold py-2 rounded transition-colors uppercase text-center mb-1">
+                      <button type="button" onClick={() => setAlunoEditandoPerfil({
+                        ...aluno,
+                        peso: aluno.peso || "",
+                        altura: aluno.altura || "",
+                        idade: aluno.idade || "",
+                        genero: aluno.genero || "Masculino",
+                        objetivo: aluno.objetivo || "Emagrecimento",
+                        nivel: aluno.nivel || "Intermediário",
+                        diasTreino: aluno.diasTreino || "5",
+                        restricoes: aluno.restricoes || "",
+                        lesoes: aluno.lesoes || "",
+                        medidas: aluno.medidas || {}
+                      })} className="w-full bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 text-[10px] font-bold py-2 rounded transition-colors uppercase text-center mb-1">
                         ✏️ Editar Perfil do Aluno
                       </button>
 
@@ -728,7 +764,7 @@ function App() {
           </div>
         )}
 
-        {/* MODAL: EDIÇÃO DE BIOMETRIA E RECÁLCULO IA (COM MEDIDAS ATUALIZADAS) */}
+        {/* MODAL: EDIÇÃO DE BIOMETRIA E RECÁLCULO IA */}
         {alunoEditandoPerfil && (
           <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="w-full max-w-md bg-[#16171d] border border-neutral-800 rounded-2xl shadow-2xl p-6 relative overflow-y-auto max-h-[90vh]">
@@ -738,19 +774,35 @@ function App() {
 
               <form onSubmit={atualizarBiometriaAluno} className="space-y-4">
                 <div className="grid grid-cols-3 gap-3">
-                  <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Peso(kg)</label><input required type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.peso || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, peso: e.target.value })} disabled={isRecalculando} /></div>
-                  <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Altura(m)</label><input required type="number" step="0.01" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.altura || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, altura: e.target.value })} disabled={isRecalculando} /></div>
-                  <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Idade</label><input required type="number" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.idade || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, idade: e.target.value })} disabled={isRecalculando} /></div>
+                  <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Peso(kg)</label>
+                    <input required type="text" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700"
+                      value={alunoEditandoPerfil.peso !== undefined ? alunoEditandoPerfil.peso : ""}
+                      onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, peso: e.target.value })} disabled={isRecalculando} />
+                  </div>
+                  <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Altura(m)</label>
+                    <input required type="text" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700"
+                      value={alunoEditandoPerfil.altura !== undefined ? alunoEditandoPerfil.altura : ""}
+                      onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, altura: e.target.value })} disabled={isRecalculando} />
+                  </div>
+                  <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Idade</label>
+                    <input required type="number" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700"
+                      value={alunoEditandoPerfil.idade !== undefined ? alunoEditandoPerfil.idade : ""}
+                      onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, idade: e.target.value })} disabled={isRecalculando} />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Gênero</label>
-                    <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.genero || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, genero: e.target.value })} disabled={isRecalculando}>
+                    <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700"
+                      value={alunoEditandoPerfil.genero || "Masculino"}
+                      onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, genero: e.target.value })} disabled={isRecalculando}>
                       <option value="Masculino">Masculino</option><option value="Feminino">Feminino</option>
                     </select>
                   </div>
                   <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Objetivo</label>
-                    <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.objetivo || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, objetivo: e.target.value })} disabled={isRecalculando}>
+                    <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700"
+                      value={alunoEditandoPerfil.objetivo || "Emagrecimento"}
+                      onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, objetivo: e.target.value })} disabled={isRecalculando}>
                       <option value="Emagrecimento">Emagrecimento</option><option value="Hipertrofia">Hipertrofia</option><option value="Performance">Performance</option>
                     </select>
                   </div>
@@ -758,12 +810,16 @@ function App() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Nível</label>
-                    <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.nivel || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, nivel: e.target.value })} disabled={isRecalculando}>
+                    <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700"
+                      value={alunoEditandoPerfil.nivel || "Intermediário"}
+                      onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, nivel: e.target.value })} disabled={isRecalculando}>
                       <option value="Iniciante">Iniciante</option><option value="Intermediário">Intermediário</option><option value="Avançado">Avançado</option>
                     </select>
                   </div>
                   <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Dias Treino</label>
-                    <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.diasTreino || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, diasTreino: e.target.value })} disabled={isRecalculando}>
+                    <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700"
+                      value={alunoEditandoPerfil.diasTreino || "5"}
+                      onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, diasTreino: e.target.value })} disabled={isRecalculando}>
                       <option value="3">3 Dias</option><option value="4">4 Dias</option><option value="5">5 Dias</option><option value="6">6 Dias</option>
                     </select>
                   </div>
@@ -772,7 +828,7 @@ function App() {
                 <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Restrições Alimentares</label><input type="text" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.restricoes || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, restricoes: e.target.value })} disabled={isRecalculando} /></div>
                 <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Lesões ou Dores</label><input type="text" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.lesoes || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, lesoes: e.target.value })} disabled={isRecalculando} /></div>
 
-                {/* 🔥 NOVO BLOCO DE MEDIDAS COMPLETAS (ESTILO APP PREMIUM) 🔥 */}
+                {/* 🔥 BLOCO DE MEDIDAS COMPLETAS 🔥 */}
                 <div className="pt-3 border-t border-neutral-800 mt-4 mb-2">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-500 mb-3">📏 Perímetros Corporais (cm)</p>
 
@@ -949,7 +1005,6 @@ function App() {
     );
   }
 
-  // 🔥 PORTAL DO ALUNO COM O NOVO BOTÃO E MODAL "MINHA AVALIAÇÃO" 🔥
   if (etapa === "aluno") {
     return (
       <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col p-6 overflow-y-auto font-sans z-40">
@@ -1145,19 +1200,19 @@ function App() {
                     <div className="grid grid-cols-2 gap-2">
                       <div className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl">
                         <p className="text-[9px] text-neutral-500 uppercase font-bold mb-1">Peso</p>
-                        <p className="text-sm font-bold text-white">{alunoLogado?.peso || '--'} kg</p>
+                        <p className="text-sm font-bold text-white">{alunoLogado?.peso ? alunoLogado.peso : '--'} kg</p>
                       </div>
                       <div className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl">
                         <p className="text-[9px] text-neutral-500 uppercase font-bold mb-1">Altura</p>
-                        <p className="text-sm font-bold text-white">{alunoLogado?.altura || '--'} m</p>
+                        <p className="text-sm font-bold text-white">{alunoLogado?.altura ? alunoLogado.altura : '--'} m</p>
                       </div>
                       <div className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl">
                         <p className="text-[9px] text-neutral-500 uppercase font-bold mb-1">Idade</p>
-                        <p className="text-sm font-bold text-white">{alunoLogado?.idade || '--'} anos</p>
+                        <p className="text-sm font-bold text-white">{alunoLogado?.idade ? alunoLogado.idade : '--'} anos</p>
                       </div>
                       <div className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl">
                         <p className="text-[9px] text-neutral-500 uppercase font-bold mb-1">Gênero</p>
-                        <p className="text-sm font-bold text-white">{alunoLogado?.genero || '--'}</p>
+                        <p className="text-sm font-bold text-white">{alunoLogado?.genero ? alunoLogado.genero : '--'}</p>
                       </div>
                     </div>
                   </div>
@@ -1166,7 +1221,7 @@ function App() {
                   <div className="bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl space-y-3">
                     <div>
                       <p className="text-[9px] text-neutral-500 uppercase font-bold">Nível de Treino</p>
-                      <p className="text-xs text-neutral-300 font-medium">{alunoLogado?.nivel || '--'}</p>
+                      <p className="text-xs text-neutral-300 font-medium">{alunoLogado?.nivel ? alunoLogado.nivel : '--'}</p>
                     </div>
                     {alunoLogado?.restricoes && (
                       <div>
@@ -1297,7 +1352,19 @@ function App() {
             try {
               const urlParams = new URLSearchParams(window.location.search);
               const refPersonal = urlParams.get('ref');
-              const res = await fetch(`${API_URL}/aluno/matricula-ia`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...perfil, whatsapp: novoAlunoForm.whatsapp, objetivo: perfil.meta, personalRef: refPersonal }) });
+
+              // Garante que o objeto vai redondinho pro banco sem strings com vírgula
+              const payload = {
+                ...perfil,
+                peso: parseNumeroSeguro(perfil.peso),
+                altura: parseNumeroSeguro(perfil.altura),
+                idade: parseInt(perfil.idade) || 0,
+                whatsapp: novoAlunoForm.whatsapp,
+                objetivo: perfil.meta,
+                personalRef: refPersonal
+              };
+
+              const res = await fetch(`${API_URL}/aluno/matricula-ia`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
               if (res.ok) { alert("🎉 Análise concluída! Sua ficha já está na mesa do Personal."); window.location.href = window.location.origin; }
               else { const data = await res.json(); alert(data.mensagem || "Erro na análise."); setEtapa("matricula_externa"); }
             } catch { alert("Erro de conexão."); setEtapa("matricula_externa"); }
@@ -1306,8 +1373,8 @@ function App() {
             <input required type="text" placeholder="WhatsApp (Apenas Números)" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setNovoAlunoForm({ ...novoAlunoForm, whatsapp: e.target.value })} />
 
             <div className="grid grid-cols-3 gap-3">
-              <input required type="number" step="0.1" placeholder="Peso (kg)" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, peso: e.target.value })} />
-              <input required type="number" step="0.01" placeholder="Altura (m)" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, altura: e.target.value })} />
+              <input required type="text" placeholder="Peso (kg)" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, peso: e.target.value })} />
+              <input required type="text" placeholder="Altura (m)" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, altura: e.target.value })} />
               <input required type="number" placeholder="Idade" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, idade: e.target.value })} />
             </div>
 
@@ -1349,8 +1416,8 @@ function App() {
             <div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Nome Completo</label><input required type="text" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.nome} onChange={(e) => setPerfil({ ...perfil, nome: e.target.value })} /></div>
 
             <div className="grid grid-cols-3 gap-3">
-              <div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Peso(kg)</label><input required type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.peso} onChange={(e) => setPerfil({ ...perfil, peso: e.target.value })} /></div>
-              <div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Altura(m)</label><input required type="number" step="0.01" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.altura} onChange={(e) => setPerfil({ ...perfil, altura: e.target.value })} /></div>
+              <div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Peso(kg)</label><input required type="text" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.peso} onChange={(e) => setPerfil({ ...perfil, peso: e.target.value })} /></div>
+              <div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Altura(m)</label><input required type="text" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.altura} onChange={(e) => setPerfil({ ...perfil, altura: e.target.value })} /></div>
               <div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Idade</label><input required type="number" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.idade} onChange={(e) => setPerfil({ ...perfil, idade: e.target.value })} /></div>
             </div>
 
