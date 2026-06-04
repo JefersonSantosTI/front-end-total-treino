@@ -414,22 +414,38 @@ function App() {
 
   if (etapa === "login") return <Login aoLogar={handleLogin} />;
 
+  // 🔥 AQUI ESTÁ A TELA DE TRIAGEM ATUALIZADA COM FUNDO PREMIUM 🔥
   if (etapa === "triagem") {
     return (
-      <div className="fixed inset-0 bg-[#0d0e12] flex flex-col items-center justify-center p-6 text-white font-sans z-50">
-        <div className="w-full max-w-sm bg-[#16171d] border border-neutral-800 p-8 rounded-2xl shadow-2xl">
-          <div className="flex justify-center mb-6">
-            <img src="/logo512.png" alt="Logo Treino Fit" className="h-16 object-contain" />
+      <div className="fixed inset-0 flex flex-col items-center justify-center p-6 text-white font-sans z-50 bg-[#0d0e12] bg-[url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop')] bg-cover bg-center">
+        {/* Overlay escuro elegante com leve desfoque para destacar os botões */}
+        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
+
+        <div className="relative z-10 w-full max-w-sm bg-[#16171d]/80 border border-neutral-700/50 p-8 rounded-3xl shadow-[0_0_50px_rgba(16,185,129,0.15)] backdrop-blur-md">
+          <div className="flex justify-center mb-8">
+            <img src="/logo512.png" alt="Logo Treino Fit" className="h-20 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.2)]" />
           </div>
-          <div className="space-y-3">
-            <button type="button" onClick={() => setEtapa(usuario ? "home" : "login")} className="w-full bg-[#1e2029] hover:bg-[#252834] border border-neutral-800 text-left p-4 rounded-xl flex items-center justify-between transition-all group">
-              <div><p className="text-[10px] uppercase font-bold text-emerald-500 tracking-wider">Módulo Consultoria</p><p className="text-sm font-semibold text-neutral-200">Acessar Chat Inteligência Artificial</p></div><span className="text-neutral-500 group-hover:text-emerald-500 transition-colors text-sm">→</span>
+          <div className="space-y-4">
+            <button type="button" onClick={() => setEtapa(usuario ? "home" : "login")} className="w-full bg-[#1e2029]/90 hover:bg-[#252834] border border-neutral-700/50 hover:border-emerald-500/50 text-left p-4 rounded-2xl flex items-center justify-between transition-all group shadow-lg">
+              <div>
+                <p className="text-[10px] uppercase font-black text-emerald-500 tracking-widest mb-0.5">Módulo Consultoria</p>
+                <p className="text-sm font-bold text-neutral-200">Acessar Chat Inteligência Artificial</p>
+              </div>
+              <span className="text-neutral-500 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all text-lg font-bold">→</span>
             </button>
-            <button type="button" onClick={() => setEtapa("login_personal")} className="w-full bg-[#1e2029] hover:bg-[#252834] border border-neutral-800 text-left p-4 rounded-xl flex items-center justify-between transition-all group">
-              <div><p className="text-[10px] uppercase font-bold text-neutral-400 tracking-wider">Módulo Treinador</p><p className="text-sm font-semibold text-neutral-200">Painel Geral do Personal Trainer</p></div><span className="text-neutral-500 group-hover:text-white transition-colors text-sm">→</span>
+            <button type="button" onClick={() => setEtapa("login_personal")} className="w-full bg-[#1e2029]/90 hover:bg-[#252834] border border-neutral-700/50 hover:border-neutral-400/50 text-left p-4 rounded-2xl flex items-center justify-between transition-all group shadow-lg">
+              <div>
+                <p className="text-[10px] uppercase font-black text-neutral-400 tracking-widest mb-0.5">Módulo Treinador</p>
+                <p className="text-sm font-bold text-neutral-200">Painel Geral do Personal Trainer</p>
+              </div>
+              <span className="text-neutral-500 group-hover:text-white group-hover:translate-x-1 transition-all text-lg font-bold">→</span>
             </button>
-            <button type="button" onClick={() => setEtapa("login_aluno")} className="w-full bg-[#1e2029] hover:bg-[#252834] border border-neutral-800 text-left p-4 rounded-xl flex items-center justify-between transition-all group">
-              <div><p className="text-[10px] uppercase font-bold text-blue-400 tracking-wider">Módulo Aluno</p><p className="text-sm font-semibold text-neutral-200">Portal de Planilhas e Treinos Pro</p></div><span className="text-neutral-500 group-hover:text-blue-400 transition-colors text-sm">→</span>
+            <button type="button" onClick={() => setEtapa("login_aluno")} className="w-full bg-[#1e2029]/90 hover:bg-[#252834] border border-neutral-700/50 hover:border-blue-500/50 text-left p-4 rounded-2xl flex items-center justify-between transition-all group shadow-lg">
+              <div>
+                <p className="text-[10px] uppercase font-black text-blue-400 tracking-widest mb-0.5">Módulo Aluno</p>
+                <p className="text-sm font-bold text-neutral-200">Portal de Planilhas e Treinos Pro</p>
+              </div>
+              <span className="text-neutral-500 group-hover:text-blue-400 group-hover:translate-x-1 transition-all text-lg font-bold">→</span>
             </button>
           </div>
         </div>
