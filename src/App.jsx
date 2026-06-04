@@ -419,7 +419,7 @@ function App() {
       <div className="fixed inset-0 bg-[#0d0e12] flex flex-col items-center justify-center p-6 text-white font-sans z-50">
         <div className="w-full max-w-sm bg-[#16171d] border border-neutral-800 p-8 rounded-2xl shadow-2xl">
           <div className="flex justify-center mb-6">
-            <img src="/logo-completa.png" alt="Logo Treino Fit" className="h-16 object-contain" />
+            <img src="/logo512.png" alt="Logo Treino Fit" className="h-16 object-contain" />
           </div>
           <div className="space-y-3">
             <button type="button" onClick={() => setEtapa(usuario ? "home" : "login")} className="w-full bg-[#1e2029] hover:bg-[#252834] border border-neutral-800 text-left p-4 rounded-xl flex items-center justify-between transition-all group">
@@ -498,7 +498,7 @@ function App() {
       <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col p-4 md:p-6 overflow-y-auto font-sans z-40">
         <header className="w-full max-w-5xl mx-auto flex justify-between items-center border-b border-neutral-800 pb-4 mb-6">
           <div className="flex items-center gap-3">
-            <img src="/icone.png" alt="Ícone Treino Fit" className="w-8 h-8 rounded" />
+            <img src="/logo192.png" alt="Ícone Treino Fit" className="w-8 h-8 rounded" />
             <div>
               <h2 className="text-sm font-bold text-white uppercase tracking-tight">{personalLogado?.nome}</h2>
               <p className="text-[10px] text-neutral-500 font-mono">{personalLogado?.cref} • {personalLogado?.assinaturaAtiva ? "Licença PRO Ativa" : "Modo Teste Grátis"}</p>
@@ -1092,7 +1092,7 @@ function App() {
           <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center">
             <header className="w-full max-w-4xl flex justify-between items-center border-b border-neutral-800 pb-4 mb-6">
               <div className="flex items-center space-x-3">
-                <img src="/icone.png" alt="Ícone Treino Fit" className="w-8 h-8 rounded" />
+                <img src="/logo192.png" alt="Ícone Treino Fit" className="w-8 h-8 rounded" />
                 <div>
                   <h2 className="text-sm font-bold text-white uppercase tracking-tight">{perfil.nome}</h2>
                   <p className="text-[10px] text-neutral-500 font-mono uppercase tracking-wider">Conta {isVip ? 'Premium Elite' : 'Free Tier'}</p>
