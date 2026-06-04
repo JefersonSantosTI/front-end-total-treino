@@ -418,12 +418,8 @@ function App() {
     return (
       <div className="fixed inset-0 bg-[#0d0e12] flex flex-col items-center justify-center p-6 text-white font-sans z-50">
         <div className="w-full max-w-sm bg-[#16171d] border border-neutral-800 p-8 rounded-2xl shadow-2xl">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-black font-black text-xs">TF</div>
-            <div>
-              <h1 className="text-md font-bold tracking-tight uppercase">Treino Fit <span className="text-emerald-500 text-[10px] ml-1 font-mono">v8.0</span></h1>
-              <p className="text-neutral-500 text-[11px]">Banco de dados ativado</p>
-            </div>
+          <div className="flex justify-center mb-6">
+            <img src="/logo-completa.png" alt="Logo Treino Fit" className="h-16 object-contain" />
           </div>
           <div className="space-y-3">
             <button type="button" onClick={() => setEtapa(usuario ? "home" : "login")} className="w-full bg-[#1e2029] hover:bg-[#252834] border border-neutral-800 text-left p-4 rounded-xl flex items-center justify-between transition-all group">
@@ -501,7 +497,13 @@ function App() {
     return (
       <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col p-4 md:p-6 overflow-y-auto font-sans z-40">
         <header className="w-full max-w-5xl mx-auto flex justify-between items-center border-b border-neutral-800 pb-4 mb-6">
-          <div className="flex items-center gap-3"><div className="w-7 h-7 bg-neutral-800 border border-neutral-700 rounded flex items-center justify-center text-emerald-500 font-mono text-xs font-bold">TF</div><div><h2 className="text-sm font-bold text-white uppercase tracking-tight">{personalLogado?.nome}</h2><p className="text-[10px] text-neutral-500 font-mono">{personalLogado?.cref} • {personalLogado?.assinaturaAtiva ? "Licença PRO Ativa" : "Modo Teste Grátis"}</p></div></div>
+          <div className="flex items-center gap-3">
+            <img src="/icone.png" alt="Ícone Treino Fit" className="w-8 h-8 rounded" />
+            <div>
+              <h2 className="text-sm font-bold text-white uppercase tracking-tight">{personalLogado?.nome}</h2>
+              <p className="text-[10px] text-neutral-500 font-mono">{personalLogado?.cref} • {personalLogado?.assinaturaAtiva ? "Licença PRO Ativa" : "Modo Teste Grátis"}</p>
+            </div>
+          </div>
           <button type="button" onClick={handleSair} className="px-3 py-1.5 bg-neutral-900 border border-neutral-800 rounded-md hover:bg-neutral-800 text-[10px] text-neutral-400 font-bold uppercase transition-colors">Sair</button>
         </header>
 
@@ -1089,7 +1091,13 @@ function App() {
         {abaAtiva === "home" && (
           <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center">
             <header className="w-full max-w-4xl flex justify-between items-center border-b border-neutral-800 pb-4 mb-6">
-              <div className="flex items-center space-x-3"><div className="w-7 h-7 bg-neutral-800 border border-neutral-700 rounded flex items-center justify-center text-emerald-500 font-mono text-xs font-bold">TF</div><div><h2 className="text-sm font-bold text-white uppercase tracking-tight">{perfil.nome}</h2><p className="text-[10px] text-neutral-500 font-mono uppercase tracking-wider">Conta {isVip ? 'Premium Elite' : 'Free Tier'}</p></div></div>
+              <div className="flex items-center space-x-3">
+                <img src="/icone.png" alt="Ícone Treino Fit" className="w-8 h-8 rounded" />
+                <div>
+                  <h2 className="text-sm font-bold text-white uppercase tracking-tight">{perfil.nome}</h2>
+                  <p className="text-[10px] text-neutral-500 font-mono uppercase tracking-wider">Conta {isVip ? 'Premium Elite' : 'Free Tier'}</p>
+                </div>
+              </div>
               <button type="button" onClick={() => !isVip && setBloqueado(true)} className={`px-3 py-1.5 rounded text-[10px] font-bold uppercase font-mono border ${isVip ? 'border-emerald-500/20 text-emerald-500 bg-emerald-500/5' : 'border-amber-500/20 text-amber-500 bg-amber-500/5 animate-pulse'}`}>{isVip ? "✓ Vip Ativado" : "Upgrade para Enterprise"}</button>
             </header>
 
