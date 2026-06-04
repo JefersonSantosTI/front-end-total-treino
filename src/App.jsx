@@ -41,6 +41,8 @@ function App() {
   const [alunoVerFeedback, setAlunoVerFeedback] = useState(null);
 
   const [modalPlanosPersonal, setModalPlanosPersonal] = useState(false);
+  // NOVO: Controle do modal de avaliação do aluno
+  const [modalAvaliacaoAluno, setModalAvaliacaoAluno] = useState(false);
 
   const [treinoForm, setTreinoForm] = useState([]);
   const [dietaForm, setDietaForm] = useState([]);
@@ -947,15 +949,27 @@ function App() {
     );
   }
 
+  // 🔥 PORTAL DO ALUNO COM O NOVO BOTÃO E MODAL "MINHA AVALIAÇÃO" 🔥
   if (etapa === "aluno") {
     return (
       <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col p-6 overflow-y-auto font-sans z-40">
         <header className="w-full max-w-md mx-auto flex justify-between items-center border-b border-neutral-800 pb-4 mb-6">
-          <div><p className="text-[9px] text-blue-400 font-mono font-bold uppercase tracking-wider">Consultoria Privada Treino Fit</p><h2 className="text-md font-bold text-white uppercase tracking-tight">{alunoLogado?.nome}</h2><p className="text-[10px] text-neutral-500 font-mono mt-0.5">Objetivo: {alunoLogado?.objetivo}</p></div>
-          <button type="button" onClick={() => { setEtapa("triagem"); setAlunoLogado(null); }} className="px-3 py-1.5 bg-neutral-900 border border-neutral-800 rounded-md text-[10px] font-bold uppercase tracking-wider text-neutral-400 transition-colors">Sair</button>
+          <div>
+            <p className="text-[9px] text-blue-400 font-mono font-bold uppercase tracking-wider">Consultoria Privada Treino Fit</p>
+            <h2 className="text-md font-bold text-white uppercase tracking-tight">{alunoLogado?.nome}</h2>
+            <p className="text-[10px] text-neutral-500 font-mono mt-0.5">Objetivo: {alunoLogado?.objetivo}</p>
+          </div>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => setModalAvaliacaoAluno(true)} className="px-3 py-1.5 bg-blue-600/10 border border-blue-500/20 text-blue-400 hover:bg-blue-600/20 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors flex items-center gap-1">
+              📋 Avaliação
+            </button>
+            <button type="button" onClick={() => { setEtapa("triagem"); setAlunoLogado(null); }} className="px-3 py-1.5 bg-neutral-900 border border-neutral-800 rounded-md text-[10px] font-bold uppercase tracking-wider text-neutral-400 transition-colors">
+              Sair
+            </button>
+          </div>
         </header>
-        <main className="w-full max-w-md mx-auto flex-1 space-y-6 pb-10">
 
+        <main className="w-full max-w-md mx-auto flex-1 space-y-6 pb-10">
           <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl flex items-center justify-between">
             <div><p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Check-ins Validados</p><h3 className="text-3xl font-bold text-white mt-1">{alunoLogado?.checkins?.length || 0}</h3></div>
             <button type="button" onClick={iniciarCheckin} className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-3 rounded-lg text-xs uppercase tracking-wider transition-colors shadow-lg">Confirmar Treino Hoje</button>
@@ -1106,6 +1120,108 @@ function App() {
                     Enviar e Registrar Check-in
                   </button>
                 </form>
+              </div>
+            </div>
+          )}
+
+          {/* 🔥 NOVO: MODAL "MINHA AVALIAÇÃO" NO PORTAL DO ALUNO 🔥 */}
+          {modalAvaliacaoAluno && (
+            <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setModalAvaliacaoAluno(false)}>
+              <div className="w-full max-w-md bg-[#16171d] border border-neutral-800 rounded-3xl p-6 relative shadow-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                <button onClick={() => setModalAvaliacaoAluno(false)} className="absolute top-4 right-4 text-neutral-500 hover:text-white font-bold">✕</button>
+
+                <div className="flex items-center gap-3 mb-6 border-b border-neutral-800 pb-4">
+                  <div className="w-10 h-10 bg-blue-500/10 border border-blue-500/20 rounded-full flex items-center justify-center text-xl">📊</div>
+                  <div>
+                    <h3 className="font-bold text-white uppercase text-sm tracking-tight">Sua Avaliação Física</h3>
+                    <p className="text-[10px] text-blue-400 font-mono uppercase">Histórico e Medidas</p>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  {/* Dados Básicos */}
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-3">Perfil Biométrico</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl">
+                        <p className="text-[9px] text-neutral-500 uppercase font-bold mb-1">Peso</p>
+                        <p className="text-sm font-bold text-white">{alunoLogado?.peso || '--'} kg</p>
+                      </div>
+                      <div className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl">
+                        <p className="text-[9px] text-neutral-500 uppercase font-bold mb-1">Altura</p>
+                        <p className="text-sm font-bold text-white">{alunoLogado?.altura || '--'} m</p>
+                      </div>
+                      <div className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl">
+                        <p className="text-[9px] text-neutral-500 uppercase font-bold mb-1">Idade</p>
+                        <p className="text-sm font-bold text-white">{alunoLogado?.idade || '--'} anos</p>
+                      </div>
+                      <div className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl">
+                        <p className="text-[9px] text-neutral-500 uppercase font-bold mb-1">Gênero</p>
+                        <p className="text-sm font-bold text-white">{alunoLogado?.genero || '--'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Informações Extras */}
+                  <div className="bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl space-y-3">
+                    <div>
+                      <p className="text-[9px] text-neutral-500 uppercase font-bold">Nível de Treino</p>
+                      <p className="text-xs text-neutral-300 font-medium">{alunoLogado?.nivel || '--'}</p>
+                    </div>
+                    {alunoLogado?.restricoes && (
+                      <div>
+                        <p className="text-[9px] text-neutral-500 uppercase font-bold">Restrições Alimentares</p>
+                        <p className="text-xs text-neutral-300">{alunoLogado.restricoes}</p>
+                      </div>
+                    )}
+                    {alunoLogado?.lesoes && (
+                      <div>
+                        <p className="text-[9px] text-neutral-500 uppercase font-bold">Histórico de Lesões</p>
+                        <p className="text-xs text-neutral-300">{alunoLogado.lesoes}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Perímetros Corporais (Só exibe se existir) */}
+                  {alunoLogado?.medidas && Object.keys(alunoLogado.medidas).length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400 mb-3 pt-2 border-t border-neutral-800">📏 Suas Medidas (cm)</p>
+
+                      <div className="space-y-3">
+                        <div className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl">
+                          <p className="text-[9px] text-neutral-500 uppercase font-bold mb-2">Tronco</p>
+                          <div className="grid grid-cols-2 gap-y-2 text-xs">
+                            {alunoLogado.medidas.pescoco && <div className="flex justify-between border-b border-neutral-800/50 pb-1"><span className="text-neutral-400">Pescoço:</span><span className="font-mono text-white">{alunoLogado.medidas.pescoco}</span></div>}
+                            {alunoLogado.medidas.torax && <div className="flex justify-between border-b border-neutral-800/50 pb-1"><span className="text-neutral-400">Tórax:</span><span className="font-mono text-white">{alunoLogado.medidas.torax}</span></div>}
+                            {alunoLogado.medidas.cintura && <div className="flex justify-between border-b border-neutral-800/50 pb-1"><span className="text-neutral-400">Cintura:</span><span className="font-mono text-white">{alunoLogado.medidas.cintura}</span></div>}
+                            {alunoLogado.medidas.abdomen && <div className="flex justify-between border-b border-neutral-800/50 pb-1"><span className="text-neutral-400">Abdômen:</span><span className="font-mono text-white">{alunoLogado.medidas.abdomen}</span></div>}
+                            {alunoLogado.medidas.quadril && <div className="flex justify-between border-b border-neutral-800/50 pb-1"><span className="text-neutral-400">Quadril:</span><span className="font-mono text-white">{alunoLogado.medidas.quadril}</span></div>}
+                          </div>
+                        </div>
+
+                        <div className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl">
+                          <p className="text-[9px] text-neutral-500 uppercase font-bold mb-2">Membros Superiores</p>
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                            {alunoLogado.medidas.bracoDir && <div className="flex justify-between border-b border-neutral-800/50 pb-1"><span className="text-neutral-400">Braço Dir:</span><span className="font-mono text-white">{alunoLogado.medidas.bracoDir}</span></div>}
+                            {alunoLogado.medidas.bracoEsq && <div className="flex justify-between border-b border-neutral-800/50 pb-1"><span className="text-neutral-400">Braço Esq:</span><span className="font-mono text-white">{alunoLogado.medidas.bracoEsq}</span></div>}
+                            {alunoLogado.medidas.antebracoDir && <div className="flex justify-between border-b border-neutral-800/50 pb-1"><span className="text-neutral-400">Antebraço Dir:</span><span className="font-mono text-white">{alunoLogado.medidas.antebracoDir}</span></div>}
+                            {alunoLogado.medidas.antebracoEsq && <div className="flex justify-between border-b border-neutral-800/50 pb-1"><span className="text-neutral-400">Antebraço Esq:</span><span className="font-mono text-white">{alunoLogado.medidas.antebracoEsq}</span></div>}
+                          </div>
+                        </div>
+
+                        <div className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl">
+                          <p className="text-[9px] text-neutral-500 uppercase font-bold mb-2">Membros Inferiores</p>
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                            {alunoLogado.medidas.coxaDir && <div className="flex justify-between border-b border-neutral-800/50 pb-1"><span className="text-neutral-400">Coxa Dir:</span><span className="font-mono text-white">{alunoLogado.medidas.coxaDir}</span></div>}
+                            {alunoLogado.medidas.coxaEsq && <div className="flex justify-between border-b border-neutral-800/50 pb-1"><span className="text-neutral-400">Coxa Esq:</span><span className="font-mono text-white">{alunoLogado.medidas.coxaEsq}</span></div>}
+                            {alunoLogado.medidas.panturrilhaDir && <div className="flex justify-between border-b border-neutral-800/50 pb-1"><span className="text-neutral-400">Panturrilha Dir:</span><span className="font-mono text-white">{alunoLogado.medidas.panturrilhaDir}</span></div>}
+                            {alunoLogado.medidas.panturrilhaEsq && <div className="flex justify-between border-b border-neutral-800/50 pb-1"><span className="text-neutral-400">Panturrilha Esq:</span><span className="font-mono text-white">{alunoLogado.medidas.panturrilhaEsq}</span></div>}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
