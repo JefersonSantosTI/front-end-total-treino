@@ -8,7 +8,7 @@ const TelaPlanos = () => {
             precoMensal: "17,90",
             total: "53,70",
             destaque: false,
-            linkKiwify: "https://pay.kiwify.com.br/3TMozok" // Atualize aqui
+            linkKiwify: "https://pay.kiwify.com.br/bphu4Hm" // Atualize aqui
         },
         {
             nome: "Semestral",
