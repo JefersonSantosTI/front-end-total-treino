@@ -426,7 +426,7 @@ function App() {
     );
   }
 
-  if (etapa === "login") return <Login aoLogar={handleLogin} />;
+  if (etapa === "login") return <Login aoLogar={handleLogin} aoVoltar={() => setEtapa("triagem")} />;
 
   if (etapa === "triagem") {
     return (
@@ -1451,6 +1451,9 @@ function App() {
             <div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Lesões ou Dores?</label><input type="text" placeholder="Ex: Dor no Joelho, Lombar..." className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.lesoes} onChange={(e) => setPerfil({ ...perfil, lesoes: e.target.value })} /></div>
 
             <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-xl uppercase tracking-wider font-bold text-xs transition-colors shadow-lg mt-2">Salvar e Entrar</button>
+
+            {/* NOVO BOTÃO DE VOLTAR */}
+            <button type="button" onClick={() => setEtapa("triagem")} className="w-full bg-transparent border border-neutral-800 hover:bg-neutral-800 text-neutral-400 p-4 rounded-xl uppercase tracking-wider font-bold text-xs transition-colors mt-2">Voltar</button>
           </form>
         </div>
       </div>

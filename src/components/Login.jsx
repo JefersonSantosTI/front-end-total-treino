@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export default function Login({ aoLogar }) {
+export default function Login({ aoLogar, aoVoltar }) { // <-- ATENÇÃO AQUI: Adicione aoVoltar
     const [whatsapp, setWhatsapp] = useState("");
 
     const handleSubmit = (e) => {
@@ -9,7 +9,6 @@ export default function Login({ aoLogar }) {
             alert("Por favor, digite um WhatsApp válido.");
             return;
         }
-        // Salva no navegador para o usuário não precisar logar de novo depois
         localStorage.setItem("usuario_whatsapp", whatsapp);
         aoLogar(whatsapp);
     };
@@ -33,6 +32,14 @@ export default function Login({ aoLogar }) {
                         className="bg-green-600 hover:bg-green-500 transition-colors p-4 rounded-lg font-bold text-xl"
                     >
                         Entrar no Treino
+                    </button>
+                    {/* ✅ BOTÃO VOLTAR ADICIONADO AQUI NO LOGIN.JS */}
+                    <button
+                        type="button"
+                        onClick={aoVoltar}
+                        className="bg-transparent border border-gray-600 hover:bg-gray-700 text-gray-400 transition-colors p-4 rounded-lg font-bold text-xl"
+                    >
+                        Voltar
                     </button>
                 </form>
             </div>
