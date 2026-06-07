@@ -1238,43 +1238,29 @@ function App() {
                   </div>
 
                   {/* Perímetros Corporais (Só exibe se existir) */}
-                  {alunoLogado?.medidas && Object.keys(alunoLogado.medidas).length > 0 && (
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400 mb-3 pt-2 border-t border-neutral-800">📏 Suas Medidas (cm)</p>
+                  {alunoLogado?.medidas && Object.keys(alunoLogado.medidas).length > 0 ? (
+                    <div className="mt-6">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400 mb-3 pt-2 border-t border-neutral-800">
+                        📏 Suas Medidas (cm)
+                      </p>
+                      <div className="grid grid-cols-2 gap-3">
+                        {Object.entries(alunoLogado.medidas).map(([key, value]) => {
+                          // Ignora valores vazios ou nulos
+                          if (!value || value === "" || value === 0) return null;
 
-                      <div className="space-y-3">
-                        <div className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl">
-                          <p className="text-[9px] text-neutral-500 uppercase font-bold mb-2">Tronco</p>
-                          <div className="grid grid-cols-2 gap-y-2 text-xs">
-                            {alunoLogado.medidas.pescoco && <div className="flex justify-between border-b border-neutral-800/50 pb-1"><span className="text-neutral-400">Pescoço:</span><span className="font-mono text-white">{alunoLogado.medidas.pescoco}</span></div>}
-                            {alunoLogado.medidas.torax && <div className="flex justify-between border-b border-neutral-800/50 pb-1"><span className="text-neutral-400">Tórax:</span><span className="font-mono text-white">{alunoLogado.medidas.torax}</span></div>}
-                            {alunoLogado.medidas.cintura && <div className="flex justify-between border-b border-neutral-800/50 pb-1"><span className="text-neutral-400">Cintura:</span><span className="font-mono text-white">{alunoLogado.medidas.cintura}</span></div>}
-                            {alunoLogado.medidas.abdomen && <div className="flex justify-between border-b border-neutral-800/50 pb-1"><span className="text-neutral-400">Abdômen:</span><span className="font-mono text-white">{alunoLogado.medidas.abdomen}</span></div>}
-                            {alunoLogado.medidas.quadril && <div className="flex justify-between border-b border-neutral-800/50 pb-1"><span className="text-neutral-400">Quadril:</span><span className="font-mono text-white">{alunoLogado.medidas.quadril}</span></div>}
-                          </div>
-                        </div>
-
-                        <div className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl">
-                          <p className="text-[9px] text-neutral-500 uppercase font-bold mb-2">Membros Superiores</p>
-                          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
-                            {alunoLogado.medidas.bracoDir && <div className="flex justify-between border-b border-neutral-800/50 pb-1"><span className="text-neutral-400">Braço Dir:</span><span className="font-mono text-white">{alunoLogado.medidas.bracoDir}</span></div>}
-                            {alunoLogado.medidas.bracoEsq && <div className="flex justify-between border-b border-neutral-800/50 pb-1"><span className="text-neutral-400">Braço Esq:</span><span className="font-mono text-white">{alunoLogado.medidas.bracoEsq}</span></div>}
-                            {alunoLogado.medidas.antebracoDir && <div className="flex justify-between border-b border-neutral-800/50 pb-1"><span className="text-neutral-400">Antebraço Dir:</span><span className="font-mono text-white">{alunoLogado.medidas.antebracoDir}</span></div>}
-                            {alunoLogado.medidas.antebracoEsq && <div className="flex justify-between border-b border-neutral-800/50 pb-1"><span className="text-neutral-400">Antebraço Esq:</span><span className="font-mono text-white">{alunoLogado.medidas.antebracoEsq}</span></div>}
-                          </div>
-                        </div>
-
-                        <div className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl">
-                          <p className="text-[9px] text-neutral-500 uppercase font-bold mb-2">Membros Inferiores</p>
-                          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
-                            {alunoLogado.medidas.coxaDir && <div className="flex justify-between border-b border-neutral-800/50 pb-1"><span className="text-neutral-400">Coxa Dir:</span><span className="font-mono text-white">{alunoLogado.medidas.coxaDir}</span></div>}
-                            {alunoLogado.medidas.coxaEsq && <div className="flex justify-between border-b border-neutral-800/50 pb-1"><span className="text-neutral-400">Coxa Esq:</span><span className="font-mono text-white">{alunoLogado.medidas.coxaEsq}</span></div>}
-                            {alunoLogado.medidas.panturrilhaDir && <div className="flex justify-between border-b border-neutral-800/50 pb-1"><span className="text-neutral-400">Panturrilha Dir:</span><span className="font-mono text-white">{alunoLogado.medidas.panturrilhaDir}</span></div>}
-                            {alunoLogado.medidas.panturrilhaEsq && <div className="flex justify-between border-b border-neutral-800/50 pb-1"><span className="text-neutral-400">Panturrilha Esq:</span><span className="font-mono text-white">{alunoLogado.medidas.panturrilhaEsq}</span></div>}
-                          </div>
-                        </div>
+                          return (
+                            <div key={key} className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl flex justify-between items-center">
+                              <span className="text-[9px] text-neutral-500 uppercase font-bold capitalize">
+                                {key.replace(/([A-Z])/g, ' $1')}
+                              </span>
+                              <span className="text-sm font-mono text-white font-bold">{value}cm</span>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
+                  ) : (
+                    <p className="text-[10px] text-neutral-600 italic mt-4">Nenhuma medida cadastrada ainda.</p>
                   )}
                 </div>
               </div>
