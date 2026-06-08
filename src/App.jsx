@@ -1245,14 +1245,17 @@ function App() {
                       </p>
                       <div className="grid grid-cols-2 gap-3">
                         {Object.entries(alunoLogado.medidas).map(([key, value]) => {
-                          // Ignora valores vazios ou nulos
-                          if (!value || value === "" || value === 0) return null;
+                          // Ignora valores vazios, nulos ou campos de sistema
+                          if (!value || value === "" || value === 0 || key === "_id") return null;
+
+                          // Formatação automática: bracoDir -> Braco Dir
+                          const labelFormatada = key
+                            .replace(/([A-Z])/g, ' $1')
+                            .replace(/^./, str => str.toUpperCase());
 
                           return (
                             <div key={key} className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl flex justify-between items-center">
-                              <span className="text-[9px] text-neutral-500 uppercase font-bold capitalize">
-                                {key.replace(/([A-Z])/g, ' $1')}
-                              </span>
+                              <span className="text-[9px] text-neutral-500 uppercase font-bold">{labelFormatada}</span>
                               <span className="text-sm font-mono text-white font-bold">{value}cm</span>
                             </div>
                           );
