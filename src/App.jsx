@@ -536,18 +536,33 @@ function App() {
         </header>
 
         <main className="w-full max-w-5xl mx-auto flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 items-start pb-10">
-          <div className="md:col-span-1 bg-[#16171d] border border-neutral-800 rounded-xl p-5 shadow-xl">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-4">Métricas da Assessoria</h3>
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="p-3 bg-[#0d0e12] border border-neutral-800 rounded-lg"><p className="text-xl font-semibold text-white">{alunosPersonal.length}</p><p className="text-[9px] uppercase tracking-wide text-neutral-500 mt-1">Alunos</p></div>
-              <div className="p-3 bg-[#0d0e12] border border-neutral-800 rounded-lg"><p className="text-xl font-semibold text-amber-500">{alunosPersonal.filter(a => a.statusTreino === "Rascunho IA").length}</p><p className="text-[9px] uppercase tracking-wide text-neutral-500 mt-1">Alertas IA</p></div>
-              <div className="p-3 bg-[#0d0e12] border border-neutral-800 rounded-lg"><p className="text-xl font-semibold text-neutral-400">{alunosPersonal.filter(a => a.statusConta === "Off").length}</p><p className="text-[9px] uppercase tracking-wide text-neutral-500 mt-1">Inativos</p></div>
-            </div>
-            {!personalLogado?.assinaturaAtiva && (
-              <div className="mt-4 bg-emerald-500/5 border border-emerald-500/20 p-3 rounded-xl text-center">
-                <p className="text-[10px] text-emerald-400 font-bold uppercase">Teste Ativo: {alunosPersonal.length}/2 Alunos</p>
+
+          {/* COLUNA ESQUERDA - DASHBOARD DO PERSONAL */}
+          <div className="md:col-span-1 flex flex-col gap-6">
+            <div className="bg-[#16171d] border border-neutral-800 rounded-xl p-5 shadow-xl">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-4">Métricas da Assessoria</h3>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="p-3 bg-[#0d0e12] border border-neutral-800 rounded-lg"><p className="text-xl font-semibold text-white">{alunosPersonal.length}</p><p className="text-[9px] uppercase tracking-wide text-neutral-500 mt-1">Alunos</p></div>
+                <div className="p-3 bg-[#0d0e12] border border-neutral-800 rounded-lg"><p className="text-xl font-semibold text-amber-500">{alunosPersonal.filter(a => a.statusTreino === "Rascunho IA").length}</p><p className="text-[9px] uppercase tracking-wide text-neutral-500 mt-1">Alertas IA</p></div>
+                <div className="p-3 bg-[#0d0e12] border border-neutral-800 rounded-lg"><p className="text-xl font-semibold text-neutral-400">{alunosPersonal.filter(a => a.statusConta === "Off").length}</p><p className="text-[9px] uppercase tracking-wide text-neutral-500 mt-1">Inativos</p></div>
               </div>
-            )}
+              {!personalLogado?.assinaturaAtiva && (
+                <div className="mt-4 bg-emerald-500/5 border border-emerald-500/20 p-3 rounded-xl text-center">
+                  <p className="text-[10px] text-emerald-400 font-bold uppercase">Teste Ativo: {alunosPersonal.length}/2 Alunos</p>
+                </div>
+              )}
+            </div>
+
+            {/* 🔥 BANNER HORTILIFE - PAINEL DO PERSONAL 🔥 */}
+            <div className="bg-gradient-to-br from-[#16171d] to-emerald-900/10 border border-emerald-500/20 rounded-xl p-5 shadow-xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-2 opacity-10 text-4xl">🛒</div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-500 mb-2">🤝 Parceiro Oficial</p>
+              <h4 className="text-sm font-bold text-white mb-2">Hortilife Praticidade</h4>
+              <p className="text-[11px] text-neutral-400 mb-4 leading-relaxed">Indique nosso parceiro para seus alunos comprarem os alimentos da dieta direto de casa. Mais adesão ao plano nutricional!</p>
+              <a href="https://hortilife-praticidade.kyte.site/pt-BR" target="_blank" rel="noopener noreferrer" className="block w-full bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 text-center font-bold py-2.5 px-4 rounded-lg text-[10px] uppercase tracking-wider transition-all">
+                👉 Conhecer Hortilife
+              </a>
+            </div>
           </div>
 
           <div className="md:col-span-2 bg-[#16171d] border border-neutral-800 rounded-xl p-4 md:p-5 shadow-xl">
@@ -1016,9 +1031,9 @@ function App() {
           </div>
           <div className="flex gap-2">
             <button type="button" onClick={() => setModalAvaliacaoAluno(true)} className="px-3 py-1.5 bg-blue-600/10 border border-blue-500/20 text-blue-400 hover:bg-blue-600/20 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors flex items-center gap-1">
-              📋 Avaliação
+              📋 Minha Avaliação
             </button>
-            <button type="button" onClick={() => { setEtapa("triagem"); setAlunoLogado(null); }} className="px-3 py-1.5 bg-neutral-900 border border-neutral-800 rounded-md text-[10px] font-bold uppercase tracking-wider text-neutral-400 transition-colors">
+            <button type="button" onClick={() => { setEtapa("triagem"); setAlunoLogado(null); }} className="px-3 py-1.5 bg-red-500 border border-neutral-800 rounded-md text-[10px] font-bold uppercase tracking-wider text-neutral-50 transition-all duration-200 hover:bg-red-600 hover:scale-105 hover:cursor-pointer">
               Sair
             </button>
           </div>
@@ -1048,6 +1063,16 @@ function App() {
                   </div>
                 ))}
               </div>
+
+              {/* 🔥 BANNER HORTILIFE - PAINEL DO ALUNO 🔥 */}
+              <div className="mt-4 bg-gradient-to-r from-emerald-900/20 to-blue-900/20 border border-emerald-500/20 p-4 rounded-xl text-center">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-400 mb-1">🛒 Facilite sua Dieta!</p>
+                <p className="text-[10px] text-neutral-300 mb-3">Peça as carnes, frutas e verduras do seu plano sem sair de casa.</p>
+                <a href="https://hortilife-praticidade.kyte.site/pt-BR" target="_blank" rel="noopener noreferrer" className="inline-block w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-lg text-[10px] uppercase tracking-wider transition-colors shadow-lg">
+                  👉 Pedir na Hortilife
+                </a>
+              </div>
+
             </div>
           )}
 
@@ -1308,6 +1333,18 @@ function App() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3"><button type="button" onClick={() => setAbaAtiva("chat")} className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 px-4 rounded-lg text-xs uppercase tracking-wider text-center transition-all shadow-lg">Abrir Chat IA & Consultoria</button><button type="button" onClick={() => setAbaAtiva("treino")} className="bg-transparent hover:bg-neutral-800 border border-neutral-800 text-neutral-200 font-bold py-3.5 px-4 rounded-lg text-xs uppercase tracking-wider text-center transition-all">Acessar Biblioteca de Treinos</button></div>
                   <div className="text-center pt-3 border-t border-neutral-800/40"><button type="button" onClick={handleSair} className="text-[10px] font-mono uppercase text-neutral-600 hover:text-red-400 transition-colors">Encerrar sessão de dados</button></div>
                 </div>
+
+                {/* 🔥 BANNER HORTILIFE - DASHBOARD HOME 🔥 */}
+                <div className="bg-gradient-to-r from-[#16171d] to-emerald-900/10 border border-emerald-500/20 p-5 rounded-xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-500 mb-1">🛒 Mercado Saudável Oficial</p>
+                    <p className="text-xs font-medium text-neutral-300">A IA montou sua dieta? Peça os ingredientes agora mesmo e receba no conforto de casa.</p>
+                  </div>
+                  <a href="https://hortilife-praticidade.kyte.site/pt-BR" target="_blank" rel="noopener noreferrer" className="whitespace-nowrap bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-5 rounded-lg text-[10px] uppercase tracking-wider transition-colors shadow-lg">
+                    👉 Pedir na Hortilife
+                  </a>
+                </div>
+
               </div>
             </main>
           </div>
