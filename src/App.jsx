@@ -39,6 +39,9 @@ function App() {
   const [alunoEditandoPerfil, setAlunoEditandoPerfil] = useState(null);
   const [isRecalculando, setIsRecalculando] = useState(false);
 
+  // 🔥 NOVO ESTADO: Trava de edição para segurança dos dados do aluno 🔥
+  const [modoEdicaoBiometria, setModoEdicaoBiometria] = useState(false);
+
   const [modalFeedbackAberto, setModalFeedbackAberto] = useState(false);
   const [feedbackTreino, setFeedbackTreino] = useState({ intensidade: "Moderado 🟡", carga: "Na medida ✅", comentario: "" });
   const [alunoVerFeedback, setAlunoVerFeedback] = useState(null);
@@ -268,7 +271,6 @@ function App() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          // Garante que os números são processados de forma limpa pro banco de dados
           ...alunoEditandoPerfil,
           peso: parseNumeroSeguro(alunoEditandoPerfil.peso),
           altura: parseNumeroSeguro(alunoEditandoPerfil.altura),
@@ -624,20 +626,24 @@ function App() {
                           )}
                         </td>
                         <td className="py-3.5 text-right space-x-2">
-                          {/* 🔥 AQUI PREPARAMOS OS DADOS PARA NÃO IR EM BRANCO PRO FORMULÁRIO 🔥 */}
-                          <button type="button" onClick={() => setAlunoEditandoPerfil({
-                            ...aluno,
-                            peso: aluno.peso || "",
-                            altura: aluno.altura || "",
-                            idade: aluno.idade || "",
-                            genero: aluno.genero || "Masculino",
-                            objetivo: aluno.objetivo || "Emagrecimento",
-                            nivel: aluno.nivel || "Intermediário",
-                            diasTreino: aluno.diasTreino || "5",
-                            restricoes: aluno.restricoes || "",
-                            lesoes: aluno.lesoes || "",
-                            medidas: aluno.medidas || {}
-                          })} className="bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase mr-1">Editar Perfil</button>
+
+                          <button type="button" onClick={() => {
+                            setModoEdicaoBiometria(false);
+                            setAlunoEditandoPerfil({
+                              ...aluno,
+                              peso: aluno.peso ?? "",
+                              altura: aluno.altura ?? "",
+                              idade: aluno.idade ?? "",
+                              genero: aluno.genero ?? "Masculino",
+                              objetivo: aluno.objetivo ?? aluno.meta ?? "Emagrecimento",
+                              nivel: aluno.nivel ?? "Intermediário",
+                              diasTreino: aluno.diasTreino ?? "5",
+                              restricoes: aluno.restricoes ?? "",
+                              lesoes: aluno.lesoes ?? "",
+                              medidas: aluno.medidas ?? {}
+                            });
+                          }} className="bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase mr-1">Editar Perfil</button>
+
                           <button type="button" onClick={() => abrirGeradorTreino(aluno)} className="bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase">{aluno.statusTreino === "Rascunho IA" ? "Revisar IA" : "Montar Semanal"}</button>
                           <button type="button" onClick={() => alterStatusContaAluno(idUnico, aluno.statusConta === "Ativo" ? "Off" : "Ativo")} className="border border-neutral-800 text-neutral-400 hover:bg-neutral-800 text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase">{aluno.statusConta === "Ativo" ? "Arquivar" : "Ativar"}</button>
                           <button type="button" onClick={() => deletarAluno(idUnico)} className="text-red-500/70 hover:text-red-400 border border-neutral-800 hover:border-red-500/20 rounded font-bold text-[9px] py-1 px-2 uppercase">Excluir</button>
@@ -689,19 +695,22 @@ function App() {
                     </div>
 
                     <div className="pt-1 flex flex-wrap gap-2">
-                      <button type="button" onClick={() => setAlunoEditandoPerfil({
-                        ...aluno,
-                        peso: aluno.peso || "",
-                        altura: aluno.altura || "",
-                        idade: aluno.idade || "",
-                        genero: aluno.genero || "Masculino",
-                        objetivo: aluno.objetivo || "Emagrecimento",
-                        nivel: aluno.nivel || "Intermediário",
-                        diasTreino: aluno.diasTreino || "5",
-                        restricoes: aluno.restricoes || "",
-                        lesoes: aluno.lesoes || "",
-                        medidas: aluno.medidas || {}
-                      })} className="w-full bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 text-[10px] font-bold py-2 rounded transition-colors uppercase text-center mb-1">
+                      <button type="button" onClick={() => {
+                        setModoEdicaoBiometria(false);
+                        setAlunoEditandoPerfil({
+                          ...aluno,
+                          peso: aluno.peso ?? "",
+                          altura: aluno.altura ?? "",
+                          idade: aluno.idade ?? "",
+                          genero: aluno.genero ?? "Masculino",
+                          objetivo: aluno.objetivo ?? aluno.meta ?? "Emagrecimento",
+                          nivel: aluno.nivel ?? "Intermediário",
+                          diasTreino: aluno.diasTreino ?? "5",
+                          restricoes: aluno.restricoes ?? "",
+                          lesoes: aluno.lesoes ?? "",
+                          medidas: aluno.medidas ?? {}
+                        });
+                      }} className="w-full bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 text-[10px] font-bold py-2 rounded transition-colors uppercase text-center mb-1">
                         ✏️ Editar Perfil do Aluno
                       </button>
 
@@ -784,40 +793,48 @@ function App() {
           <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="w-full max-w-md bg-[#16171d] border border-neutral-800 rounded-2xl shadow-2xl p-6 relative overflow-y-auto max-h-[90vh]">
               <button onClick={() => !isRecalculando && setAlunoEditandoPerfil(null)} className="absolute top-4 right-4 text-neutral-500 hover:text-white font-bold">✕</button>
-              <h3 className="text-sm font-bold text-white uppercase mb-1">Editar Biometria</h3>
-              <p className="text-[10px] text-neutral-400 mb-5">Altere os dados de <span className="text-emerald-400 font-bold">{alunoEditandoPerfil.nome}</span>. A IA irá recalcular tudo automaticamente.</p>
+
+              <div className="flex justify-between items-center mb-5 border-b border-neutral-800 pb-4">
+                <div>
+                  <h3 className="text-sm font-bold text-white uppercase mb-1">Ficha Biométrica</h3>
+                  <p className="text-[10px] text-neutral-400">Dados de <span className="text-emerald-400 font-bold">{alunoEditandoPerfil.nome}</span>.</p>
+                </div>
+                <button type="button" onClick={() => setModoEdicaoBiometria(!modoEdicaoBiometria)} className={`text-[10px] font-bold px-3 py-1.5 rounded uppercase transition-colors border ${modoEdicaoBiometria ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:text-white'}`}>
+                  {modoEdicaoBiometria ? "🔒 Bloquear Edição" : "✏️ Habilitar Edição"}
+                </button>
+              </div>
 
               <form onSubmit={atualizarBiometriaAluno} className="space-y-4">
                 <div className="grid grid-cols-3 gap-3">
                   <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Peso(kg)</label>
-                    <input required type="text" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700"
+                    <input required type="text" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed"
                       value={alunoEditandoPerfil.peso !== undefined ? alunoEditandoPerfil.peso : ""}
-                      onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, peso: e.target.value })} disabled={isRecalculando} />
+                      onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, peso: e.target.value })} disabled={isRecalculando || !modoEdicaoBiometria} />
                   </div>
                   <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Altura(m)</label>
-                    <input required type="text" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700"
+                    <input required type="text" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed"
                       value={alunoEditandoPerfil.altura !== undefined ? alunoEditandoPerfil.altura : ""}
-                      onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, altura: e.target.value })} disabled={isRecalculando} />
+                      onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, altura: e.target.value })} disabled={isRecalculando || !modoEdicaoBiometria} />
                   </div>
                   <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Idade</label>
-                    <input required type="number" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700"
+                    <input required type="number" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed"
                       value={alunoEditandoPerfil.idade !== undefined ? alunoEditandoPerfil.idade : ""}
-                      onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, idade: e.target.value })} disabled={isRecalculando} />
+                      onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, idade: e.target.value })} disabled={isRecalculando || !modoEdicaoBiometria} />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Gênero</label>
-                    <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700"
+                    <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed"
                       value={alunoEditandoPerfil.genero || "Masculino"}
-                      onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, genero: e.target.value })} disabled={isRecalculando}>
+                      onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, genero: e.target.value })} disabled={isRecalculando || !modoEdicaoBiometria}>
                       <option value="Masculino">Masculino</option><option value="Feminino">Feminino</option>
                     </select>
                   </div>
                   <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Objetivo</label>
-                    <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700"
+                    <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed"
                       value={alunoEditandoPerfil.objetivo || "Emagrecimento"}
-                      onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, objetivo: e.target.value })} disabled={isRecalculando}>
+                      onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, objetivo: e.target.value })} disabled={isRecalculando || !modoEdicaoBiometria}>
                       <option value="Emagrecimento">Emagrecimento</option><option value="Hipertrofia">Hipertrofia</option><option value="Performance">Performance</option>
                     </select>
                   </div>
@@ -825,23 +842,23 @@ function App() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Nível</label>
-                    <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700"
+                    <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed"
                       value={alunoEditandoPerfil.nivel || "Intermediário"}
-                      onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, nivel: e.target.value })} disabled={isRecalculando}>
+                      onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, nivel: e.target.value })} disabled={isRecalculando || !modoEdicaoBiometria}>
                       <option value="Iniciante">Iniciante</option><option value="Intermediário">Intermediário</option><option value="Avançado">Avançado</option>
                     </select>
                   </div>
                   <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Dias Treino</label>
-                    <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700"
+                    <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed"
                       value={alunoEditandoPerfil.diasTreino || "5"}
-                      onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, diasTreino: e.target.value })} disabled={isRecalculando}>
+                      onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, diasTreino: e.target.value })} disabled={isRecalculando || !modoEdicaoBiometria}>
                       <option value="3">3 Dias</option><option value="4">4 Dias</option><option value="5">5 Dias</option><option value="6">6 Dias</option>
                     </select>
                   </div>
                 </div>
 
-                <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Restrições Alimentares</label><input type="text" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.restricoes || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, restricoes: e.target.value })} disabled={isRecalculando} /></div>
-                <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Lesões ou Dores</label><input type="text" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.lesoes || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, lesoes: e.target.value })} disabled={isRecalculando} /></div>
+                <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Restrições Alimentares</label><input type="text" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed" value={alunoEditandoPerfil.restricoes || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, restricoes: e.target.value })} disabled={isRecalculando || !modoEdicaoBiometria} /></div>
+                <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Lesões ou Dores</label><input type="text" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed" value={alunoEditandoPerfil.lesoes || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, lesoes: e.target.value })} disabled={isRecalculando || !modoEdicaoBiometria} /></div>
 
                 {/* 🔥 BLOCO DE MEDIDAS COMPLETAS 🔥 */}
                 <div className="pt-3 border-t border-neutral-800 mt-4 mb-2">
@@ -849,33 +866,40 @@ function App() {
 
                   {/* Tronco */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
-                    <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Pescoço</label><input type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.medidas?.pescoco || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), pescoco: e.target.value } })} disabled={isRecalculando} /></div>
-                    <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Tórax</label><input type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.medidas?.torax || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), torax: e.target.value } })} disabled={isRecalculando} /></div>
-                    <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Cintura</label><input type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.medidas?.cintura || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), cintura: e.target.value } })} disabled={isRecalculando} /></div>
-                    <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Abdômen</label><input type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.medidas?.abdomen || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), abdomen: e.target.value } })} disabled={isRecalculando} /></div>
-                    <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Quadril</label><input type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.medidas?.quadril || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), quadril: e.target.value } })} disabled={isRecalculando} /></div>
+                    <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Pescoço</label><input type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed" value={alunoEditandoPerfil.medidas?.pescoco || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), pescoco: e.target.value } })} disabled={isRecalculando || !modoEdicaoBiometria} /></div>
+                    <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Tórax</label><input type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed" value={alunoEditandoPerfil.medidas?.torax || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), torax: e.target.value } })} disabled={isRecalculando || !modoEdicaoBiometria} /></div>
+                    <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Cintura</label><input type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed" value={alunoEditandoPerfil.medidas?.cintura || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), cintura: e.target.value } })} disabled={isRecalculando || !modoEdicaoBiometria} /></div>
+                    <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Abdômen</label><input type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed" value={alunoEditandoPerfil.medidas?.abdomen || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), abdomen: e.target.value } })} disabled={isRecalculando || !modoEdicaoBiometria} /></div>
+                    <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Quadril</label><input type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed" value={alunoEditandoPerfil.medidas?.quadril || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), quadril: e.target.value } })} disabled={isRecalculando || !modoEdicaoBiometria} /></div>
                   </div>
 
                   {/* Membros Superiores */}
                   <div className="grid grid-cols-2 gap-3 mb-3">
-                    <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Braço Dir. (Relx)</label><input type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.medidas?.bracoDir || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), bracoDir: e.target.value } })} disabled={isRecalculando} /></div>
-                    <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Braço Esq. (Relx)</label><input type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.medidas?.bracoEsq || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), bracoEsq: e.target.value } })} disabled={isRecalculando} /></div>
-                    <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Antebraço Dir.</label><input type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.medidas?.antebracoDir || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), antebracoDir: e.target.value } })} disabled={isRecalculando} /></div>
-                    <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Antebraço Esq.</label><input type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.medidas?.antebracoEsq || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), antebracoEsq: e.target.value } })} disabled={isRecalculando} /></div>
+                    <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Braço Dir. (Relx)</label><input type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed" value={alunoEditandoPerfil.medidas?.bracoDir || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), bracoDir: e.target.value } })} disabled={isRecalculando || !modoEdicaoBiometria} /></div>
+                    <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Braço Esq. (Relx)</label><input type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed" value={alunoEditandoPerfil.medidas?.bracoEsq || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), bracoEsq: e.target.value } })} disabled={isRecalculando || !modoEdicaoBiometria} /></div>
+                    <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Antebraço Dir.</label><input type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed" value={alunoEditandoPerfil.medidas?.antebracoDir || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), antebracoDir: e.target.value } })} disabled={isRecalculando || !modoEdicaoBiometria} /></div>
+                    <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Antebraço Esq.</label><input type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed" value={alunoEditandoPerfil.medidas?.antebracoEsq || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), antebracoEsq: e.target.value } })} disabled={isRecalculando || !modoEdicaoBiometria} /></div>
                   </div>
 
                   {/* Membros Inferiores */}
                   <div className="grid grid-cols-2 gap-3">
-                    <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Coxa Méd. Dir.</label><input type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.medidas?.coxaDir || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), coxaDir: e.target.value } })} disabled={isRecalculando} /></div>
-                    <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Coxa Méd. Esq.</label><input type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.medidas?.coxaEsq || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), coxaEsq: e.target.value } })} disabled={isRecalculando} /></div>
-                    <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Panturrilha Dir.</label><input type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.medidas?.panturrilhaDir || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), panturrilhaDir: e.target.value } })} disabled={isRecalculando} /></div>
-                    <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Panturrilha Esq.</label><input type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={alunoEditandoPerfil.medidas?.panturrilhaEsq || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), panturrilhaEsq: e.target.value } })} disabled={isRecalculando} /></div>
+                    <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Coxa Méd. Dir.</label><input type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed" value={alunoEditandoPerfil.medidas?.coxaDir || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), coxaDir: e.target.value } })} disabled={isRecalculando || !modoEdicaoBiometria} /></div>
+                    <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Coxa Méd. Esq.</label><input type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed" value={alunoEditandoPerfil.medidas?.coxaEsq || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), coxaEsq: e.target.value } })} disabled={isRecalculando || !modoEdicaoBiometria} /></div>
+                    <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Panturrilha Dir.</label><input type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed" value={alunoEditandoPerfil.medidas?.panturrilhaDir || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), panturrilhaDir: e.target.value } })} disabled={isRecalculando || !modoEdicaoBiometria} /></div>
+                    <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Panturrilha Esq.</label><input type="number" step="0.1" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed" value={alunoEditandoPerfil.medidas?.panturrilhaEsq || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), panturrilhaEsq: e.target.value } })} disabled={isRecalculando || !modoEdicaoBiometria} /></div>
                   </div>
                 </div>
 
-                <button type="submit" disabled={isRecalculando} className={`w-full p-4 rounded-xl uppercase tracking-wider font-bold text-xs shadow-lg mt-4 transition-all ${isRecalculando ? 'bg-emerald-600/50 text-white/50 cursor-not-allowed animate-pulse' : 'bg-emerald-600 hover:bg-emerald-500 text-white'}`}>
-                  {isRecalculando ? "🤖 Recalculando na IA..." : "Salvar e Recalcular na IA"}
-                </button>
+                {modoEdicaoBiometria ? (
+                  <button type="submit" disabled={isRecalculando} className={`w-full p-4 rounded-xl uppercase tracking-wider font-bold text-xs shadow-lg mt-4 transition-all ${isRecalculando ? 'bg-emerald-600/50 text-white/50 cursor-not-allowed animate-pulse' : 'bg-emerald-600 hover:bg-emerald-500 text-white'}`}>
+                    {isRecalculando ? "🤖 Recalculando na IA..." : "Salvar e Recalcular na IA"}
+                  </button>
+                ) : (
+                  <div className="p-3 mt-4 bg-blue-500/10 border border-blue-500/20 rounded-xl text-center">
+                    <p className="text-[10px] text-blue-400 font-bold uppercase tracking-wider">Modo de Visualização Ativo</p>
+                    <p className="text-[9px] text-neutral-400 mt-1">Clique em "Habilitar Edição" no topo para alterar os dados.</p>
+                  </div>
+                )}
               </form>
             </div>
           </div>
