@@ -10,7 +10,6 @@ import { abrirExercicioVisual } from "./components/visual";
 
 const DIAS_SEMANA = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 
-// Função para garantir que os números sejam salvos corretamente (evitando erros de vírgula)
 const parseNumeroSeguro = (val) => Number(String(val).replace(',', '.')) || 0;
 
 function App() {
@@ -39,12 +38,18 @@ function App() {
   const [alunoEditandoPerfil, setAlunoEditandoPerfil] = useState(null);
   const [isRecalculando, setIsRecalculando] = useState(false);
 
-  // 🔥 NOVO ESTADO: Trava de edição para segurança dos dados do aluno 🔥
   const [modoEdicaoBiometria, setModoEdicaoBiometria] = useState(false);
 
   const [modalFeedbackAberto, setModalFeedbackAberto] = useState(false);
   const [feedbackTreino, setFeedbackTreino] = useState({ intensidade: "Moderado 🟡", carga: "Na medida ✅", comentario: "" });
   const [alunoVerFeedback, setAlunoVerFeedback] = useState(null);
+
+  // ✅ NOVO ESTADO: FEEDBACK DO PERSONAL
+  const [respostasFeedback, setRespostasFeedback] = useState({});
+
+  // ✅ NOVO ESTADO: CALCULADORA DE DOBRAS (ANTROPOMETRIA)
+  const [modalDobrasAberto, setModalDobrasAberto] = useState(false);
+  const [dobrasForm, setDobrasForm] = useState({ triceps: '', torax: '', subescapular: '', axilar: '', iliaca: '', abdominal: '', coxa: '' });
 
   const [modalPlanosPersonal, setModalPlanosPersonal] = useState(false);
   const [modalAvaliacaoAluno, setModalAvaliacaoAluno] = useState(false);
@@ -391,6 +396,64 @@ function App() {
     } catch { alert("Erro ao enviar check-in."); }
   };
 
+  // ✅ NOVA FUNÇÃO: ENVIAR RESPOSTA DO PERSONAL AO FEEDBACK
+  const enviarRespostaFeedback = async (alunoId, dataCheckin) => {
+    const resposta = respostasFeedback[dataCheckin];
+    if (!resposta) return alert("Digite uma resposta antes de enviar.");
+
+    try {
+      const response = await fetch(`${API_URL}/aluno/${alunoId}/responder-checkin`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dataCheckin, resposta })
+      });
+
+      if (response.ok) {
+        const alunoAtualizado = await response.json();
+        setAlunoVerFeedback(alunoAtualizado); // Atualiza modal atual
+        setAlunosPersonal(prev => prev.map(a => (a.id || a._id) === alunoId ? alunoAtualizado : a)); // Atualiza tabela
+        setRespostasFeedback(prev => ({ ...prev, [dataCheckin]: "" }));
+        alert("✅ Resposta enviada com sucesso para o aluno!");
+      }
+    } catch {
+      alert("Erro ao enviar resposta.");
+    }
+  };
+
+  // ✅ NOVA FUNÇÃO: CALCULADORA DE DOBRAS (POLLOCK 7)
+  const calcularDobras = () => {
+    const tr = parseFloat(String(dobrasForm.triceps).replace(',', '.')) || 0;
+    const to = parseFloat(String(dobrasForm.torax).replace(',', '.')) || 0;
+    const sub = parseFloat(String(dobrasForm.subescapular).replace(',', '.')) || 0;
+    const ax = parseFloat(String(dobrasForm.axilar).replace(',', '.')) || 0;
+    const il = parseFloat(String(dobrasForm.iliaca).replace(',', '.')) || 0;
+    const ab = parseFloat(String(dobrasForm.abdominal).replace(',', '.')) || 0;
+    const co = parseFloat(String(dobrasForm.coxa).replace(',', '.')) || 0;
+
+    const soma7 = tr + to + sub + ax + il + ab + co;
+    const idade = parseInt(alunoEditandoPerfil.idade) || 25;
+    const genero = alunoEditandoPerfil.genero || 'Masculino';
+
+    if (soma7 === 0) return alert("Preencha ao menos uma dobra para calcular.");
+
+    let densidade = 0;
+    if (genero === 'Masculino') {
+      densidade = 1.112 - (0.00043499 * soma7) + (0.00000055 * (soma7 * soma7)) - (0.00028826 * idade);
+    } else {
+      densidade = 1.097 - (0.00046971 * soma7) + (0.00000056 * (soma7 * soma7)) - (0.00012828 * idade);
+    }
+
+    const bf = ((4.95 / densidade) - 4.50) * 100;
+
+    // Atualiza o estado da ficha com o % de gordura gerado
+    setAlunoEditandoPerfil(prev => ({
+      ...prev,
+      medidas: { ...prev.medidas, percentualGordura: bf.toFixed(1) }
+    }));
+
+    alert(`✅ Avaliação concluída!\n\nPercentual de Gordura Estimado: ${bf.toFixed(1)}%\n\nO valor foi adicionado à ficha do aluno. Clique em "Salvar" para confirmar.`);
+    setModalDobrasAberto(false);
+  };
+
   const salvarOnboarding = async (e) => {
     e.preventDefault();
     if (!perfil.nome || !perfil.peso || !perfil.altura || !perfil.idade) { alert("Preencha todos os campos!"); return; }
@@ -731,7 +794,7 @@ function App() {
           </div>
         </main>
 
-        {/* MODAL DETALHES DO FEEDBACK (RPE) PARA O PERSONAL */}
+        {/* MODAL DETALHES DO FEEDBACK (RPE E RESPOSTAS) */}
         {alunoVerFeedback && (
           <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setAlunoVerFeedback(null)}>
             <div className="w-full max-w-sm bg-[#16171d] border border-neutral-800 rounded-3xl p-6 relative shadow-2xl" onClick={e => e.stopPropagation()}>
@@ -772,6 +835,22 @@ function App() {
                               <p className="text-xs text-neutral-300 italic">"{checkin.feedback.comentario}"</p>
                             </div>
                           )}
+
+                          {/* ✅ CAIXA DE RESPOSTA DO PERSONAL */}
+                          {checkin.respostaPersonal ? (
+                            <div className="bg-emerald-900/20 p-3 rounded-lg border border-emerald-500/20 mt-3">
+                              <p className="text-[9px] text-emerald-500 font-bold uppercase mb-1">Sua Resposta</p>
+                              <p className="text-xs text-neutral-300 italic">"{checkin.respostaPersonal}"</p>
+                            </div>
+                          ) : (
+                            <div className="mt-3 flex gap-2">
+                              <input type="text" placeholder="Responder feedback..." className="flex-1 bg-[#16171d] border border-neutral-800 p-2 rounded-lg text-xs outline-none text-white focus:border-neutral-700"
+                                value={respostasFeedback[checkin.data] || ""}
+                                onChange={e => setRespostasFeedback({ ...respostasFeedback, [checkin.data]: e.target.value })}
+                              />
+                              <button type="button" onClick={() => enviarRespostaFeedback(alunoVerFeedback.id || alunoVerFeedback._id, checkin.data)} className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-3 rounded-lg text-[10px] uppercase transition-colors">Responder</button>
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <p className="text-xs text-neutral-500 italic">Check-in simples (Sem feedback detalhado).</p>
@@ -799,9 +878,16 @@ function App() {
                   <h3 className="text-sm font-bold text-white uppercase mb-1">Ficha Biométrica</h3>
                   <p className="text-[10px] text-neutral-400">Dados de <span className="text-emerald-400 font-bold">{alunoEditandoPerfil.nome}</span>.</p>
                 </div>
-                <button type="button" onClick={() => setModoEdicaoBiometria(!modoEdicaoBiometria)} className={`text-[10px] font-bold px-3 py-1.5 rounded uppercase transition-colors border ${modoEdicaoBiometria ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:text-white'}`}>
-                  {modoEdicaoBiometria ? "🔒 Bloquear Edição" : "✏️ Habilitar Edição"}
-                </button>
+
+                {/* ✅ BOTÃO WHATSAPP E TRAVA DE EDIÇÃO NO CABEÇALHO */}
+                <div className="flex items-center gap-2">
+                  <a href={`https://wa.me/55${alunoEditandoPerfil.whatsapp?.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="bg-[#25D366] hover:bg-[#128C7E] text-white text-[10px] font-bold px-3 py-1.5 rounded uppercase transition-colors shadow-lg flex items-center gap-1">
+                    <span className="text-sm">💬</span> Whats
+                  </a>
+                  <button type="button" onClick={() => setModoEdicaoBiometria(!modoEdicaoBiometria)} className={`text-[10px] font-bold px-3 py-1.5 rounded uppercase transition-colors border ${modoEdicaoBiometria ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:text-white'}`}>
+                    {modoEdicaoBiometria ? "🔒 Bloquear Edição" : "✏️ Habilitar"}
+                  </button>
+                </div>
               </div>
 
               <form onSubmit={atualizarBiometriaAluno} className="space-y-4">
@@ -860,9 +946,22 @@ function App() {
                 <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Restrições Alimentares</label><input type="text" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed" value={alunoEditandoPerfil.restricoes || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, restricoes: e.target.value })} disabled={isRecalculando || !modoEdicaoBiometria} /></div>
                 <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Lesões ou Dores</label><input type="text" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed" value={alunoEditandoPerfil.lesoes || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, lesoes: e.target.value })} disabled={isRecalculando || !modoEdicaoBiometria} /></div>
 
-                {/* 🔥 BLOCO DE MEDIDAS COMPLETAS 🔥 */}
+                {/* 🔥 BLOCO DE MEDIDAS E NOVA AVALIAÇÃO DE DOBRAS 🔥 */}
                 <div className="pt-3 border-t border-neutral-800 mt-4 mb-2">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-500 mb-3">📏 Perímetros Corporais (cm)</p>
+
+                  <div className="flex justify-between items-center mb-3">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-500">📏 Perímetros (cm)</p>
+                    <button type="button" disabled={!modoEdicaoBiometria} onClick={() => setModalDobrasAberto(true)} className="bg-blue-600 hover:bg-blue-500 text-white text-[9px] font-bold px-3 py-1.5 rounded transition-colors uppercase disabled:opacity-50 disabled:cursor-not-allowed shadow-lg flex items-center gap-1">
+                      ✚ Protocolo 7 Dobras
+                    </button>
+                  </div>
+
+                  {alunoEditandoPerfil.medidas?.percentualGordura && (
+                    <div className="mb-4 bg-emerald-900/20 border border-emerald-500/20 rounded-xl p-3 flex justify-between items-center">
+                      <span className="text-[10px] font-bold uppercase text-emerald-500">Percentual de Gordura Atual:</span>
+                      <span className="text-lg font-black text-white">{alunoEditandoPerfil.medidas.percentualGordura}%</span>
+                    </div>
+                  )}
 
                   {/* Tronco */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
@@ -901,6 +1000,38 @@ function App() {
                   </div>
                 )}
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* ✅ NOVO: MODAL FLUTUANTE DA CALCULADORA DE DOBRAS CUTÂNEAS */}
+        {modalDobrasAberto && (
+          <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="w-full max-w-sm bg-[#16171d] border border-blue-500/30 rounded-3xl p-6 shadow-2xl relative">
+              <button onClick={() => setModalDobrasAberto(false)} className="absolute top-4 right-4 text-neutral-500 hover:text-white font-bold">✕</button>
+
+              <div className="flex items-center gap-3 mb-6 border-b border-neutral-800 pb-4">
+                <div className="w-10 h-10 bg-blue-500/10 border border-blue-500/20 rounded-full flex items-center justify-center text-xl">📏</div>
+                <div>
+                  <h3 className="font-bold text-white uppercase text-sm tracking-tight">Avaliação Antropométrica</h3>
+                  <p className="text-[10px] text-blue-400 font-mono uppercase">Protocolo de Pollock 7 Dobras</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Tríceps (mm)</label><input type="number" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={dobrasForm.triceps} onChange={e => setDobrasForm({ ...dobrasForm, triceps: e.target.value })} /></div>
+                <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Tórax (mm)</label><input type="number" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={dobrasForm.torax} onChange={e => setDobrasForm({ ...dobrasForm, torax: e.target.value })} /></div>
+                <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Subescapular</label><input type="number" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={dobrasForm.subescapular} onChange={e => setDobrasForm({ ...dobrasForm, subescapular: e.target.value })} /></div>
+                <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Axilar Média</label><input type="number" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={dobrasForm.axilar} onChange={e => setDobrasForm({ ...dobrasForm, axilar: e.target.value })} /></div>
+                <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Suprailíaca</label><input type="number" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={dobrasForm.iliaca} onChange={e => setDobrasForm({ ...dobrasForm, iliaca: e.target.value })} /></div>
+                <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Abdominal</label><input type="number" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={dobrasForm.abdominal} onChange={e => setDobrasForm({ ...dobrasForm, abdominal: e.target.value })} /></div>
+                <div><label className="text-[9px] font-bold uppercase text-neutral-500 block mb-1">Coxa (mm)</label><input type="number" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={dobrasForm.coxa} onChange={e => setDobrasForm({ ...dobrasForm, coxa: e.target.value })} /></div>
+              </div>
+
+              <div className="flex gap-2">
+                <button type="button" onClick={() => setModalDobrasAberto(false)} className="w-1/3 bg-transparent border border-neutral-800 hover:bg-neutral-800 text-neutral-400 font-bold p-3 rounded-xl text-[10px] uppercase transition-colors">Cancelar</button>
+                <button type="button" onClick={calcularDobras} className="w-2/3 bg-blue-600 hover:bg-blue-500 text-white font-bold p-3 rounded-xl text-[10px] uppercase transition-colors shadow-lg">Calcular % Gordura</button>
+              </div>
             </div>
           </div>
         )}
@@ -1069,6 +1200,14 @@ function App() {
             <button type="button" onClick={iniciarCheckin} className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-3 rounded-lg text-xs uppercase tracking-wider transition-colors shadow-lg">Confirmar Treino Hoje</button>
           </div>
 
+          {/* ✅ EXIBIÇÃO DA RESPOSTA DO PERSONAL NA HOME DO ALUNO */}
+          {alunoLogado?.checkins?.[0]?.respostaPersonal && (
+            <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl shadow-xl mt-4">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 mb-1">💬 Mensagem do seu Treinador</p>
+              <p className="text-xs text-neutral-300 italic">"{alunoLogado.checkins[0].respostaPersonal}"</p>
+            </div>
+          )}
+
           {alunoLogado?.metaAgua && (
             <div className="bg-blue-600/10 border border-blue-500/20 p-5 rounded-xl shadow-xl flex items-center justify-between">
               <div><p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">💧 Hidratação Diária</p><h3 className="text-xl font-bold text-white mt-1">{alunoLogado.metaAgua}</h3></div>
@@ -1088,7 +1227,6 @@ function App() {
                 ))}
               </div>
 
-              {/* 🔥 BANNER HORTILIFE - PAINEL DO ALUNO 🔥 */}
               <div className="mt-4 bg-gradient-to-r from-emerald-900/20 to-blue-900/20 border border-emerald-500/20 p-4 rounded-xl text-center">
                 <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-400 mb-1">🛒 Facilite sua Dieta!</p>
                 <p className="text-[10px] text-neutral-300 mb-3">Peça as carnes, frutas e verduras do seu plano sem sair de casa.</p>
@@ -1228,7 +1366,7 @@ function App() {
             </div>
           )}
 
-          {/* 🔥 NOVO: MODAL "MINHA AVALIAÇÃO" NO PORTAL DO ALUNO 🔥 */}
+          {/* 🔥 MODAL "MINHA AVALIAÇÃO" NO PORTAL DO ALUNO 🔥 */}
           {modalAvaliacaoAluno && (
             <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setModalAvaliacaoAluno(false)}>
               <div className="w-full max-w-md bg-[#16171d] border border-neutral-800 rounded-3xl p-6 relative shadow-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
@@ -1286,18 +1424,24 @@ function App() {
                     )}
                   </div>
 
-                  {/* Perímetros Corporais (Só exibe se existir) */}
+                  {/* Perímetros Corporais e %Gordura */}
                   {alunoLogado?.medidas && Object.keys(alunoLogado.medidas).length > 0 ? (
                     <div className="mt-6">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400 mb-3 pt-2 border-t border-neutral-800">
-                        📏 Suas Medidas (cm)
+                        📏 Suas Medidas e Resultados
                       </p>
+
+                      {alunoLogado.medidas.percentualGordura && (
+                        <div className="mb-3 bg-emerald-900/20 border border-emerald-500/20 rounded-xl p-3 flex justify-between items-center">
+                          <span className="text-[10px] font-bold uppercase text-emerald-500">Percentual de Gordura:</span>
+                          <span className="text-lg font-black text-white">{alunoLogado.medidas.percentualGordura}%</span>
+                        </div>
+                      )}
+
                       <div className="grid grid-cols-2 gap-3">
                         {Object.entries(alunoLogado.medidas).map(([key, value]) => {
-                          // Ignora valores vazios, nulos ou campos de sistema
-                          if (!value || value === "" || value === 0 || key === "_id") return null;
+                          if (!value || value === "" || value === 0 || key === "_id" || key === "percentualGordura") return null;
 
-                          // Formatação automática: bracoDir -> Braco Dir
                           const labelFormatada = key
                             .replace(/([A-Z])/g, ' $1')
                             .replace(/^./, str => str.toUpperCase());
@@ -1403,14 +1547,20 @@ function App() {
               const urlParams = new URLSearchParams(window.location.search);
               const refPersonal = urlParams.get('ref');
 
-              // Garante que o objeto vai redondinho pro banco sem strings com vírgula
               const payload = {
                 ...perfil,
+                nome: perfil.nome,
                 peso: parseNumeroSeguro(perfil.peso),
                 altura: parseNumeroSeguro(perfil.altura),
                 idade: parseInt(perfil.idade) || 0,
                 whatsapp: novoAlunoForm.whatsapp,
                 objetivo: perfil.meta,
+                meta: perfil.meta,
+                genero: perfil.genero,
+                nivel: perfil.nivel,
+                diasTreino: perfil.diasTreino,
+                restricoes: perfil.restricoes,
+                lesoes: perfil.lesoes,
                 personalRef: refPersonal
               };
 
@@ -1502,7 +1652,6 @@ function App() {
 
             <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-xl uppercase tracking-wider font-bold text-xs transition-colors shadow-lg mt-2">Salvar e Entrar</button>
 
-            {/* NOVO BOTÃO DE VOLTAR */}
             <button type="button" onClick={() => setEtapa("triagem")} className="w-full bg-transparent border border-neutral-800 hover:bg-neutral-800 text-neutral-400 p-4 rounded-xl uppercase tracking-wider font-bold text-xs transition-colors mt-2">Voltar</button>
           </form>
         </div>
