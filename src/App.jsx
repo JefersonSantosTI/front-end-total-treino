@@ -13,6 +13,9 @@ const DIAS_SEMANA = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'
 const parseNumeroSeguro = (val) => Number(String(val).replace(',', '.')) || 0;
 
 function App() {
+  // =========================================================================
+  // 1. TODOS OS ESTADOS (HOOKS)
+  // =========================================================================
   const [usuario, setUsuario] = useState(() => localStorage.getItem("usuario_whatsapp"));
   const [etapa, setEtapa] = useState("verificando");
   const [abaAtiva, setAbaAtiva] = useState(() => localStorage.getItem("treino_fit_aba") || "home");
@@ -20,6 +23,10 @@ function App() {
   const [treinoIAPescado, setTreinoIAPescado] = useState(null);
   const [bloqueado, setBloqueado] = useState(false);
   const [modalidadeAberta, setModalidadeAberta] = useState(null);
+
+  const [seriesFeitas, setSeriesFeitas] = useState({});
+  const [timerDescanso, setTimerDescanso] = useState(0);
+  const [timerAtivo, setTimerAtivo] = useState(false);
 
   const [personalLogado, setPersonalLogado] = useState(() => {
     const salvo = localStorage.getItem("treino_fit_personal");
@@ -37,22 +44,19 @@ function App() {
   const [modalGifAberto, setModalGifAberto] = useState(null);
   const [alunoEditandoPerfil, setAlunoEditandoPerfil] = useState(null);
   const [isRecalculando, setIsRecalculando] = useState(false);
-
   const [modoEdicaoBiometria, setModoEdicaoBiometria] = useState(false);
 
   const [modalFeedbackAberto, setModalFeedbackAberto] = useState(false);
   const [feedbackTreino, setFeedbackTreino] = useState({ intensidade: "Moderado 🟡", carga: "Na medida ✅", comentario: "" });
   const [alunoVerFeedback, setAlunoVerFeedback] = useState(null);
-
-  // ✅ NOVO ESTADO: FEEDBACK DO PERSONAL
   const [respostasFeedback, setRespostasFeedback] = useState({});
 
-  // ✅ NOVO ESTADO: CALCULADORA DE DOBRAS (ANTROPOMETRIA)
   const [modalDobrasAberto, setModalDobrasAberto] = useState(false);
   const [dobrasForm, setDobrasForm] = useState({ triceps: '', torax: '', subescapular: '', axilar: '', iliaca: '', abdominal: '', coxa: '' });
 
   const [modalPlanosPersonal, setModalPlanosPersonal] = useState(false);
   const [modalAvaliacaoAluno, setModalAvaliacaoAluno] = useState(false);
+  const [alunoVerAvaliacao, setAlunoVerAvaliacao] = useState(null);
 
   const [treinoForm, setTreinoForm] = useState([]);
   const [dietaForm, setDietaForm] = useState([]);
@@ -68,11 +72,76 @@ function App() {
     imc: "0", tmb: "0", faltam: "0"
   });
 
+  const [quizStep, setQuizStep] = useState(1);
+  const [alimentosFavoritos, setAlimentosFavoritos] = useState([]);
+
   const API_URL = "https://api-backend-treino-fit.onrender.com/api";
   const verificandoRef = useRef(false);
-
   const KIWIFY_MENSAL = "https://pay.kiwify.com.br/O5ggnzX";
   const KIWIFY_ANUAL = "https://pay.kiwify.com.br/vbvKtGY";
+
+  // =========================================================================
+  // 2. LÓGICAS, CRONÔMETRO E FUNÇÕES DE SÉRIE
+  // =========================================================================
+
+  useEffect(() => {
+    let intervalo;
+    if (timerAtivo && timerDescanso > 0) {
+      intervalo = setInterval(() => {
+        setTimerDescanso((prev) => prev - 1);
+      }, 1000);
+    } else if (timerDescanso === 0) {
+      setTimerAtivo(false);
+      clearInterval(intervalo);
+    }
+    return () => clearInterval(intervalo);
+  }, [timerAtivo, timerDescanso]);
+
+  const marcarSerie = (exIndex, numSerie, totalSeries) => {
+    const chaveSerie = `${diaAbaAluno}-${exIndex}-s${numSerie}`;
+    const chaveUnicaExercicio = `${diaAbaAluno}-${exIndex}`;
+    const jaFeito = seriesFeitas[chaveSerie];
+
+    setSeriesFeitas(prev => {
+      const newState = { ...prev, [chaveSerie]: !jaFeito };
+
+      const todasFeitas = Array.from({ length: totalSeries }).every((_, sIdx) =>
+        (sIdx + 1 === numSerie ? !jaFeito : newState[`${diaAbaAluno}-${exIndex}-s${sIdx + 1}`])
+      );
+
+      if (todasFeitas && !exerciciosConcluidos.includes(chaveUnicaExercicio)) {
+        setExerciciosConcluidos([...exerciciosConcluidos, chaveUnicaExercicio]);
+      } else if (!todasFeitas && exerciciosConcluidos.includes(chaveUnicaExercicio)) {
+        setExerciciosConcluidos(exerciciosConcluidos.filter(id => id !== chaveUnicaExercicio));
+      }
+
+      return newState;
+    });
+
+    if (!jaFeito) {
+      setTimerDescanso(60);
+      setTimerAtivo(true);
+    }
+  };
+
+  const alternarConclusaoExercicio = (chaveUnicaExercicio) => {
+    if (exerciciosConcluidos.includes(chaveUnicaExercicio)) {
+      setExerciciosConcluidos(exerciciosConcluidos.filter(id => id !== chaveUnicaExercicio));
+      const novasSeries = { ...seriesFeitas };
+      Object.keys(novasSeries).forEach(key => {
+        if (key.startsWith(chaveUnicaExercicio)) {
+          novasSeries[key] = false;
+        }
+      });
+      setSeriesFeitas(novasSeries);
+    } else {
+      setExerciciosConcluidos([...exerciciosConcluidos, chaveUnicaExercicio]);
+    }
+  };
+
+  // =========================================================================
+  // 3. COMUNICAÇÃO COM O BANCO DE DADOS (EFEITOS E SINCRONIZAÇÃO)
+  // =========================================================================
 
   useEffect(() => {
     const diaAtualSistema = new Date().toLocaleDateString("pt-BR", { weekday: 'long' });
@@ -175,6 +244,10 @@ function App() {
     }
   }, [etapa, sincronizarComBanco]);
 
+  // =========================================================================
+  // 4. FUNÇÕES GERAIS, AUTENTICAÇÃO E PERSONAL
+  // =========================================================================
+
   const handleLogin = (whatsapp) => {
     const limpo = String(whatsapp).replace(/\D/g, "");
     localStorage.removeItem("treino_fit_personal");
@@ -219,11 +292,9 @@ function App() {
   const handleCadastrarCref = async (e) => {
     e.preventDefault();
     const regexCref = /^\d{4,6}-[GgPp]\/[A-Za-z]{2}$/;
-
     if (!regexCref.test(cref.trim())) {
       return alert("🚫 Formato de CREF inválido!\n\nO formato correto deve ter os números, a categoria (G) e a sigla do seu Estado.\n\nExemplo correto: 123456-G/SP");
     }
-
     try {
       const response = await fetch(`${API_URL}/personal/auth`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...googleUser, cref })
@@ -241,7 +312,6 @@ function App() {
     e.preventDefault();
     try {
       const payload = { ...novoAlunoForm, personalId: personalLogado._id };
-
       const response = await fetch(`${API_URL}/aluno`, {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
       });
@@ -345,6 +415,10 @@ function App() {
     } catch { alert("Erro ao deletar aluno."); }
   };
 
+  // =========================================================================
+  // 5. FUNÇÕES DO ALUNO, CHECK-IN E AVALIAÇÃO
+  // =========================================================================
+
   const handleLoginAluno = async (e) => {
     e.preventDefault();
     const termoBusca = codigoAcessoAluno.trim();
@@ -358,11 +432,6 @@ function App() {
         setEtapa("aluno");
       } else { alert("Aluno não encontrado na assessoria."); }
     } catch { alert("Erro ao conectar."); }
-  };
-
-  const alternarConclusaoExercicio = (chaveUnica) => {
-    if (exerciciosConcluidos.includes(chaveUnica)) setExerciciosConcluidos(exerciciosConcluidos.filter(id => id !== chaveUnica));
-    else setExerciciosConcluidos([...exerciciosConcluidos, chaveUnica]);
   };
 
   const iniciarCheckin = () => {
@@ -396,7 +465,6 @@ function App() {
     } catch { alert("Erro ao enviar check-in."); }
   };
 
-  // ✅ NOVA FUNÇÃO: ENVIAR RESPOSTA DO PERSONAL AO FEEDBACK
   const enviarRespostaFeedback = async (alunoId, dataCheckin) => {
     const resposta = respostasFeedback[dataCheckin];
     if (!resposta) return alert("Digite uma resposta antes de enviar.");
@@ -409,8 +477,8 @@ function App() {
 
       if (response.ok) {
         const alunoAtualizado = await response.json();
-        setAlunoVerFeedback(alunoAtualizado); // Atualiza modal atual
-        setAlunosPersonal(prev => prev.map(a => (a.id || a._id) === alunoId ? alunoAtualizado : a)); // Atualiza tabela
+        setAlunoVerFeedback(alunoAtualizado);
+        setAlunosPersonal(prev => prev.map(a => (a.id || a._id) === alunoId ? alunoAtualizado : a));
         setRespostasFeedback(prev => ({ ...prev, [dataCheckin]: "" }));
         alert("✅ Resposta enviada com sucesso para o aluno!");
       }
@@ -419,7 +487,6 @@ function App() {
     }
   };
 
-  // ✅ NOVA FUNÇÃO: CALCULADORA DE DOBRAS (POLLOCK 7)
   const calcularDobras = () => {
     const tr = parseFloat(String(dobrasForm.triceps).replace(',', '.')) || 0;
     const to = parseFloat(String(dobrasForm.torax).replace(',', '.')) || 0;
@@ -444,7 +511,6 @@ function App() {
 
     const bf = ((4.95 / densidade) - 4.50) * 100;
 
-    // Atualiza o estado da ficha com o % de gordura gerado
     setAlunoEditandoPerfil(prev => ({
       ...prev,
       medidas: { ...prev.medidas, percentualGordura: bf.toFixed(1) }
@@ -482,6 +548,81 @@ function App() {
     } catch { alert("Erro de conexão."); }
   };
 
+  const toggleAlimento = (alimento) => {
+    if (alimentosFavoritos.includes(alimento)) {
+      setAlimentosFavoritos(alimentosFavoritos.filter(a => a !== alimento));
+    } else {
+      if (alimentosFavoritos.length < 5) setAlimentosFavoritos([...alimentosFavoritos, alimento]);
+    }
+  };
+
+  const avançarQuiz = () => {
+    if (quizStep === 1 && !perfil.meta) return alert("Selecione um objetivo!");
+    if (quizStep === 2 && !perfil.nivel) return alert("Selecione seu nível de experiência!");
+    setQuizStep(prev => prev + 1);
+  };
+
+  const finalizarQuiz = (e) => {
+    e.preventDefault();
+    const preferenciasIA = alimentosFavoritos.length > 0 ? `Gosta de: ${alimentosFavoritos.join(", ")}.` : "";
+    const novasRestricoes = `${perfil.restricoes} ${preferenciasIA}`.trim();
+    setPerfil({ ...perfil, restricoes: novasRestricoes });
+    salvarOnboarding(e);
+  };
+
+  const renderModalAvaliacao = (alunoData, fecharModal) => {
+    if (!alunoData) return null;
+    return (
+      <div className="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={fecharModal}>
+        <div className="w-full max-w-md bg-[#16171d] border border-neutral-800 rounded-3xl p-6 relative shadow-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+          <button onClick={fecharModal} className="absolute top-4 right-4 text-neutral-500 hover:text-white font-bold">✕</button>
+          <div className="flex items-center gap-3 mb-6 border-b border-neutral-800 pb-4">
+            <div className="w-10 h-10 bg-blue-500/10 border border-blue-500/20 rounded-full flex items-center justify-center text-xl">📊</div>
+            <div>
+              <h3 className="font-bold text-white uppercase text-sm tracking-tight">Avaliação Física</h3>
+              <p className="text-[10px] text-blue-400 font-mono uppercase">{alunoData.nome}</p>
+            </div>
+          </div>
+          <div className="space-y-6">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-3">Perfil Biométrico</p>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl"><p className="text-[9px] text-neutral-500 uppercase font-bold mb-1">Peso</p><p className="text-sm font-bold text-white">{alunoData.peso ? alunoData.peso : '--'} kg</p></div>
+                <div className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl"><p className="text-[9px] text-neutral-500 uppercase font-bold mb-1">Altura</p><p className="text-sm font-bold text-white">{alunoData.altura ? alunoData.altura : '--'} m</p></div>
+                <div className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl"><p className="text-[9px] text-neutral-500 uppercase font-bold mb-1">Idade</p><p className="text-sm font-bold text-white">{alunoData.idade ? alunoData.idade : '--'} anos</p></div>
+                <div className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl"><p className="text-[9px] text-neutral-500 uppercase font-bold mb-1">Gênero</p><p className="text-sm font-bold text-white">{alunoData.genero ? alunoData.genero : '--'}</p></div>
+              </div>
+            </div>
+            <div className="bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl space-y-3">
+              <div><p className="text-[9px] text-neutral-500 uppercase font-bold">Nível de Treino</p><p className="text-xs text-neutral-300 font-medium">{alunoData.nivel ? alunoData.nivel : '--'}</p></div>
+              {alunoData.restricoes && <div><p className="text-[9px] text-neutral-500 uppercase font-bold">Restrições Alimentares</p><p className="text-xs text-neutral-300">{alunoData.restricoes}</p></div>}
+              {alunoData.lesoes && <div><p className="text-[9px] text-neutral-500 uppercase font-bold">Histórico de Lesões</p><p className="text-xs text-neutral-300">{alunoData.lesoes}</p></div>}
+            </div>
+            {alunoData.medidas && Object.keys(alunoData.medidas).length > 0 ? (
+              <div className="mt-6">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400 mb-3 pt-2 border-t border-neutral-800">📏 Medidas Extras (cm)</p>
+                {alunoData.medidas.percentualGordura && (
+                  <div className="mb-3 bg-emerald-900/20 border border-emerald-500/20 rounded-xl p-3 flex justify-between items-center"><span className="text-[10px] font-bold uppercase text-emerald-500">Percentual de Gordura:</span><span className="text-lg font-black text-white">{alunoData.medidas.percentualGordura}%</span></div>
+                )}
+                <div className="grid grid-cols-2 gap-3">
+                  {Object.entries(alunoData.medidas).map(([key, value]) => {
+                    if (!value || value === "" || value === "0" || key === "_id" || key === "percentualGordura") return null;
+                    const labelFormatada = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                    return (<div key={key} className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl flex justify-between items-center"><span className="text-[9px] text-neutral-500 uppercase font-bold capitalize">{labelFormatada}</span><span className="text-sm font-mono text-white font-bold">{value}cm</span></div>);
+                  })}
+                </div>
+              </div>
+            ) : (<p className="text-[10px] text-neutral-600 italic mt-4">Nenhuma medida extra cadastrada.</p>)}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // =========================================================================
+  // 6. RENDERIZAÇÃO DAS TELAS (HTML)
+  // =========================================================================
+
   if (etapa === "verificando") {
     return (
       <div className="fixed inset-0 bg-[#0d0e12] flex flex-col items-center justify-center z-50">
@@ -497,7 +638,6 @@ function App() {
     return (
       <div className="fixed inset-0 flex flex-col items-center justify-center p-6 text-white font-sans z-50 bg-[#0d0e12] bg-[url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop')] bg-cover bg-center">
         <div className="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
-
         <div className="relative z-10 w-full max-w-sm bg-[#16171d]/80 border border-neutral-700/50 p-8 rounded-3xl shadow-[0_0_50px_rgba(16,185,129,0.15)] backdrop-blur-md">
           <div className="flex justify-center mb-8">
             <img src="/logo512.png" alt="Logo Treino Fit" className="h-20 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.2)]" />
@@ -584,6 +724,245 @@ function App() {
     );
   }
 
+  if (etapa === "matricula_externa") {
+    return (
+      <div className="fixed inset-0 bg-[#0d0e12] flex flex-col items-center justify-center p-6 text-white font-sans z-50 overflow-y-auto">
+        <div className="w-full max-w-md bg-[#16171d] border border-neutral-800 p-8 rounded-2xl shadow-2xl my-auto">
+          <div className="text-center mb-6"><span className="text-4xl mb-3 block">🤖</span><h2 className="text-lg font-bold uppercase tracking-tight text-emerald-500">Auto-Avaliação IA</h2><p className="text-neutral-400 text-[11px] mt-2">Preencha sua biometria para a Inteligência Artificial estruturar a base do seu treino e dieta.</p></div>
+          <form onSubmit={async (e) => {
+            e.preventDefault();
+            setEtapa("verificando");
+            try {
+              const urlParams = new URLSearchParams(window.location.search);
+              const refPersonal = urlParams.get('ref');
+              const payload = { ...perfil, nome: perfil.nome, peso: parseNumeroSeguro(perfil.peso), altura: parseNumeroSeguro(perfil.altura), idade: parseInt(perfil.idade) || 0, whatsapp: novoAlunoForm.whatsapp, objetivo: perfil.meta, meta: perfil.meta, genero: perfil.genero, nivel: perfil.nivel, diasTreino: perfil.diasTreino, restricoes: perfil.restricoes, lesoes: perfil.lesoes, personalRef: refPersonal };
+              const res = await fetch(`${API_URL}/aluno/matricula-ia`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+              if (res.ok) { alert("🎉 Análise concluída! Sua ficha já está na mesa do Personal."); window.location.href = window.location.origin; }
+              else { const data = await res.json(); alert(data.mensagem || "Erro na análise."); setEtapa("matricula_externa"); }
+            } catch { alert("Erro de conexão."); setEtapa("matricula_externa"); }
+          }} className="space-y-4">
+            <input required type="text" placeholder="Nome Completo" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, nome: e.target.value })} />
+            <input required type="text" placeholder="WhatsApp (Apenas Números)" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setNovoAlunoForm({ ...novoAlunoForm, whatsapp: e.target.value })} />
+            <div className="grid grid-cols-3 gap-3">
+              <input required type="text" placeholder="Peso (kg)" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, peso: e.target.value })} />
+              <input required type="text" placeholder="Altura (m)" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, altura: e.target.value })} />
+              <input required type="number" placeholder="Idade" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, idade: e.target.value })} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none text-neutral-400 focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, genero: e.target.value })}>
+                <option value="">Gênero Biológico</option><option value="Masculino">Masculino</option><option value="Feminino">Feminino</option>
+              </select>
+              <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none text-neutral-400 focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, meta: e.target.value })}>
+                <option value="">Objetivo Principal</option><option value="Emagrecimento">Emagrecimento</option><option value="Hipertrofia">Hipertrofia</option><option value="Performance">Performance</option>
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none text-neutral-400 focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, nivel: e.target.value })}>
+                <option value="">Nível de Treino</option><option value="Iniciante">Iniciante</option><option value="Intermediário">Intermediário</option><option value="Avançado">Avançado</option>
+              </select>
+              <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none text-neutral-400 focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, diasTreino: e.target.value })}>
+                <option value="">Dias de Treino/Semana</option><option value="3">3 Dias</option><option value="4">4 Dias</option><option value="5">5 Dias</option><option value="6">6 Dias</option>
+              </select>
+            </div>
+            <input type="text" placeholder="Restrições Alimentares?" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, restricoes: e.target.value })} />
+            <input type="text" placeholder="Lesões ou Dores?" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, lesoes: e.target.value })} />
+            <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-xl uppercase tracking-wider font-bold text-xs shadow-lg mt-4 transition-all">⚡ Gerar Diagnóstico com IA</button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ NOVO ONBOARDING GAMIFICADO
+  if (etapa === "onboarding") {
+    return (
+      <div className="fixed inset-0 bg-[#0d0e12] flex flex-col items-center justify-center p-4 md:p-8 text-white z-50 overflow-y-auto font-sans">
+        <div className="w-full max-w-md bg-[#16171d] border border-neutral-800 p-6 md:p-8 rounded-3xl shadow-2xl my-auto relative">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-sm font-bold uppercase tracking-tight text-emerald-500">
+              {quizStep === 1 && "1. Seu Objetivo"}
+              {quizStep === 2 && "2. Sua Rotina"}
+              {quizStep === 3 && "3. Suas Preferências"}
+              {quizStep === 4 && "4. Perfil Físico"}
+            </h2>
+            <span className="text-[10px] font-mono text-neutral-500 bg-[#0d0e12] px-2 py-1 rounded-md">Passo {quizStep} de 4</span>
+          </div>
+          <div className="w-full bg-[#0d0e12] h-2 rounded-full mb-8 overflow-hidden border border-neutral-800">
+            <div className="bg-emerald-500 h-full transition-all duration-500 ease-out" style={{ width: `${(quizStep / 4) * 100}%` }}></div>
+          </div>
+          {quizStep === 1 && (
+            <div className="space-y-4">
+              <p className="text-xs text-neutral-400 mb-4 font-medium leading-relaxed">O que você quer que a nossa Inteligência Artificial construa para você hoje?</p>
+              <div className="grid grid-cols-1 gap-3">
+                {[
+                  { id: "Emagrecimento", icone: "🔥", desc: "Queima de Gordura Intensa" },
+                  { id: "Hipertrofia", icone: "💪", desc: "Ganho de Massa Magra" },
+                  { id: "Performance", icone: "⚡", desc: "Condicionamento e Saúde" }
+                ].map(obj => (
+                  <button key={obj.id} type="button" onClick={() => setPerfil({ ...perfil, meta: obj.id })}
+                    className={`w-full p-4 rounded-2xl flex items-center gap-4 transition-all border ${perfil.meta === obj.id ? 'bg-emerald-600/10 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.15)]' : 'bg-[#0d0e12] border-neutral-800 hover:border-neutral-600'}`}>
+                    <span className="text-3xl">{obj.icone}</span>
+                    <div className="text-left">
+                      <p className={`font-bold uppercase text-sm ${perfil.meta === obj.id ? 'text-emerald-400' : 'text-white'}`}>{obj.id}</p>
+                      <p className="text-[10px] text-neutral-500">{obj.desc}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <button type="button" onClick={avançarQuiz} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-xl uppercase tracking-wider font-bold text-xs shadow-lg mt-6 transition-all">Próximo Passo →</button>
+            </div>
+          )}
+          {quizStep === 2 && (
+            <div className="space-y-6">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 mb-3">Qual o seu nível de experiência?</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {["Iniciante", "Intermediário", "Avançado"].map(niv => (
+                    <button key={niv} type="button" onClick={() => setPerfil({ ...perfil, nivel: niv })}
+                      className={`p-3 rounded-xl text-[10px] font-bold uppercase transition-all border ${perfil.nivel === niv ? 'bg-emerald-600 border-emerald-500 text-white' : 'bg-[#0d0e12] border-neutral-800 text-neutral-400 hover:bg-neutral-800'}`}>
+                      {niv}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 mb-3">Quantos dias na semana quer treinar?</p>
+                <div className="grid grid-cols-4 gap-2">
+                  {["3", "4", "5", "6"].map(dias => (
+                    <button key={dias} type="button" onClick={() => setPerfil({ ...perfil, diasTreino: dias })}
+                      className={`p-3 rounded-xl text-lg font-black transition-all border ${perfil.diasTreino === dias ? 'bg-blue-600 border-blue-500 text-white' : 'bg-[#0d0e12] border-neutral-700 text-neutral-500 hover:bg-neutral-800'}`}>
+                      {dias}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-3 mt-6">
+                <button type="button" onClick={() => setQuizStep(1)} className="w-1/3 bg-transparent border border-neutral-800 text-neutral-400 p-4 rounded-xl font-bold text-xs transition-colors">Voltar</button>
+                <button type="button" onClick={avançarQuiz} className="w-2/3 bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-xl uppercase tracking-wider font-bold text-xs shadow-lg transition-all">Continuar →</button>
+              </div>
+            </div>
+          )}
+          {quizStep === 3 && (
+            <div className="space-y-4">
+              <div className="flex justify-between items-end mb-2">
+                <p className="text-xs text-neutral-300 font-medium">Selecione até 5 alimentos que você <span className="text-emerald-400 font-bold">não quer que falte</span> na sua dieta.</p>
+                <span className="text-[10px] bg-neutral-800 text-neutral-400 px-2 py-1 rounded-md font-mono">{alimentosFavoritos.length}/5</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 max-h-60 overflow-y-auto pr-1 pb-2">
+                {[
+                  { nome: "Pão com Ovo", emoji: "🍳" }, { nome: "Frango", emoji: "🍗" },
+                  { nome: "Arroz", emoji: "🍚" }, { nome: "Carne", emoji: "🥩" },
+                  { nome: "Batata Doce", emoji: "🍠" }, { nome: "Mandioca", emoji: "🥔" },
+                  { nome: "Iogurte", emoji: "🥛" }, { nome: "Frutas", emoji: "🍎" },
+                  { nome: "Tapioca", emoji: "🌮" }, { nome: "Cuscuz", emoji: "🌽" },
+                  { nome: "Macarrão", emoji: "🍝" }, { nome: "Café", emoji: "☕" }
+                ].map(ali => {
+                  const selecionado = alimentosFavoritos.includes(ali.nome);
+                  return (
+                    <button key={ali.nome} type="button" onClick={() => toggleAlimento(ali.nome)}
+                      className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${selecionado ? 'bg-orange-500/20 border-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.2)]' : 'bg-[#0d0e12] border-neutral-800 hover:border-neutral-600'}`}>
+                      <span className="text-2xl mb-1">{ali.emoji}</span>
+                      <span className={`text-[9px] font-bold uppercase text-center ${selecionado ? 'text-orange-400' : 'text-neutral-500'}`}>{ali.nome}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="flex gap-3 mt-6">
+                <button type="button" onClick={() => setQuizStep(2)} className="w-1/3 bg-transparent border border-neutral-800 text-neutral-400 p-4 rounded-xl font-bold text-xs transition-colors">Voltar</button>
+                <button type="button" onClick={avançarQuiz} className="w-2/3 bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-xl uppercase tracking-wider font-bold text-xs shadow-lg transition-all">Quase lá! →</button>
+              </div>
+            </div>
+          )}
+          {quizStep === 4 && (
+            <form onSubmit={finalizarQuiz} className="space-y-4">
+              <p className="text-[11px] text-neutral-400 mb-4 text-center">Para a IA calcular exatamente os seus macronutrientes, precisamos dos seus dados vitais.</p>
+              <div><label className="text-[9px] font-bold uppercase tracking-wider text-neutral-500 block mb-1">Seu Nome</label><input required type="text" className="w-full bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl text-sm outline-none text-white focus:border-emerald-500/50 transition-colors" value={perfil.nome} onChange={(e) => setPerfil({ ...perfil, nome: e.target.value })} /></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className="text-[9px] font-bold uppercase tracking-wider text-neutral-500 block mb-1">Gênero</label>
+                  <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl text-sm outline-none text-white focus:border-emerald-500/50" value={perfil.genero} onChange={(e) => setPerfil({ ...perfil, genero: e.target.value })}>
+                    <option value="Masculino">Masculino</option><option value="Feminino">Feminino</option>
+                  </select>
+                </div>
+                <div><label className="text-[9px] font-bold uppercase tracking-wider text-neutral-500 block mb-1">Idade</label><input required type="number" className="w-full bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl text-sm outline-none text-white focus:border-emerald-500/50" value={perfil.idade} onChange={(e) => setPerfil({ ...perfil, idade: e.target.value })} /></div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className="text-[9px] font-bold uppercase tracking-wider text-neutral-500 block mb-1">Peso (kg)</label><input required type="text" placeholder="Ex: 75.5" className="w-full bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl text-sm outline-none text-white focus:border-emerald-500/50" value={perfil.peso} onChange={(e) => setPerfil({ ...perfil, peso: e.target.value })} /></div>
+                <div><label className="text-[9px] font-bold uppercase tracking-wider text-neutral-500 block mb-1">Altura (m)</label><input required type="text" placeholder="Ex: 1.75" className="w-full bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl text-sm outline-none text-white focus:border-emerald-500/50" value={perfil.altura} onChange={(e) => setPerfil({ ...perfil, altura: e.target.value })} /></div>
+              </div>
+              <div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Restrições Alimentares?</label><input type="text" placeholder="Ex: Vegano, Sem Lactose..." className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-emerald-500/50" value={perfil.restricoes} onChange={(e) => setPerfil({ ...perfil, restricoes: e.target.value })} /></div>
+              <div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Lesões ou Dores?</label><input type="text" placeholder="Ex: Dor no Joelho, Lombar..." className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-emerald-500/50" value={perfil.lesoes} onChange={(e) => setPerfil({ ...perfil, lesoes: e.target.value })} /></div>
+              <div className="flex gap-3 pt-4">
+                <button type="button" onClick={() => setQuizStep(3)} className="w-1/3 bg-transparent border border-neutral-800 text-neutral-400 p-4 rounded-xl font-bold text-xs transition-colors">Voltar</button>
+                <button type="submit" className="w-2/3 bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-xl uppercase tracking-wider font-bold text-xs shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all flex items-center justify-center gap-2">
+                  <span>⚡ Salvar e Entrar</span>
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (etapa === "home") {
+    return (
+      <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col overflow-hidden font-sans z-30">
+        {abaAtiva === "home" && (
+          <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center">
+            <header className="w-full max-w-4xl flex justify-between items-center border-b border-neutral-800 pb-4 mb-6">
+              <div className="flex items-center space-x-3">
+                <img src="/logo192.png" alt="Ícone Treino Fit" className="w-8 h-8 rounded" />
+                <div>
+                  <h2 className="text-sm font-bold text-white uppercase tracking-tight">{perfil.nome}</h2>
+                  <p className="text-[10px] text-neutral-500 font-mono uppercase tracking-wider">Conta {isVip ? 'Premium Elite' : 'Free Tier'}</p>
+                </div>
+              </div>
+              <button type="button" onClick={() => !isVip && setBloqueado(true)} className={`px-3 py-1.5 rounded text-[10px] font-bold uppercase font-mono border ${isVip ? 'border-emerald-500/20 text-emerald-500 bg-emerald-500/5' : 'border-amber-500/20 text-amber-500 bg-amber-500/5 animate-pulse'}`}>{isVip ? "✓ Vip Ativado" : "Upgrade para Enterprise"}</button>
+            </header>
+            <main className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-6 items-start pb-10">
+              <div className="md:col-span-1 space-y-4">
+                <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl">
+                  <p className="text-neutral-500 text-[10px] font-bold uppercase tracking-wider mb-2">Composição Corporal</p>
+                  <div className="grid grid-cols-2 gap-3"><div className="bg-[#0d0e12] p-3 border border-neutral-850 rounded-lg"><span className="text-[9px] text-neutral-500 uppercase block">Massa Global</span><span className="text-2xl font-semibold text-white">{perfil.peso}<span className="text-xs text-neutral-500 font-normal ml-0.5">kg</span></span></div><div className="bg-[#0d0e12] p-3 border border-neutral-850 rounded-lg"><span className="text-[9px] text-neutral-500 uppercase block">Estatura</span><span className="text-2xl font-semibold text-white">{perfil.altura}<span className="text-xs text-neutral-500 font-normal ml-0.5">m</span></span></div></div>
+                  <div className="mt-3 text-[10px] text-neutral-400 font-mono flex justify-between border-t border-neutral-800/60 pt-2"><span>Planejamento:</span><span className="text-emerald-500 font-bold uppercase">{perfil.meta}</span></div>
+                </div>
+                <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl text-center"><p className="text-neutral-500 text-[10px] font-bold uppercase tracking-wider text-left mb-4">Meta Metabólica Diária</p><div className="inline-flex flex-col items-center justify-center p-6 border border-neutral-800 bg-[#0d0e12] rounded-full w-28 h-28 mx-auto mb-4 border-t-emerald-600"><span className="text-xl font-bold text-white">{perfil.tmb}</span><span className="text-[9px] font-mono text-neutral-500 uppercase">kcal/dia</span></div></div>
+              </div>
+              <div className="md:col-span-2 space-y-4">
+                <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl"><p className="text-emerald-500 text-[10px] font-bold uppercase tracking-wider font-mono mb-2">⚡ Diretriz Técnica Operacional</p><p className="text-xs font-medium text-neutral-300 leading-relaxed">"{perfil.nome}, seus parâmetros apontam foco em oxidação de gordura ativa. Otimize a ingestão proteinada."</p></div>
+                <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl space-y-3">
+                  <p className="text-neutral-500 text-[10px] font-bold uppercase tracking-wider mb-2">Terminais de Execução</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3"><button type="button" onClick={() => setAbaAtiva("chat")} className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 px-4 rounded-lg text-xs uppercase tracking-wider text-center transition-all shadow-lg">Abrir Chat IA & Consultoria</button><button type="button" onClick={() => setAbaAtiva("treino")} className="bg-transparent hover:bg-neutral-800 border border-neutral-800 text-neutral-200 font-bold py-3.5 px-4 rounded-lg text-xs uppercase tracking-wider text-center transition-all">Acessar Biblioteca de Treinos</button></div>
+                  <div className="text-center pt-3 border-t border-neutral-800/40"><button type="button" onClick={handleSair} className="text-[10px] font-mono uppercase text-neutral-600 hover:text-red-400 transition-colors">Encerrar sessão de dados</button></div>
+                </div>
+                <div className="bg-gradient-to-r from-[#16171d] to-emerald-900/10 border border-emerald-500/20 p-5 rounded-xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-500 mb-1">🛒 Mercado Saudável Oficial</p>
+                    <p className="text-xs font-medium text-neutral-300">A IA montou sua dieta? Peça os ingredientes agora mesmo e receba no conforto de casa.</p>
+                  </div>
+                  <a href="https://hortilife-praticidade.kyte.site/pt-BR" target="_blank" rel="noopener noreferrer" className="whitespace-nowrap bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-5 rounded-lg text-[10px] uppercase tracking-wider transition-colors shadow-lg">
+                    👉 Pedir na Hortilife
+                  </a>
+                </div>
+              </div>
+            </main>
+          </div>
+        )}
+        {abaAtiva === "chat" && (
+          <div className="flex-1 flex flex-col overflow-hidden"><header className="p-4 flex items-center justify-between border-b border-neutral-800 bg-[#16171d]"><button type="button" onClick={() => { setAbaAtiva("home"); atualizarStatusVIP(); }} className="text-emerald-500 font-bold text-[10px] uppercase font-mono flex items-center gap-2">← Voltar para o Dashboard</button><span className="text-[10px] font-mono uppercase text-neutral-500">Módulo Consultoria de Nutrição</span></header><ChatReceitas whatsapp={usuario} isVip={isVip} aoPedirUpgrade={() => setBloqueado(true)} perfil={perfil} setTreinoIAPescado={setTreinoIAPescado} aoAtualizarPerfil={atualizarStatusVIP} /></div>
+        )}
+        {abaAtiva === "treino" && (
+          <div className="flex-1 flex flex-col bg-[#0d0e12] p-6 overflow-y-auto">
+            <header className="w-full max-w-4xl mx-auto flex justify-between items-center border-b border-neutral-800 pb-4 mb-6"><button type="button" onClick={() => { setAbaAtiva("home"); atualizarStatusVIP(); }} className="text-emerald-500 font-bold text-[10px] uppercase font-mono flex items-center gap-2">← Retornar</button><span className="text-white font-bold uppercase text-xs tracking-wider">Módulo de Planilhas</span></header>
+            <div className="w-full max-w-4xl grid grid-cols-1 sm:grid-cols-2 gap-4 mx-auto"><button type="button" onClick={() => isVip ? setModalidadeAberta('ia') : setBloqueado(true)} className="bg-[#16171d] hover:bg-[#1e2029] border border-neutral-800 p-6 rounded-xl flex items-center justify-between transition-all text-left"><div><p className="font-bold uppercase text-sm text-white">Treino Inteligência Artificial</p><p className="text-[9px] text-neutral-500 font-mono mt-0.5 uppercase tracking-wider">{!isVip ? "Status: Bloqueado corporativo" : "Acesso Elite Ativado"}</p></div><span className="text-xl">🤖</span></button><button type="button" onClick={() => setModalidadeAberta('academia')} className="bg-[#16171d] hover:bg-[#1e2029] border border-neutral-800 p-6 rounded-xl flex items-center justify-between transition-all text-left"><div><p className="font-bold uppercase text-sm text-white">Metodologia Tradicional (ABC)</p><p className="text-[9px] text-neutral-500 font-mono mt-0.5 uppercase tracking-wider">Acesso Livre</p></div><span className="text-xl">🏋️‍♂️</span></button></div>
+            {modalidadeAberta && <ListaExercicios modalidade={modalidadeAberta} whatsapp={usuario} API_URL={API_URL} perfil={perfil} treinoIA={treinoIAPescado} aoFechar={() => { setModalidadeAberta(null); atualizarStatusVIP(); }} />}
+          </div>
+        )}
+        {bloqueado && <div className="fixed inset-0 z-[500] bg-[#0d0e12]/95 backdrop-blur-sm flex flex-col items-center p-6 overflow-y-auto"><button type="button" onClick={() => { setBloqueado(false); atualizarStatusVIP(); }} className="absolute top-6 right-6 text-neutral-400 hover:text-white bg-neutral-900 border border-neutral-800 w-8 h-8 rounded flex items-center justify-center text-xs">✕</button><TelaPlanos /></div>}
+      </div>
+    );
+  }
+
   if (etapa === "personal") {
     const hojeDataStr = new Date().toLocaleDateString("pt-BR", { day: '2-digit', month: '2-digit' });
 
@@ -601,8 +980,6 @@ function App() {
         </header>
 
         <main className="w-full max-w-5xl mx-auto flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 items-start pb-10">
-
-          {/* COLUNA ESQUERDA - DASHBOARD DO PERSONAL */}
           <div className="md:col-span-1 flex flex-col gap-6">
             <div className="bg-[#16171d] border border-neutral-800 rounded-xl p-5 shadow-xl">
               <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-4">Métricas da Assessoria</h3>
@@ -618,7 +995,6 @@ function App() {
               )}
             </div>
 
-            {/* 🔥 BANNER HORTILIFE - PAINEL DO PERSONAL 🔥 */}
             <div className="bg-gradient-to-br from-[#16171d] to-emerald-900/10 border border-emerald-500/20 rounded-xl p-5 shadow-xl relative overflow-hidden">
               <div className="absolute top-0 right-0 p-2 opacity-10 text-4xl">🛒</div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-500 mb-2">🤝 Parceiro Oficial</p>
@@ -689,7 +1065,7 @@ function App() {
                           )}
                         </td>
                         <td className="py-3.5 text-right space-x-2">
-
+                          <button type="button" onClick={() => setAlunoVerAvaliacao(aluno)} className="bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase mr-1">Avaliação</button>
                           <button type="button" onClick={() => {
                             setModoEdicaoBiometria(false);
                             setAlunoEditandoPerfil({
@@ -705,8 +1081,7 @@ function App() {
                               lesoes: aluno.lesoes ?? "",
                               medidas: aluno.medidas ?? {}
                             });
-                          }} className="bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase mr-1">Editar Perfil</button>
-
+                          }} className="bg-neutral-600/20 text-neutral-400 hover:bg-neutral-600 hover:text-white border border-neutral-500/30 text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase mr-1">Editar Perfil</button>
                           <button type="button" onClick={() => abrirGeradorTreino(aluno)} className="bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase">{aluno.statusTreino === "Rascunho IA" ? "Revisar IA" : "Montar Semanal"}</button>
                           <button type="button" onClick={() => alterStatusContaAluno(idUnico, aluno.statusConta === "Ativo" ? "Off" : "Ativo")} className="border border-neutral-800 text-neutral-400 hover:bg-neutral-800 text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase">{aluno.statusConta === "Ativo" ? "Arquivar" : "Ativar"}</button>
                           <button type="button" onClick={() => deletarAluno(idUnico)} className="text-red-500/70 hover:text-red-400 border border-neutral-800 hover:border-red-500/20 rounded font-bold text-[9px] py-1 px-2 uppercase">Excluir</button>
@@ -758,6 +1133,9 @@ function App() {
                     </div>
 
                     <div className="pt-1 flex flex-wrap gap-2">
+                      <button type="button" onClick={() => setAlunoVerAvaliacao(aluno)} className="w-full bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 text-[10px] font-bold py-2 rounded transition-colors uppercase text-center mb-1">
+                        📊 Ver Avaliação
+                      </button>
                       <button type="button" onClick={() => {
                         setModoEdicaoBiometria(false);
                         setAlunoEditandoPerfil({
@@ -773,10 +1151,9 @@ function App() {
                           lesoes: aluno.lesoes ?? "",
                           medidas: aluno.medidas ?? {}
                         });
-                      }} className="w-full bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 text-[10px] font-bold py-2 rounded transition-colors uppercase text-center mb-1">
+                      }} className="w-full bg-neutral-600/20 text-neutral-400 hover:bg-neutral-600 hover:text-white border border-neutral-500/30 text-[10px] font-bold py-2 rounded transition-colors uppercase text-center mb-1">
                         ✏️ Editar Perfil do Aluno
                       </button>
-
                       <button type="button" onClick={() => abrirGeradorTreino(aluno)} className="bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold py-2 rounded transition-colors uppercase flex-1 shadow-lg text-center">
                         {aluno.statusTreino === "Rascunho IA" ? "Revisar IA" : "Editar Plano"}
                       </button>
@@ -793,6 +1170,82 @@ function App() {
             </div>
           </div>
         </main>
+
+        {alunoEmEdicao && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="w-full max-w-3xl bg-[#16171d] border border-neutral-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+              <header className="p-4 md:p-5 border-b border-neutral-800 flex justify-between items-center bg-[#1c1d26]"><div><span className="text-[10px] text-emerald-500 font-mono font-bold uppercase tracking-wider">Prescrevendo Plano Pro</span><h3 className="text-base font-bold text-white uppercase">{alunoEmEdicao.nome}</h3></div><button type="button" onClick={() => setAlunoEmEdicao(null)} className="text-neutral-400 hover:text-white text-sm uppercase font-mono font-bold">Fechar ✕</button></header>
+              <form onSubmit={salvarTreinoPersonal} className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+
+                <div className="bg-[#0d0e12] p-4 rounded-xl border border-blue-500/20">
+                  <label className="text-[10px] uppercase font-bold text-blue-400 block mb-2">💧 Meta de Hidratação Diária (Calculada pela IA)</label>
+                  <input required type="text" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-sm text-white font-bold" value={aguaForm} onChange={(e) => setAguaForm(e.target.value)} />
+                </div>
+
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-3 border-b border-neutral-800/60 pb-2">Estrutura de Exercícios Semanal</p>
+
+                  <div className="flex gap-2 overflow-x-auto pb-2 border-b border-neutral-800/40 mb-4">
+                    {DIAS_SEMANA.map(dia => (
+                      <button
+                        key={dia}
+                        type="button"
+                        onClick={() => setDiaAbaPersonal(dia)}
+                        className={`px-4 py-2 rounded-t-lg text-[10px] font-bold uppercase transition-all flex-shrink-0 ${diaAbaPersonal === dia
+                          ? 'bg-neutral-800/50 border-b-2 border-emerald-500 text-emerald-500'
+                          : 'text-neutral-500 hover:text-neutral-300'
+                          }`}
+                      >
+                        {dia}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex justify-between items-center mb-3">
+                    <p className="text-[10px] font-mono text-emerald-500 font-bold uppercase">Treino de {diaAbaPersonal}</p>
+                    <button type="button" onClick={adicionarExercicioForm} className="bg-emerald-600/10 text-emerald-500 border border-emerald-500/20 text-[10px] font-bold px-3 py-1.5 rounded hover:bg-emerald-600/20 transition-all uppercase">+ Exercício</button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {(() => {
+                      const diaObj = treinoForm.find(d => d.dia === diaAbaPersonal) || { exercicios: [] };
+                      if (diaObj.exercicios.length === 0) {
+                        return <p className="text-xs text-neutral-500 italic text-center py-4 bg-[#0d0e12] rounded-xl border border-neutral-800">Nenhum exercício cadastrado.</p>;
+                      }
+
+                      return diaObj.exercicios.map((ex, idx) => (
+                        <div key={idx} className="bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl space-y-3 relative group">
+                          <button type="button" onClick={() => removerExercicioForm(idx)} className="absolute top-3 right-3 text-neutral-600 hover:text-red-400 text-[10px] uppercase font-mono tracking-wider transition-colors">Remover</button>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 sm:pt-0">
+                            <div className="sm:col-span-1"><label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Movimento</label><input required type="text" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ex.nome} onChange={(e) => handleExercicioChange(idx, "nome", e.target.value)} /></div>
+                            <div><label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Séries</label><input required type="number" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ex.series} onChange={(e) => handleExercicioChange(idx, "series", Number(e.target.value))} /></div>
+                            <div><label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Repetições/Tempo</label><input required type="text" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ex.reps} onChange={(e) => handleExercicioChange(idx, "reps", e.target.value)} /></div>
+                          </div>
+                          <div><label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Observação</label><input type="text" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ex.obs || ""} onChange={(e) => handleExercicioChange(idx, "obs", e.target.value)} /></div>
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-neutral-800/60">
+                  <div className="flex justify-between items-center pb-2 border-b border-neutral-800/60 mb-3"><p className="text-xs font-bold uppercase tracking-wider text-neutral-400">Planejamento Nutricional</p><button type="button" onClick={adicionarDietaForm} className="bg-blue-600/10 text-blue-500 border border-blue-500/20 text-[10px] font-bold px-3 py-1.5 rounded hover:bg-blue-600/20 transition-all uppercase">+ Refeição</button></div>
+                  <div className="space-y-3">
+                    {dietaForm.map((ref, idx) => (
+                      <div key={idx} className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl flex flex-col sm:flex-row gap-3 relative sm:items-center">
+                        <div className="w-full sm:w-1/3"><label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Horário/Refeição</label><input required type="text" placeholder="Ex: Almoço" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ref.refeicao} onChange={(e) => handleDietaChange(idx, "refeicao", e.target.value)} /></div>
+                        <div className="w-full sm:w-2/3"><label className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Alimentos e Gramas</label><input required type="text" placeholder="Ex: 100g Frango" className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs outline-none text-white focus:border-neutral-700" value={ref.itens} onChange={(e) => handleDietaChange(idx, "itens", e.target.value)} /></div>
+                        <button type="button" onClick={() => removerDietaForm(idx)} className="absolute top-2 right-2 text-neutral-600 hover:text-red-400 font-bold text-sm ml-1">✕</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <footer className="pt-4 border-t border-neutral-800 flex gap-3 justify-end text-xs font-bold"><button type="button" onClick={() => setAlunoEmEdicao(null)} className="bg-transparent border border-neutral-800 text-neutral-400 p-3 rounded-xl uppercase tracking-wider hover:bg-neutral-800 transition-colors">Cancelar</button><button type="submit" className="bg-emerald-600 hover:bg-emerald-500 text-white p-3 rounded-xl uppercase tracking-wider transition-colors shadow-lg px-6">Salvar e Enviar</button></footer>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* MODAL DETALHES DO FEEDBACK (RPE E RESPOSTAS) */}
         {alunoVerFeedback && (
@@ -836,7 +1289,7 @@ function App() {
                             </div>
                           )}
 
-                          {/* ✅ CAIXA DE RESPOSTA DO PERSONAL */}
+                          {/* CAIXA DE RESPOSTA DO PERSONAL */}
                           {checkin.respostaPersonal ? (
                             <div className="bg-emerald-900/20 p-3 rounded-lg border border-emerald-500/20 mt-3">
                               <p className="text-[9px] text-emerald-500 font-bold uppercase mb-1">Sua Resposta</p>
@@ -879,7 +1332,7 @@ function App() {
                   <p className="text-[10px] text-neutral-400">Dados de <span className="text-emerald-400 font-bold">{alunoEditandoPerfil.nome}</span>.</p>
                 </div>
 
-                {/* ✅ BOTÃO WHATSAPP E TRAVA DE EDIÇÃO NO CABEÇALHO */}
+                {/* BOTÃO WHATSAPP E TRAVA DE EDIÇÃO NO CABEÇALHO */}
                 <div className="flex items-center gap-2">
                   <a href={`https://wa.me/55${alunoEditandoPerfil.whatsapp?.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="bg-[#25D366] hover:bg-[#128C7E] text-white text-[10px] font-bold px-3 py-1.5 rounded uppercase transition-colors shadow-lg flex items-center gap-1">
                     <span className="text-sm">💬</span> Whats
@@ -1004,7 +1457,7 @@ function App() {
           </div>
         )}
 
-        {/* ✅ NOVO: MODAL FLUTUANTE DA CALCULADORA DE DOBRAS CUTÂNEAS */}
+        {/* CALCULADORA DE DOBRAS (ANTROPOMETRIA) */}
         {modalDobrasAberto && (
           <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="w-full max-w-sm bg-[#16171d] border border-blue-500/30 rounded-3xl p-6 shadow-2xl relative">
@@ -1171,6 +1624,9 @@ function App() {
           </div>
         )}
 
+        {/* ✅ AQUI RENDERIZA A AVALIAÇÃO NO PAINEL DO PERSONAL */}
+        {alunoVerAvaliacao && renderModalAvaliacao(alunoVerAvaliacao, () => setAlunoVerAvaliacao(null))}
+
       </div>
     );
   }
@@ -1186,7 +1642,7 @@ function App() {
           </div>
           <div className="flex gap-2">
             <button type="button" onClick={() => setModalAvaliacaoAluno(true)} className="px-3 py-1.5 bg-blue-600/10 border border-blue-500/20 text-blue-400 hover:bg-blue-600/20 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors flex items-center gap-1">
-              📋 Minha Avaliação
+              📋 Avaliação
             </button>
             <button type="button" onClick={() => { setEtapa("triagem"); setAlunoLogado(null); }} className="px-3 py-1.5 bg-red-500 border border-neutral-800 rounded-md text-[10px] font-bold uppercase tracking-wider text-neutral-50 transition-all duration-200 hover:bg-red-600 hover:scale-105 hover:cursor-pointer">
               Sair
@@ -1277,13 +1733,17 @@ function App() {
               }
 
               return rotinaDoDia.exercicios.map((ex, i) => {
-                const chaveUnica = `${diaAbaAluno}-${i}`;
-                const estaconcluido = exerciciosConcluidos.includes(chaveUnica);
+                const chaveUnicaExercicio = `${diaAbaAluno}-${i}`;
+                const estaconcluido = exerciciosConcluidos.includes(chaveUnicaExercicio);
+
+                // ✅ VERIFICA SE TODAS AS SÉRIES FORAM FEITAS PARA DEIXAR O CARD VERDE
+                const todasSeriesFeitas = Array.from({ length: ex.series || 0 }).every((_, sIdx) => seriesFeitas[`${diaAbaAluno}-${i}-s${sIdx + 1}`]);
+
                 return (
-                  <div key={i} className={`bg-[#16171d] border transition-all rounded-xl overflow-hidden shadow-xl ${estaconcluido ? 'border-blue-500/30 opacity-60' : 'border-neutral-800'}`}>
+                  <div key={i} className={`bg-[#16171d] border transition-all rounded-xl overflow-hidden shadow-xl ${estaconcluido || todasSeriesFeitas ? 'border-emerald-500/30 opacity-80' : 'border-neutral-800'}`}>
                     <div className="p-5 flex items-start justify-between gap-4">
                       <div className="flex-1">
-                        <h4 className={`font-bold uppercase text-base tracking-tight text-white ${estaconcluido ? 'line-through text-neutral-500' : ''}`}>{ex.nome}</h4>
+                        <h4 className={`font-bold uppercase text-base tracking-tight text-white ${estaconcluido || todasSeriesFeitas ? 'text-emerald-400' : ''}`}>{ex.nome}</h4>
                         <div className="flex items-center gap-2 mt-1">
                           <span className="bg-blue-500/10 text-blue-400 font-mono text-[10px] font-bold uppercase px-2 py-0.5 rounded">{ex.series} Séries × {ex.reps} Reps</span>
                           <button type="button" onClick={() => abrirExercicioVisual(ex, setModalGifAberto)} className="bg-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-700 text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase border border-neutral-700">
@@ -1292,13 +1752,49 @@ function App() {
                         </div>
                         {ex.obs && <p className="text-xs text-neutral-400 mt-2 bg-[#0d0e12] border border-neutral-800 p-2 rounded-lg font-sans">📌 Obs: {ex.obs}</p>}
                       </div>
-                      <button type="button" onClick={() => alternarConclusaoExercicio(chaveUnica)} className={`w-6 h-6 rounded-md border flex items-center justify-center font-bold text-xs transition-colors ${estaconcluido ? 'bg-blue-600 border-blue-500 text-white' : 'border-neutral-700 bg-transparent text-transparent hover:border-neutral-500'}`}>✓</button>
+
+                      <button type="button" onClick={() => alternarConclusaoExercicio(chaveUnicaExercicio)} className={`w-6 h-6 rounded-md border flex items-center justify-center font-bold text-xs transition-colors ${estaconcluido || todasSeriesFeitas ? 'bg-emerald-600 border-emerald-500 text-white' : 'border-neutral-700 bg-transparent text-transparent hover:border-neutral-500'}`}>✓</button>
+                    </div>
+
+                    {/* ✅ CAIXAS DE SÉRIE INDIVIDUAIS (CHECK-IN) */}
+                    <div className="px-5 pb-5">
+                      <div className="grid grid-cols-4 gap-2 pt-3 border-t border-neutral-800/50 mt-2">
+                        {Array.from({ length: ex.series || 0 }).map((_, sIdx) => {
+                          const numSerie = sIdx + 1;
+                          const chaveSerie = `${diaAbaAluno}-${i}-s${numSerie}`;
+                          const isFeita = seriesFeitas[chaveSerie];
+
+                          return (
+                            <button
+                              key={numSerie}
+                              type="button"
+                              onClick={() => marcarSerie(i, numSerie, ex.series)}
+                              className={`py-2 rounded-lg flex flex-col items-center justify-center transition-all ${isFeita ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20' : 'bg-[#0d0e12] border border-neutral-700 text-neutral-400 hover:border-neutral-500'}`}
+                            >
+                              <span className="text-[9px] font-bold uppercase tracking-wider mb-0.5">Série {numSerie}</span>
+                              <span className="text-sm font-black">{isFeita ? '✓' : '⬜'}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 );
               });
             })()}
           </div>
+
+          {/* ✅ CRONÔMETRO DE DESCANSO FLUTUANTE */}
+          {timerAtivo && timerDescanso > 0 && (
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-6 py-3 rounded-full shadow-[0_10px_40px_rgba(37,99,235,0.4)] flex items-center gap-3 z-50 animate-bounce">
+              <span className="text-xl">⏱️</span>
+              <div>
+                <p className="text-[10px] uppercase tracking-wider font-bold opacity-80 leading-none mb-0.5">Descanso</p>
+                <p className="text-lg font-black font-mono leading-none">{timerDescanso}s</p>
+              </div>
+              <button type="button" onClick={() => setTimerAtivo(false)} className="ml-2 bg-white/20 hover:bg-white/30 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold transition-colors">✕</button>
+            </div>
+          )}
 
           {modalGifAberto && (
             <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setModalGifAberto(null)}>
@@ -1366,295 +1862,10 @@ function App() {
             </div>
           )}
 
-          {/* 🔥 MODAL "MINHA AVALIAÇÃO" NO PORTAL DO ALUNO 🔥 */}
-          {modalAvaliacaoAluno && (
-            <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setModalAvaliacaoAluno(false)}>
-              <div className="w-full max-w-md bg-[#16171d] border border-neutral-800 rounded-3xl p-6 relative shadow-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-                <button onClick={() => setModalAvaliacaoAluno(false)} className="absolute top-4 right-4 text-neutral-500 hover:text-white font-bold">✕</button>
-
-                <div className="flex items-center gap-3 mb-6 border-b border-neutral-800 pb-4">
-                  <div className="w-10 h-10 bg-blue-500/10 border border-blue-500/20 rounded-full flex items-center justify-center text-xl">📊</div>
-                  <div>
-                    <h3 className="font-bold text-white uppercase text-sm tracking-tight">Sua Avaliação Física</h3>
-                    <p className="text-[10px] text-blue-400 font-mono uppercase">Histórico e Medidas</p>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  {/* Dados Básicos */}
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-3">Perfil Biométrico</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl">
-                        <p className="text-[9px] text-neutral-500 uppercase font-bold mb-1">Peso</p>
-                        <p className="text-sm font-bold text-white">{alunoLogado?.peso ? alunoLogado.peso : '--'} kg</p>
-                      </div>
-                      <div className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl">
-                        <p className="text-[9px] text-neutral-500 uppercase font-bold mb-1">Altura</p>
-                        <p className="text-sm font-bold text-white">{alunoLogado?.altura ? alunoLogado.altura : '--'} m</p>
-                      </div>
-                      <div className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl">
-                        <p className="text-[9px] text-neutral-500 uppercase font-bold mb-1">Idade</p>
-                        <p className="text-sm font-bold text-white">{alunoLogado?.idade ? alunoLogado.idade : '--'} anos</p>
-                      </div>
-                      <div className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl">
-                        <p className="text-[9px] text-neutral-500 uppercase font-bold mb-1">Gênero</p>
-                        <p className="text-sm font-bold text-white">{alunoLogado?.genero ? alunoLogado.genero : '--'}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Informações Extras */}
-                  <div className="bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl space-y-3">
-                    <div>
-                      <p className="text-[9px] text-neutral-500 uppercase font-bold">Nível de Treino</p>
-                      <p className="text-xs text-neutral-300 font-medium">{alunoLogado?.nivel ? alunoLogado.nivel : '--'}</p>
-                    </div>
-                    {alunoLogado?.restricoes && (
-                      <div>
-                        <p className="text-[9px] text-neutral-500 uppercase font-bold">Restrições Alimentares</p>
-                        <p className="text-xs text-neutral-300">{alunoLogado.restricoes}</p>
-                      </div>
-                    )}
-                    {alunoLogado?.lesoes && (
-                      <div>
-                        <p className="text-[9px] text-neutral-500 uppercase font-bold">Histórico de Lesões</p>
-                        <p className="text-xs text-neutral-300">{alunoLogado.lesoes}</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Perímetros Corporais e %Gordura */}
-                  {alunoLogado?.medidas && Object.keys(alunoLogado.medidas).length > 0 ? (
-                    <div className="mt-6">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400 mb-3 pt-2 border-t border-neutral-800">
-                        📏 Suas Medidas e Resultados
-                      </p>
-
-                      {alunoLogado.medidas.percentualGordura && (
-                        <div className="mb-3 bg-emerald-900/20 border border-emerald-500/20 rounded-xl p-3 flex justify-between items-center">
-                          <span className="text-[10px] font-bold uppercase text-emerald-500">Percentual de Gordura:</span>
-                          <span className="text-lg font-black text-white">{alunoLogado.medidas.percentualGordura}%</span>
-                        </div>
-                      )}
-
-                      <div className="grid grid-cols-2 gap-3">
-                        {Object.entries(alunoLogado.medidas).map(([key, value]) => {
-                          if (!value || value === "" || value === 0 || key === "_id" || key === "percentualGordura") return null;
-
-                          const labelFormatada = key
-                            .replace(/([A-Z])/g, ' $1')
-                            .replace(/^./, str => str.toUpperCase());
-
-                          return (
-                            <div key={key} className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl flex justify-between items-center">
-                              <span className="text-[9px] text-neutral-500 uppercase font-bold">{labelFormatada}</span>
-                              <span className="text-sm font-mono text-white font-bold">{value}cm</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-[10px] text-neutral-600 italic mt-4">Nenhuma medida cadastrada ainda.</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
+          {/* ✅ Renderiza o modal de avaliação para o Aluno */}
+          {modalAvaliacaoAluno && renderModalAvaliacao(alunoLogado, () => setModalAvaliacaoAluno(false))}
 
         </main>
-      </div>
-    );
-  }
-
-  if (etapa === "home") {
-    return (
-      <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col overflow-hidden font-sans z-30">
-        {abaAtiva === "home" && (
-          <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center">
-            <header className="w-full max-w-4xl flex justify-between items-center border-b border-neutral-800 pb-4 mb-6">
-              <div className="flex items-center space-x-3">
-                <img src="/logo192.png" alt="Ícone Treino Fit" className="w-8 h-8 rounded" />
-                <div>
-                  <h2 className="text-sm font-bold text-white uppercase tracking-tight">{perfil.nome}</h2>
-                  <p className="text-[10px] text-neutral-500 font-mono uppercase tracking-wider">Conta {isVip ? 'Premium Elite' : 'Free Tier'}</p>
-                </div>
-              </div>
-              <button type="button" onClick={() => !isVip && setBloqueado(true)} className={`px-3 py-1.5 rounded text-[10px] font-bold uppercase font-mono border ${isVip ? 'border-emerald-500/20 text-emerald-500 bg-emerald-500/5' : 'border-amber-500/20 text-amber-500 bg-amber-500/5 animate-pulse'}`}>{isVip ? "✓ Vip Ativado" : "Upgrade para Enterprise"}</button>
-            </header>
-
-            <main className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-6 items-start pb-10">
-              <div className="md:col-span-1 space-y-4">
-                <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl">
-                  <p className="text-neutral-500 text-[10px] font-bold uppercase tracking-wider mb-2">Composição Corporal</p>
-                  <div className="grid grid-cols-2 gap-3"><div className="bg-[#0d0e12] p-3 border border-neutral-850 rounded-lg"><span className="text-[9px] text-neutral-500 uppercase block">Massa Global</span><span className="text-2xl font-semibold text-white">{perfil.peso}<span className="text-xs text-neutral-500 font-normal ml-0.5">kg</span></span></div><div className="bg-[#0d0e12] p-3 border border-neutral-850 rounded-lg"><span className="text-[9px] text-neutral-500 uppercase block">Estatura</span><span className="text-2xl font-semibold text-white">{perfil.altura}<span className="text-xs text-neutral-500 font-normal ml-0.5">m</span></span></div></div>
-                  <div className="mt-3 text-[10px] text-neutral-400 font-mono flex justify-between border-t border-neutral-800/60 pt-2"><span>Planejamento:</span><span className="text-emerald-500 font-bold uppercase">{perfil.meta}</span></div>
-                </div>
-                <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl text-center"><p className="text-neutral-500 text-[10px] font-bold uppercase tracking-wider text-left mb-4">Meta Metabólica Diária</p><div className="inline-flex flex-col items-center justify-center p-6 border border-neutral-800 bg-[#0d0e12] rounded-full w-28 h-28 mx-auto mb-4 border-t-emerald-600"><span className="text-xl font-bold text-white">{perfil.tmb}</span><span className="text-[9px] font-mono text-neutral-500 uppercase">kcal/dia</span></div></div>
-              </div>
-
-              <div className="md:col-span-2 space-y-4">
-                <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl"><p className="text-emerald-500 text-[10px] font-bold uppercase tracking-wider font-mono mb-2">⚡ Diretriz Técnica Operacional</p><p className="text-xs font-medium text-neutral-300 leading-relaxed">"{perfil.nome}, seus parâmetros apontam foco em oxidação de gordura ativa. Otimize a ingestão proteinada."</p></div>
-                <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl space-y-3">
-                  <p className="text-neutral-500 text-[10px] font-bold uppercase tracking-wider mb-2">Terminais de Execução</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3"><button type="button" onClick={() => setAbaAtiva("chat")} className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 px-4 rounded-lg text-xs uppercase tracking-wider text-center transition-all shadow-lg">Abrir Chat IA & Consultoria</button><button type="button" onClick={() => setAbaAtiva("treino")} className="bg-transparent hover:bg-neutral-800 border border-neutral-800 text-neutral-200 font-bold py-3.5 px-4 rounded-lg text-xs uppercase tracking-wider text-center transition-all">Acessar Biblioteca de Treinos</button></div>
-                  <div className="text-center pt-3 border-t border-neutral-800/40"><button type="button" onClick={handleSair} className="text-[10px] font-mono uppercase text-neutral-600 hover:text-red-400 transition-colors">Encerrar sessão de dados</button></div>
-                </div>
-
-                {/* 🔥 BANNER HORTILIFE - DASHBOARD HOME 🔥 */}
-                <div className="bg-gradient-to-r from-[#16171d] to-emerald-900/10 border border-emerald-500/20 p-5 rounded-xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-500 mb-1">🛒 Mercado Saudável Oficial</p>
-                    <p className="text-xs font-medium text-neutral-300">A IA montou sua dieta? Peça os ingredientes agora mesmo e receba no conforto de casa.</p>
-                  </div>
-                  <a href="https://hortilife-praticidade.kyte.site/pt-BR" target="_blank" rel="noopener noreferrer" className="whitespace-nowrap bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-5 rounded-lg text-[10px] uppercase tracking-wider transition-colors shadow-lg">
-                    👉 Pedir na Hortilife
-                  </a>
-                </div>
-
-              </div>
-            </main>
-          </div>
-        )}
-
-        {abaAtiva === "chat" && (
-          <div className="flex-1 flex flex-col overflow-hidden"><header className="p-4 flex items-center justify-between border-b border-neutral-800 bg-[#16171d]"><button type="button" onClick={() => { setAbaAtiva("home"); atualizarStatusVIP(); }} className="text-emerald-500 font-bold text-[10px] uppercase font-mono flex items-center gap-2">← Voltar para o Dashboard</button><span className="text-[10px] font-mono uppercase text-neutral-500">Módulo Consultoria de Nutrição</span></header><ChatReceitas whatsapp={usuario} isVip={isVip} aoPedirUpgrade={() => setBloqueado(true)} perfil={perfil} setTreinoIAPescado={setTreinoIAPescado} aoAtualizarPerfil={atualizarStatusVIP} /></div>
-        )}
-
-        {abaAtiva === "treino" && (
-          <div className="flex-1 flex flex-col bg-[#0d0e12] p-6 overflow-y-auto">
-            <header className="w-full max-w-4xl mx-auto flex justify-between items-center border-b border-neutral-800 pb-4 mb-6"><button type="button" onClick={() => { setAbaAtiva("home"); atualizarStatusVIP(); }} className="text-emerald-500 font-bold text-[10px] uppercase font-mono flex items-center gap-2">← Retornar</button><span className="text-white font-bold uppercase text-xs tracking-wider">Módulo de Planilhas</span></header>
-            <div className="w-full max-w-4xl grid grid-cols-1 sm:grid-cols-2 gap-4 mx-auto"><button type="button" onClick={() => isVip ? setModalidadeAberta('ia') : setBloqueado(true)} className="bg-[#16171d] hover:bg-[#1e2029] border border-neutral-800 p-6 rounded-xl flex items-center justify-between transition-all text-left"><div><p className="font-bold uppercase text-sm text-white">Treino Inteligência Artificial</p><p className="text-[9px] text-neutral-500 font-mono mt-0.5 uppercase tracking-wider">{!isVip ? "Status: Bloqueado corporativo" : "Acesso Elite Ativado"}</p></div><span className="text-xl">🤖</span></button><button type="button" onClick={() => setModalidadeAberta('academia')} className="bg-[#16171d] hover:bg-[#1e2029] border border-neutral-800 p-6 rounded-xl flex items-center justify-between transition-all text-left"><div><p className="font-bold uppercase text-sm text-white">Metodologia Tradicional (ABC)</p><p className="text-[9px] text-neutral-500 font-mono mt-0.5 uppercase tracking-wider">Acesso Livre</p></div><span className="text-xl">🏋️‍♂️</span></button></div>
-            {modalidadeAberta && <ListaExercicios modalidade={modalidadeAberta} whatsapp={usuario} API_URL={API_URL} perfil={perfil} treinoIA={treinoIAPescado} aoFechar={() => { setModalidadeAberta(null); atualizarStatusVIP(); }} />}
-          </div>
-        )}
-
-        {bloqueado && <div className="fixed inset-0 z-[500] bg-[#0d0e12]/95 backdrop-blur-sm flex flex-col items-center p-6 overflow-y-auto"><button type="button" onClick={() => { setBloqueado(false); atualizarStatusVIP(); }} className="absolute top-6 right-6 text-neutral-400 hover:text-white bg-neutral-900 border border-neutral-800 w-8 h-8 rounded flex items-center justify-center text-xs">✕</button><TelaPlanos /></div>}
-      </div>
-    );
-  }
-
-  if (etapa === "matricula_externa") {
-    return (
-      <div className="fixed inset-0 bg-[#0d0e12] flex flex-col items-center justify-center p-6 text-white font-sans z-50 overflow-y-auto">
-        <div className="w-full max-w-md bg-[#16171d] border border-neutral-800 p-8 rounded-2xl shadow-2xl my-auto">
-          <div className="text-center mb-6"><span className="text-4xl mb-3 block">🤖</span><h2 className="text-lg font-bold uppercase tracking-tight text-emerald-500">Auto-Avaliação IA</h2><p className="text-neutral-400 text-[11px] mt-2">Preencha sua biometria para a Inteligência Artificial estruturar a base do seu treino e dieta.</p></div>
-          <form onSubmit={async (e) => {
-            e.preventDefault();
-            setEtapa("verificando");
-            try {
-              const urlParams = new URLSearchParams(window.location.search);
-              const refPersonal = urlParams.get('ref');
-
-              const payload = {
-                ...perfil,
-                nome: perfil.nome,
-                peso: parseNumeroSeguro(perfil.peso),
-                altura: parseNumeroSeguro(perfil.altura),
-                idade: parseInt(perfil.idade) || 0,
-                whatsapp: novoAlunoForm.whatsapp,
-                objetivo: perfil.meta,
-                meta: perfil.meta,
-                genero: perfil.genero,
-                nivel: perfil.nivel,
-                diasTreino: perfil.diasTreino,
-                restricoes: perfil.restricoes,
-                lesoes: perfil.lesoes,
-                personalRef: refPersonal
-              };
-
-              const res = await fetch(`${API_URL}/aluno/matricula-ia`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-              if (res.ok) { alert("🎉 Análise concluída! Sua ficha já está na mesa do Personal."); window.location.href = window.location.origin; }
-              else { const data = await res.json(); alert(data.mensagem || "Erro na análise."); setEtapa("matricula_externa"); }
-            } catch { alert("Erro de conexão."); setEtapa("matricula_externa"); }
-          }} className="space-y-4">
-            <input required type="text" placeholder="Nome Completo" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, nome: e.target.value })} />
-            <input required type="text" placeholder="WhatsApp (Apenas Números)" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setNovoAlunoForm({ ...novoAlunoForm, whatsapp: e.target.value })} />
-
-            <div className="grid grid-cols-3 gap-3">
-              <input required type="text" placeholder="Peso (kg)" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, peso: e.target.value })} />
-              <input required type="text" placeholder="Altura (m)" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, altura: e.target.value })} />
-              <input required type="number" placeholder="Idade" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, idade: e.target.value })} />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none text-neutral-400 focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, genero: e.target.value })}>
-                <option value="">Gênero Biológico</option><option value="Masculino">Masculino</option><option value="Feminino">Feminino</option>
-              </select>
-              <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none text-neutral-400 focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, meta: e.target.value })}>
-                <option value="">Objetivo Principal</option><option value="Emagrecimento">Emagrecimento</option><option value="Hipertrofia">Hipertrofia</option><option value="Performance">Performance</option>
-              </select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none text-neutral-400 focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, nivel: e.target.value })}>
-                <option value="">Nível de Treino</option><option value="Iniciante">Iniciante</option><option value="Intermediário">Intermediário</option><option value="Avançado">Avançado</option>
-              </select>
-              <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none text-neutral-400 focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, diasTreino: e.target.value })}>
-                <option value="">Dias de Treino/Semana</option><option value="3">3 Dias</option><option value="4">4 Dias</option><option value="5">5 Dias</option><option value="6">6 Dias</option>
-              </select>
-            </div>
-
-            <input type="text" placeholder="Restrições Alimentares?" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, restricoes: e.target.value })} />
-            <input type="text" placeholder="Lesões ou Dores?" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm outline-none focus:border-neutral-700" onChange={e => setPerfil({ ...perfil, lesoes: e.target.value })} />
-
-            <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-xl uppercase tracking-wider font-bold text-xs shadow-lg mt-4 transition-all">⚡ Gerar Diagnóstico com IA</button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
-  if (etapa === "onboarding") {
-    return (
-      <div className="fixed inset-0 bg-[#0d0e12] flex flex-col items-center justify-center p-8 text-white z-50 overflow-y-auto font-sans">
-        <div className="w-full max-w-sm bg-[#16171d] border border-neutral-800 p-8 rounded-2xl shadow-2xl my-auto">
-          <h2 className="text-md font-bold mb-1 uppercase tracking-tight text-neutral-200">Parâmetros Iniciais</h2><p className="text-neutral-500 text-xs mb-5">Monte seu perfil para a Inteligência Artificial.</p>
-          <form onSubmit={salvarOnboarding} className="space-y-4">
-
-            <div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Nome Completo</label><input required type="text" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.nome} onChange={(e) => setPerfil({ ...perfil, nome: e.target.value })} /></div>
-
-            <div className="grid grid-cols-3 gap-3">
-              <div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Peso(kg)</label><input required type="text" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.peso} onChange={(e) => setPerfil({ ...perfil, peso: e.target.value })} /></div>
-              <div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Altura(m)</label><input required type="text" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.altura} onChange={(e) => setPerfil({ ...perfil, altura: e.target.value })} /></div>
-              <div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Idade</label><input required type="number" className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.idade} onChange={(e) => setPerfil({ ...perfil, idade: e.target.value })} /></div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Gênero</label>
-                <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.genero} onChange={(e) => setPerfil({ ...perfil, genero: e.target.value })}>
-                  <option value="Masculino">Masculino</option><option value="Feminino">Feminino</option>
-                </select>
-              </div>
-              <div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Objetivo</label>
-                <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.meta} onChange={(e) => setPerfil({ ...perfil, meta: e.target.value })}>
-                  <option value="Emagrecimento">Emagrecimento</option><option value="Hipertrofia">Hipertrofia</option><option value="Performance">Performance</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Nível</label>
-                <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.nivel} onChange={(e) => setPerfil({ ...perfil, nivel: e.target.value })}>
-                  <option value="Iniciante">Iniciante</option><option value="Intermediário">Intermediário</option><option value="Avançado">Avançado</option>
-                </select>
-              </div>
-              <div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Dias Treino</label>
-                <select required className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.diasTreino} onChange={(e) => setPerfil({ ...perfil, diasTreino: e.target.value })}>
-                  <option value="3">3 Dias</option><option value="4">4 Dias</option><option value="5">5 Dias</option><option value="6">6 Dias</option>
-                </select>
-              </div>
-            </div>
-
-            <div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Restrições Alimentares?</label><input type="text" placeholder="Ex: Vegano, Sem Lactose..." className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.restricoes} onChange={(e) => setPerfil({ ...perfil, restricoes: e.target.value })} /></div>
-            <div><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">Lesões ou Dores?</label><input type="text" placeholder="Ex: Dor no Joelho, Lombar..." className="w-full bg-[#0d0e12] border border-neutral-800 p-3.5 rounded-xl text-sm font-medium outline-none text-white focus:border-neutral-700" value={perfil.lesoes} onChange={(e) => setPerfil({ ...perfil, lesoes: e.target.value })} /></div>
-
-            <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-xl uppercase tracking-wider font-bold text-xs transition-colors shadow-lg mt-2">Salvar e Entrar</button>
-
-            <button type="button" onClick={() => setEtapa("triagem")} className="w-full bg-transparent border border-neutral-800 hover:bg-neutral-800 text-neutral-400 p-4 rounded-xl uppercase tracking-wider font-bold text-xs transition-colors mt-2">Voltar</button>
-          </form>
-        </div>
       </div>
     );
   }
