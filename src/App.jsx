@@ -1,3 +1,4 @@
+import html2canvas from 'html2canvas';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { jwtDecode } from "jwt-decode";
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -1711,16 +1712,47 @@ function App() {
 
                                 <button type="button" onClick={async () => {
                                     try {
-                                        if (navigator.share) {
-                                            await navigator.share({
-                                                title: 'Treino Concluído!',
-                                                text: `Mais um treino pago no Treino Fit! Intensidade: ${dadosShare.intensidade.split(" ")[0]}. Treinador: ${dadosShare.nomePersonal}. Bora! 💪`,
-                                            });
-                                        } else {
-                                            alert("Tire um print desta tela e poste no seu Instagram marcando seu personal! 📸");
-                                        }
+                                        // 1. Pegamos o card na tela
+                                        const cardElement = document.getElementById('instagram-card');
+                                        if (!cardElement) return;
+
+                                        // 2. Transformamos o HTML em uma imagem estática nos bastidores
+                                        const canvas = await html2canvas(cardElement, {
+                                            backgroundColor: '#0d0e12',
+                                            scale: 2, // Aumenta a qualidade para ficar nítido no Instagram
+                                            useCORS: true // Permite carregar imagens externas se precisar
+                                        });
+
+                                        // 3. Transformamos o canvas em um arquivo (Blob)
+                                        canvas.toBlob(async (blob) => {
+                                            if (!blob) return alert("Erro ao gerar imagem.");
+
+                                            const file = new File([blob], 'meu-treino-treino-fit.png', { type: 'image/png' });
+
+                                            // 4. Verificamos se o celular suporta compartilhar arquivos (Imagens)
+                                            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                                                await navigator.share({
+                                                    files: [file], // AQUI ESTÁ A MÁGICA! Enviamos a imagem.
+                                                    title: 'Treino Concluído!',
+                                                    text: `Mais um treino pago! 💪 Treinador: ${dadosShare.nomePersonal}`
+                                                });
+                                            } else {
+                                                // Fallback: Se o navegador (ex: PC desktop) não suporta compartilhar arquivos, baixa a imagem direto!
+                                                const url = URL.createObjectURL(blob);
+                                                const a = document.createElement('a');
+                                                a.href = url;
+                                                a.download = 'treino-pago-treinofit.png';
+                                                document.body.appendChild(a);
+                                                a.click();
+                                                document.body.removeChild(a);
+                                                URL.revokeObjectURL(url);
+                                                alert("Imagem salva na sua galeria! Agora é só postar nos Stories 📸");
+                                            }
+                                        }, 'image/png');
+
                                     } catch (err) {
-                                        console.log("Erro ao compartilhar", err);
+                                        console.error("Erro ao gerar/compartilhar imagem", err);
+                                        alert("Erro ao preparar a imagem para o Instagram.");
                                     }
                                 }} className="w-full bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white font-bold py-4 rounded-xl text-xs uppercase tracking-widest transition-all shadow-[0_10px_20px_rgba(16,185,129,0.3)] flex items-center justify-center gap-2">
                                     <span>📸 Compartilhar no Insta</span>
