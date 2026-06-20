@@ -1,4 +1,4 @@
-import html2canvas from 'html2canvas';
+import { toBlob } from 'html-to-image';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { jwtDecode } from "jwt-decode";
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -1440,7 +1440,7 @@ function App() {
                     </div>
                 )}
 
-                {/* ✅ AQUI RENDERIZA A AVALIAÇÃO NO PAINEL DO PERSONAL */}
+                {/* ✅ AQUI RENDERIZA A AVALIAÇÃO NO PAINEL DO PERSONAL E DO ALUNO */}
                 {alunoVerAvaliacao && renderModalAvaliacao(alunoVerAvaliacao, () => setAlunoVerAvaliacao(null))}
 
             </div>
@@ -1716,39 +1716,35 @@ function App() {
                                         const cardElement = document.getElementById('instagram-card');
                                         if (!cardElement) return;
 
-                                        // 2. Transformamos o HTML em uma imagem estática nos bastidores
-                                        const canvas = await html2canvas(cardElement, {
+                                        // Usando html-to-image para evitar o erro do "oklch" (CSS moderno)
+                                        const blob = await toBlob(cardElement, {
                                             backgroundColor: '#0d0e12',
-                                            scale: 2, // Aumenta a qualidade para ficar nítido no Instagram
-                                            useCORS: true // Permite carregar imagens externas se precisar
+                                            pixelRatio: 2 // Alta qualidade para o Instagram
                                         });
 
-                                        // 3. Transformamos o canvas em um arquivo (Blob)
-                                        canvas.toBlob(async (blob) => {
-                                            if (!blob) return alert("Erro ao gerar imagem.");
+                                        if (!blob) return alert("Erro ao gerar imagem.");
 
-                                            const file = new File([blob], 'meu-treino-treino-fit.png', { type: 'image/png' });
+                                        const file = new File([blob], 'meu-treino-treino-fit.png', { type: 'image/png' });
 
-                                            // 4. Verificamos se o celular suporta compartilhar arquivos (Imagens)
-                                            if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                                                await navigator.share({
-                                                    files: [file], // AQUI ESTÁ A MÁGICA! Enviamos a imagem.
-                                                    title: 'Treino Concluído!',
-                                                    text: `Mais um treino pago! 💪 Treinador: ${dadosShare.nomePersonal}`
-                                                });
-                                            } else {
-                                                // Fallback: Se o navegador (ex: PC desktop) não suporta compartilhar arquivos, baixa a imagem direto!
-                                                const url = URL.createObjectURL(blob);
-                                                const a = document.createElement('a');
-                                                a.href = url;
-                                                a.download = 'treino-pago-treinofit.png';
-                                                document.body.appendChild(a);
-                                                a.click();
-                                                document.body.removeChild(a);
-                                                URL.revokeObjectURL(url);
-                                                alert("Imagem salva na sua galeria! Agora é só postar nos Stories 📸");
-                                            }
-                                        }, 'image/png');
+                                        // 4. Verificamos se o celular suporta compartilhar arquivos (Imagens)
+                                        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                                            await navigator.share({
+                                                files: [file], // AQUI ESTÁ A MÁGICA! Enviamos a imagem.
+                                                title: 'Treino Concluído!',
+                                                text: `Mais um treino pago! 💪 Treinador: ${dadosShare.nomePersonal}`
+                                            });
+                                        } else {
+                                            // Fallback: Se o navegador (ex: PC desktop) não suporta compartilhar arquivos, baixa a imagem direto!
+                                            const url = URL.createObjectURL(blob);
+                                            const a = document.createElement('a');
+                                            a.href = url;
+                                            a.download = 'treino-pago-treinofit.png';
+                                            document.body.appendChild(a);
+                                            a.click();
+                                            document.body.removeChild(a);
+                                            URL.revokeObjectURL(url);
+                                            alert("Imagem salva na sua galeria! Agora é só postar nos Stories 📸");
+                                        }
 
                                     } catch (err) {
                                         console.error("Erro ao gerar/compartilhar imagem", err);
