@@ -7,6 +7,7 @@ import ChatReceitas from "./pages/ChatReceitas";
 import Login from "./components/Login";
 import TelaPlanos from "./components/TelaPlanos";
 
+// eslint-disable-next-line no-unused-vars
 import { abrirExercicioVisual } from "./components/visual";
 
 const DIAS_SEMANA = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
@@ -42,7 +43,10 @@ function App() {
     const [alunosPersonal, setAlunosPersonal] = useState([]);
 
     const [alunoEmEdicao, setAlunoEmEdicao] = useState(null);
+
+    // eslint-disable-next-line no-unused-vars
     const [modalGifAberto, setModalGifAberto] = useState(null);
+
     const [alunoEditandoPerfil, setAlunoEditandoPerfil] = useState(null);
 
     // eslint-disable-next-line no-unused-vars
@@ -112,6 +116,7 @@ function App() {
         return () => clearInterval(intervalo);
     }, [timerAtivo, timerDescanso]);
 
+    // eslint-disable-next-line no-unused-vars
     const marcarSerie = (exIndex, numSerie, totalSeries) => {
         const chaveSerie = `${diaAbaAluno}-${exIndex}-s${numSerie}`;
         const chaveUnicaExercicio = `${diaAbaAluno}-${exIndex}`;
@@ -139,6 +144,7 @@ function App() {
         }
     };
 
+    // eslint-disable-next-line no-unused-vars
     const alternarConclusaoExercicio = (chaveUnicaExercicio) => {
         if (exerciciosConcluidos.includes(chaveUnicaExercicio)) {
             setExerciciosConcluidos(exerciciosConcluidos.filter(id => id !== chaveUnicaExercicio));
@@ -267,6 +273,33 @@ function App() {
             }
         }
     }, [etapa, sincronizarComBanco]);
+
+
+    // =========================================================================
+    // 💡 LÓGICA DO RADAR DE RETENÇÃO (CÁLCULO DE DIAS SEM TREINO)
+    // =========================================================================
+    const calcularDiasSemTreino = (checkins) => {
+        if (!checkins || checkins.length === 0) return Infinity;
+        const ultimoCheckinStr = checkins[0].data; // Formato "DD/MM"
+        const [dia, mes] = ultimoCheckinStr.split('/');
+        const hoje = new Date();
+        const dataUltimoCheckin = new Date(hoje.getFullYear(), parseInt(mes) - 1, parseInt(dia));
+
+        if (dataUltimoCheckin > hoje) dataUltimoCheckin.setFullYear(hoje.getFullYear() - 1);
+
+        hoje.setHours(0, 0, 0, 0);
+        dataUltimoCheckin.setHours(0, 0, 0, 0);
+        return Math.round((hoje - dataUltimoCheckin) / (1000 * 60 * 60 * 24));
+    };
+
+    const enviarZapRetencao = (aluno, dias) => {
+        const primeiroNome = aluno.nome.split(' ')[0];
+        let diasTexto = dias === Infinity ? "ainda não registrou nenhum treino no app" : `não treina há ${dias} dias`;
+        const mensagem = `Fala ${primeiroNome}, vi no Treino Fit que você ${diasTexto}. Aconteceu algo? Bora voltar pro foco! 💪🔥`;
+        const zap = String(aluno.whatsapp).replace(/\D/g, '');
+        const url = `https://wa.me/55${zap}?text=${encodeURIComponent(mensagem)}`;
+        window.open(url, '_blank');
+    };
 
     // =========================================================================
     // 4. FUNÇÕES GERAIS E DO PERSONAL
@@ -1063,10 +1096,11 @@ function App() {
                     <div className="md:col-span-1 flex flex-col gap-6">
                         <div className="bg-[#16171d] border border-neutral-800 rounded-xl p-5 shadow-xl">
                             <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-4">Métricas da Assessoria</h3>
-                            <div className="grid grid-cols-3 gap-2 text-center">
-                                <div className="p-3 bg-[#0d0e12] border border-neutral-800 rounded-lg"><p className="text-xl font-semibold text-white">{alunosPersonal.length}</p><p className="text-[9px] uppercase tracking-wide text-neutral-500 mt-1">Alunos</p></div>
-                                <div className="p-3 bg-[#0d0e12] border border-neutral-800 rounded-lg"><p className="text-xl font-semibold text-amber-500">{alunosPersonal.filter(a => a.statusTreino === "Rascunho IA").length}</p><p className="text-[9px] uppercase tracking-wide text-neutral-500 mt-1">Alertas IA</p></div>
-                                <div className="p-3 bg-[#0d0e12] border border-neutral-800 rounded-lg"><p className="text-xl font-semibold text-neutral-400">{alunosPersonal.filter(a => a.statusConta === "Off").length}</p><p className="text-[9px] uppercase tracking-wide text-neutral-500 mt-1">Inativos</p></div>
+                            <div className="grid grid-cols-4 gap-2 text-center">
+                                <div className="p-3 bg-[#0d0e12] border border-neutral-800 rounded-lg flex flex-col justify-center"><p className="text-lg font-semibold text-white">{alunosPersonal.length}</p><p className="text-[8px] uppercase tracking-wide text-neutral-500 mt-1">Alunos</p></div>
+                                <div className="p-3 bg-[#0d0e12] border border-neutral-800 rounded-lg flex flex-col justify-center"><p className="text-lg font-semibold text-amber-500">{alunosPersonal.filter(a => a.statusTreino === "Rascunho IA").length}</p><p className="text-[8px] uppercase tracking-wide text-neutral-500 mt-1">Alertas IA</p></div>
+                                <div className="p-3 bg-[#0d0e12] border border-red-900/30 rounded-lg flex flex-col justify-center"><p className="text-lg font-semibold text-red-500">{alunosPersonal.filter(a => calcularDiasSemTreino(a.checkins) >= 5 && a.statusConta !== 'Off').length}</p><p className="text-[8px] uppercase tracking-wide text-red-400 mt-1">Em Risco</p></div>
+                                <div className="p-3 bg-[#0d0e12] border border-neutral-800 rounded-lg flex flex-col justify-center"><p className="text-lg font-semibold text-neutral-400">{alunosPersonal.filter(a => a.statusConta === "Off").length}</p><p className="text-[8px] uppercase tracking-wide text-neutral-500 mt-1">Inativos</p></div>
                             </div>
                             {!personalLogado?.assinaturaAtiva && (
                                 <div className="mt-4 bg-emerald-500/5 border border-emerald-500/20 p-3 rounded-xl text-center">
@@ -1114,13 +1148,35 @@ function App() {
                             <table className="w-full text-left border-collapse min-w-[600px]">
                                 <thead>
                                     <tr className="border-b border-neutral-800 text-[10px] uppercase text-neutral-500 tracking-wider">
-                                        <th className="pb-3 font-semibold">Nome do Aluno</th><th className="pb-3 font-semibold">Objetivo</th><th className="pb-3 font-semibold">Status Planilha</th><th className="pb-3 font-semibold">Último Treino</th><th className="pb-3 font-semibold text-right">Ações Gerenciais</th>
+                                        <th className="pb-3 font-semibold">Nome do Aluno</th><th className="pb-3 font-semibold">Objetivo</th><th className="pb-3 font-semibold">Status Planilha</th><th className="pb-3 font-semibold">Último Treino</th><th className="pb-3 font-semibold">Radar</th><th className="pb-3 font-semibold text-right">Ações Gerenciais</th>
                                     </tr>
                                 </thead>
                                 <tbody className="text-xs divide-y divide-neutral-800/40">
                                     {alunosPersonal.map((aluno) => {
                                         const idUnico = aluno.id || aluno._id;
                                         const checkinDeHoje = aluno.checkins?.find(c => c.data === hojeDataStr);
+
+                                        const diasSemTreino = calcularDiasSemTreino(aluno.checkins);
+                                        let corFarol = "bg-neutral-800 text-neutral-400 border-neutral-700";
+                                        let iconeFarol = "⚪";
+                                        let textoFarol = "Novo";
+
+                                        if (diasSemTreino !== Infinity) {
+                                            if (diasSemTreino < 3) {
+                                                corFarol = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+                                                iconeFarol = "🟢";
+                                                textoFarol = "Em dia";
+                                            } else if (diasSemTreino >= 3 && diasSemTreino < 5) {
+                                                corFarol = "bg-amber-500/10 text-amber-400 border-amber-500/20";
+                                                iconeFarol = "🟡";
+                                                textoFarol = "Atenção";
+                                            } else {
+                                                corFarol = "bg-red-500/10 text-red-400 border-red-500/20";
+                                                iconeFarol = "🔴";
+                                                textoFarol = "Risco";
+                                            }
+                                        }
+
                                         return (
                                             <tr key={idUnico} className={`hover:bg-neutral-800/20 transition-colors ${aluno.statusConta === 'Off' ? 'opacity-40' : ''}`}>
                                                 <td className="py-3.5 font-medium text-white">
@@ -1143,6 +1199,18 @@ function App() {
                                                     ) : (
                                                         <span className="text-[10px] text-neutral-600 font-mono">Nenhum treino</span>
                                                     )}
+                                                </td>
+                                                <td className="py-3.5">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className={`px-2 py-1 rounded text-[9px] font-bold uppercase border flex items-center gap-1 ${corFarol}`}>
+                                                            {iconeFarol} {textoFarol}
+                                                        </span>
+                                                        {(diasSemTreino >= 3 || diasSemTreino === Infinity) && aluno.statusConta !== 'Off' && (
+                                                            <button type="button" onClick={() => enviarZapRetencao(aluno, diasSemTreino)} className="text-[#25D366] hover:scale-110 transition-transform flex-shrink-0" title="Chamar no WhatsApp">
+                                                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.305-.885-.653-1.482-1.46-1.656-1.758-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" /></svg>
+                                                            </button>
+                                                        )}
+                                                    </div>
                                                 </td>
                                                 <td className="py-3.5 text-right space-x-2">
                                                     <button type="button" onClick={() => setAlunoVerAvaliacao(aluno)} className="bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase mr-1">Avaliação</button>
@@ -1177,6 +1245,28 @@ function App() {
                             {alunosPersonal.map((aluno) => {
                                 const idUnico = aluno.id || aluno._id;
                                 const checkinDeHoje = aluno.checkins?.find(c => c.data === hojeDataStr);
+
+                                const diasSemTreino = calcularDiasSemTreino(aluno.checkins);
+                                let corFarol = "bg-neutral-800 text-neutral-400 border-neutral-700";
+                                let iconeFarol = "⚪";
+                                let textoFarol = "Novo";
+
+                                if (diasSemTreino !== Infinity) {
+                                    if (diasSemTreino < 3) {
+                                        corFarol = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+                                        iconeFarol = "🟢";
+                                        textoFarol = "Em dia";
+                                    } else if (diasSemTreino >= 3 && diasSemTreino < 5) {
+                                        corFarol = "bg-amber-500/10 text-amber-400 border-amber-500/20";
+                                        iconeFarol = "🟡";
+                                        textoFarol = "Atenção";
+                                    } else {
+                                        corFarol = "bg-red-500/10 text-red-400 border-red-500/20";
+                                        iconeFarol = "🔴";
+                                        textoFarol = "Risco";
+                                    }
+                                }
+
                                 return (
                                     <div key={idUnico} className={`bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl flex flex-col space-y-3 ${aluno.statusConta === 'Off' ? 'opacity-50' : ''}`}>
                                         <div className="flex justify-between items-start">
@@ -1210,6 +1300,19 @@ function App() {
                                                     <span className="text-[10px] text-neutral-600 font-mono">Nenhum</span>
                                                 )}
                                             </div>
+                                        </div>
+
+                                        <div className="bg-[#16171d] p-2.5 rounded-lg border border-neutral-800/50 mt-1 flex justify-between items-center">
+                                            <div className="flex items-center gap-2">
+                                                <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase border flex items-center gap-1 ${corFarol}`}>
+                                                    {iconeFarol} {textoFarol}
+                                                </span>
+                                            </div>
+                                            {(diasSemTreino >= 3 || diasSemTreino === Infinity) && aluno.statusConta !== 'Off' && (
+                                                <button type="button" onClick={() => enviarZapRetencao(aluno, diasSemTreino)} className="flex items-center gap-1 bg-[#25D366]/10 text-[#25D366] px-2 py-1 rounded text-[9px] font-bold uppercase transition-all hover:bg-[#25D366]/20">
+                                                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.305-.885-.653-1.482-1.46-1.656-1.758-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" /></svg> Resgatar
+                                                </button>
+                                            )}
                                         </div>
 
                                         <div className="pt-1 flex flex-wrap gap-2">
