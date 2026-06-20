@@ -195,6 +195,8 @@ function App() {
         if (!usuario) return;
         try {
             const whatsLimpo = String(usuario).replace(/\D/g, "");
+            if (!whatsLimpo) return; // Segurança contra chamadas vazias
+
             const response = await fetch(`${API_URL}/usuarios/${whatsLimpo}`);
             if (response.ok) {
                 const dados = await response.json();
@@ -213,6 +215,13 @@ function App() {
         try {
             verificandoRef.current = true;
             const whatsLimpo = String(whatsappId).replace(/\D/g, "");
+
+            // ✅ PROTEÇÃO: Se não tiver ID válido, barra o 404 e vai pra triagem.
+            if (!whatsLimpo) {
+                setEtapa("triagem");
+                return;
+            }
+
             const response = await fetch(`${API_URL}/usuarios/${whatsLimpo}`);
             if (response.ok) {
                 const dados = await response.json();
@@ -1430,297 +1439,299 @@ function App() {
                     </div>
                 )}
 
-                {/* ✅ AQUI RENDERIZA A AVALIAÇÃO NO PAINEL DO PERSONAL E DO ALUNO */}
+                {/* ✅ AQUI RENDERIZA A AVALIAÇÃO NO PAINEL DO PERSONAL */}
                 {alunoVerAvaliacao && renderModalAvaliacao(alunoVerAvaliacao, () => setAlunoVerAvaliacao(null))}
 
-                {/* ✅ PAINEL DO ALUNO COMEÇA AQUI - TODAS AS VARIÁVEIS SÃO CHAMADAS AQUI */}
-                {etapa === "aluno" && (
-                    <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col p-6 overflow-y-auto font-sans z-40">
-                        <header className="w-full max-w-md mx-auto flex justify-between items-center border-b border-neutral-800 pb-4 mb-6">
-                            <div>
-                                <p className="text-[9px] text-blue-400 font-mono font-bold uppercase tracking-wider">Consultoria Privada Treino Fit</p>
-                                <h2 className="text-md font-bold text-white uppercase tracking-tight">{alunoLogado?.nome}</h2>
-                                <p className="text-[10px] text-neutral-500 font-mono mt-0.5">Objetivo: {alunoLogado?.objetivo}</p>
-                            </div>
-                            <div className="flex gap-2">
-                                <button type="button" onClick={() => setModalAvaliacaoAluno(true)} className="px-3 py-1.5 bg-blue-600/10 border border-blue-500/20 text-blue-400 hover:bg-blue-600/20 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors flex items-center gap-1">
-                                    📋 Avaliação
-                                </button>
-                                <button type="button" onClick={() => { setEtapa("triagem"); setAlunoLogado(null); }} className="px-3 py-1.5 bg-red-500 border border-neutral-800 rounded-md text-[10px] font-bold uppercase tracking-wider text-neutral-50 transition-all duration-200 hover:bg-red-600 hover:scale-105 hover:cursor-pointer">
-                                    Sair
-                                </button>
-                            </div>
-                        </header>
+            </div>
+        );
+    }
 
-                        <main className="w-full max-w-md mx-auto flex-1 space-y-6 pb-10">
-                            <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl flex items-center justify-between">
-                                <div><p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Check-ins Validados</p><h3 className="text-3xl font-bold text-white mt-1">{alunoLogado?.checkins?.length || 0}</h3></div>
-                                <button type="button" onClick={iniciarCheckin} className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-3 rounded-lg text-xs uppercase tracking-wider transition-colors shadow-lg">Confirmar Treino Hoje</button>
-                            </div>
-
-                            {alunoLogado?.checkins?.[0]?.respostaPersonal && (
-                                <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl shadow-xl mt-4">
-                                    <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 mb-1">💬 Mensagem do seu Treinador</p>
-                                    <p className="text-xs text-neutral-300 italic">"{alunoLogado.checkins[0].respostaPersonal}"</p>
-                                </div>
-                            )}
-
-                            {alunoLogado?.metaAgua && (
-                                <div className="bg-blue-600/10 border border-blue-500/20 p-5 rounded-xl shadow-xl flex items-center justify-between">
-                                    <div><p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">💧 Hidratação Diária</p><h3 className="text-xl font-bold text-white mt-1">{alunoLogado.metaAgua}</h3></div>
-                                    <span className="text-3xl">🚰</span>
-                                </div>
-                            )}
-
-                            {alunoLogado?.dietaPrescrita && alunoLogado.dietaPrescrita.length > 0 && (
-                                <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl space-y-3">
-                                    <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400 mb-2">🍽️ Seu Plano Alimentar</p>
-                                    <div className="space-y-2">
-                                        {alunoLogado.dietaPrescrita.map((ref, idx) => (
-                                            <div key={idx} className="bg-[#0d0e12] border border-neutral-850 p-3 rounded-lg">
-                                                <p className="text-[11px] font-bold text-white tracking-tight uppercase mb-1">{ref.refeicao}</p>
-                                                <p className="text-[10px] text-neutral-400">{ref.itens}</p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="mt-4 bg-gradient-to-r from-emerald-900/20 to-blue-900/20 border border-emerald-500/20 p-4 rounded-xl text-center">
-                                        <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-400 mb-1">🛒 Facilite sua Dieta!</p>
-                                        <p className="text-[10px] text-neutral-300 mb-3">Peça as carnes, frutas e verduras do seu plano sem sair de casa.</p>
-                                        <a href="https://hortilife-praticidade.kyte.site/pt-BR" target="_blank" rel="noopener noreferrer" className="inline-block w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-lg text-[10px] uppercase tracking-wider transition-colors shadow-lg">
-                                            👉 Pedir na Hortilife
-                                        </a>
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="space-y-3">
-                                <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 mb-2">Calendário de Treinos Semanal</p>
-                                <div className="flex gap-1.5 overflow-x-auto pb-2 scrollbar-none">
-                                    {DIAS_SEMANA.map((dia) => {
-                                        const diaAtualSistema = new Date().toLocaleDateString("pt-BR", { weekday: 'long' });
-                                        const ehHoje = diaAtualSistema.toLowerCase().includes(dia.toLowerCase().slice(0, 4));
-                                        const ativo = diaAbaAluno === dia;
-                                        return (
-                                            <button
-                                                key={dia}
-                                                type="button"
-                                                onClick={() => setDiaAbaAluno(dia)}
-                                                className={`px-3 py-2 rounded-lg text-[11px] font-bold uppercase transition-all flex-shrink-0 border ${ativo
-                                                    ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-600/10'
-                                                    : ehHoje
-                                                        ? 'bg-neutral-900 border-blue-500/40 text-blue-400'
-                                                        : 'bg-[#16171d] border-neutral-800 text-neutral-400 hover:bg-neutral-800'
-                                                    }`}
-                                            >
-                                                {dia.slice(0, 3)} {ehHoje && "•"}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-
-                                {(() => {
-                                    const rotinaDoDia = alunoLogado?.treinoSemanal?.find(t => t.dia === diaAbaAluno);
-                                    if (!rotinaDoDia || !rotinaDoDia.exercicios || rotinaDoDia.exercicios.length === 0) {
-                                        return (
-                                            <div className="bg-[#16171d] border border-neutral-800 p-8 rounded-xl text-center shadow-xl">
-                                                <p className="text-xs text-neutral-500 font-semibold uppercase font-mono">Nenhum treino para {diaAbaAluno}. Descanso! 🧘‍♂️</p>
-                                            </div>
-                                        );
-                                    }
-
-                                    return rotinaDoDia.exercicios.map((ex, i) => {
-                                        const chaveUnicaExercicio = `${diaAbaAluno}-${i}`;
-                                        const estaconcluido = exerciciosConcluidos.includes(chaveUnicaExercicio);
-                                        const todasSeriesFeitas = Array.from({ length: ex.series || 0 }).every((_, sIdx) => seriesFeitas[`${diaAbaAluno}-${i}-s${sIdx + 1}`]);
-
-                                        return (
-                                            <div key={i} className={`bg-[#16171d] border transition-all rounded-xl overflow-hidden shadow-xl ${estaconcluido || todasSeriesFeitas ? 'border-emerald-500/30 opacity-80' : 'border-neutral-800'}`}>
-                                                <div className="p-5 flex items-start justify-between gap-4">
-                                                    <div className="flex-1">
-                                                        <h4 className={`font-bold uppercase text-base tracking-tight text-white ${estaconcluido || todasSeriesFeitas ? 'text-emerald-400' : ''}`}>{ex.nome}</h4>
-                                                        <div className="flex items-center gap-2 mt-1">
-                                                            <span className="bg-blue-500/10 text-blue-400 font-mono text-[10px] font-bold uppercase px-2 py-0.5 rounded">{ex.series} Séries × {ex.reps} Reps</span>
-                                                            <button type="button" onClick={() => abrirExercicioVisual(ex, setModalGifAberto)} className="bg-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-700 text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase border border-neutral-700">
-                                                                ▶ Ver GIF
-                                                            </button>
-                                                        </div>
-                                                        {ex.obs && <p className="text-xs text-neutral-400 mt-2 bg-[#0d0e12] border border-neutral-800 p-2 rounded-lg font-sans">📌 Obs: {ex.obs}</p>}
-                                                    </div>
-
-                                                    <button type="button" onClick={() => alternarConclusaoExercicio(chaveUnicaExercicio)} className={`w-6 h-6 rounded-md border flex items-center justify-center font-bold text-xs transition-colors ${estaconcluido || todasSeriesFeitas ? 'bg-emerald-600 border-emerald-500 text-white' : 'border-neutral-700 bg-transparent text-transparent hover:border-neutral-500'}`}>✓</button>
-                                                </div>
-
-                                                <div className="px-5 pb-5">
-                                                    <div className="grid grid-cols-4 gap-2 pt-3 border-t border-neutral-800/50 mt-2">
-                                                        {Array.from({ length: ex.series || 0 }).map((_, sIdx) => {
-                                                            const numSerie = sIdx + 1;
-                                                            const chaveSerie = `${diaAbaAluno}-${i}-s${numSerie}`;
-                                                            const isFeita = seriesFeitas[chaveSerie];
-
-                                                            return (
-                                                                <button
-                                                                    key={numSerie}
-                                                                    type="button"
-                                                                    onClick={() => marcarSerie(i, numSerie, ex.series)}
-                                                                    className={`py-2 rounded-lg flex flex-col items-center justify-center transition-all ${isFeita ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20' : 'bg-[#0d0e12] border border-neutral-700 text-neutral-400 hover:border-neutral-500'}`}
-                                                                >
-                                                                    <span className="text-[9px] font-bold uppercase tracking-wider mb-0.5">Série {numSerie}</span>
-                                                                    <span className="text-sm font-black">{isFeita ? '✓' : '⬜'}</span>
-                                                                </button>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    });
-                                })()}
-                            </div>
-
-                            {timerAtivo && timerDescanso > 0 && (
-                                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-6 py-3 rounded-full shadow-[0_10px_40px_rgba(37,99,235,0.4)] flex items-center gap-3 z-50 animate-bounce">
-                                    <span className="text-xl">⏱️</span>
-                                    <div>
-                                        <p className="text-[10px] uppercase tracking-wider font-bold opacity-80 leading-none mb-0.5">Descanso</p>
-                                        <p className="text-lg font-black font-mono leading-none">{timerDescanso}s</p>
-                                    </div>
-                                    <button type="button" onClick={() => setTimerAtivo(false)} className="ml-2 bg-white/20 hover:bg-white/30 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold transition-colors">✕</button>
-                                </div>
-                            )}
-
-                            {modalGifAberto && (
-                                <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setModalGifAberto(null)}>
-                                    <div className="w-full max-w-sm bg-[#16171d] border border-neutral-800 rounded-2xl overflow-hidden shadow-2xl relative" onClick={e => e.stopPropagation()}>
-                                        <button onClick={() => setModalGifAberto(null)} className="absolute top-3 right-3 z-10 w-8 h-8 bg-black/50 hover:bg-red-500 text-white rounded-full flex items-center justify-center text-xs transition-colors">✕</button>
-                                        <div className="p-4 bg-[#1c1d26] border-b border-neutral-800">
-                                            <h3 className="font-bold text-white uppercase text-sm pr-8">{modalGifAberto.nome}</h3>
-                                        </div>
-                                        <div className="w-full bg-[#0d0e12] flex justify-center p-4 min-h-[200px] items-center">
-                                            <img src={modalGifAberto.url} alt={modalGifAberto.nome} className="max-w-full rounded-lg shadow-lg border border-neutral-800" />
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {modalFeedbackAberto && (
-                                <div className="fixed inset-0 z-[999] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setModalFeedbackAberto(false)}>
-                                    <div className="w-full max-w-sm bg-[#16171d] border border-neutral-800 rounded-3xl p-6 shadow-2xl relative" onClick={e => e.stopPropagation()}>
-                                        <button onClick={() => setModalFeedbackAberto(false)} className="absolute top-4 right-4 text-neutral-500 font-bold hover:text-white">✕</button>
-                                        <div className="text-center mb-6">
-                                            <span className="text-4xl mb-2 block">🔥</span>
-                                            <h3 className="text-lg font-bold text-white uppercase tracking-tight">Treino Concluído!</h3>
-                                            <p className="text-[10px] text-neutral-400 uppercase tracking-widest mt-1">Dê o feedback para seu treinador</p>
-                                        </div>
-
-                                        <form onSubmit={confirmarCheckinComFeedback} className="space-y-5">
-                                            <div>
-                                                <label className="text-[10px] font-bold uppercase text-neutral-500 block mb-2">Qual foi a Intensidade?</label>
-                                                <div className="grid grid-cols-2 gap-2">
-                                                    {["Leve 🟢", "Moderado 🟡", "Intenso 🔴", "Extremo ☠️"].map(nivel => (
-                                                        <button key={nivel} type="button" onClick={() => setFeedbackTreino({ ...feedbackTreino, intensidade: nivel })} className={`py-2 rounded-xl text-xs font-bold uppercase transition-all ${feedbackTreino.intensidade === nivel ? 'bg-orange-600 text-white shadow-lg shadow-orange-600/20' : 'bg-[#0d0e12] border border-neutral-800 text-neutral-500'}`}>
-                                                            {nivel.split(" ")[0]}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <label className="text-[10px] font-bold uppercase text-neutral-500 block mb-2">E os Pesos / Cargas?</label>
-                                                <div className="grid grid-cols-3 gap-2">
-                                                    {["Pouca ⬇️", "Na medida ✅", "Pesado ⬆️"].map(peso => (
-                                                        <button key={peso} type="button" onClick={() => setFeedbackTreino({ ...feedbackTreino, carga: peso })} className={`py-2 rounded-xl text-[10px] font-bold uppercase transition-all ${feedbackTreino.carga === peso ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-[#0d0e12] border border-neutral-800 text-neutral-500'}`}>
-                                                            {peso.split(" ")[0]}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <label className="text-[10px] font-bold uppercase text-neutral-500 block mb-2">Observações (Opcional)</label>
-                                                <textarea
-                                                    placeholder="Observações de hoje..."
-                                                    className="w-full bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl text-xs text-white outline-none h-20 resize-none"
-                                                    value={feedbackTreino.comentario}
-                                                    onChange={e => setFeedbackTreino({ ...feedbackTreino, comentario: e.target.value })}
-                                                />
-                                            </div>
-
-                                            <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-4 rounded-xl font-bold uppercase tracking-wider transition-colors shadow-lg mt-2">
-                                                Enviar e Registrar Check-in
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* 📸 NOVO MODAL: CARD DE COMPARTILHAMENTO DO INSTAGRAM */}
-                            {modalShareAberto && dadosShare && (
-                                <div className="fixed inset-0 z-[1000] bg-black/90 backdrop-blur-md flex items-center justify-center p-6" onClick={() => setModalShareAberto(false)}>
-                                    <div className="w-full max-w-[320px] bg-gradient-to-br from-neutral-900 to-[#0d0e12] border border-emerald-500/30 rounded-3xl p-6 relative shadow-[0_0_50px_rgba(16,185,129,0.2)] flex flex-col items-center" onClick={e => e.stopPropagation()}>
-                                        <button onClick={() => setModalShareAberto(false)} className="absolute top-4 right-4 text-neutral-500 hover:text-white font-bold z-10">✕</button>
-
-                                        {/* O "Story" Card que o aluno vai printar/compartilhar */}
-                                        <div id="instagram-card" className="w-full aspect-[9/16] bg-gradient-to-b from-emerald-900/40 to-[#0d0e12] border border-emerald-500/20 rounded-2xl flex flex-col items-center justify-between p-6 relative overflow-hidden mb-6">
-                                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-blue-500"></div>
-
-                                            <div className="text-center w-full mt-4">
-                                                <p className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest mb-1">Treino Fit App</p>
-                                                <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter">TREINO PAGO!</h3>
-                                                <p className="text-xs text-neutral-400 mt-1">{dadosShare.data}</p>
-                                            </div>
-
-                                            <div className="w-full space-y-3 my-auto">
-                                                <div className="bg-[#16171d]/80 backdrop-blur-sm border border-neutral-700/50 p-3 rounded-xl text-center">
-                                                    <p className="text-[9px] uppercase text-neutral-500 font-bold mb-0.5">Foco de Hoje</p>
-                                                    <p className="text-sm font-bold text-white uppercase">{dadosShare.treino}</p>
-                                                </div>
-                                                <div className="flex gap-2">
-                                                    <div className="flex-1 bg-[#16171d]/80 backdrop-blur-sm border border-neutral-700/50 p-3 rounded-xl text-center">
-                                                        <p className="text-[9px] uppercase text-neutral-500 font-bold mb-0.5">Intensidade</p>
-                                                        <p className="text-xs font-bold text-white uppercase truncate">{dadosShare.intensidade.split(" ")[0]}</p>
-                                                    </div>
-                                                    <div className="flex-1 bg-[#16171d]/80 backdrop-blur-sm border border-neutral-700/50 p-3 rounded-xl text-center">
-                                                        <p className="text-[9px] uppercase text-neutral-500 font-bold mb-0.5">Carga</p>
-                                                        <p className="text-xs font-bold text-white uppercase truncate">{dadosShare.carga.split(" ")[0]}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="w-full text-center mb-2">
-                                                <div className="w-12 h-12 bg-neutral-800 rounded-full mx-auto mb-2 border-2 border-emerald-500 flex items-center justify-center text-lg">
-                                                    💪
-                                                </div>
-                                                <p className="text-[10px] uppercase font-bold text-neutral-400 tracking-wider">Treinador</p>
-                                                <p className="text-xs font-bold text-emerald-400">{dadosShare.nomePersonal}</p>
-                                            </div>
-                                        </div>
-
-                                        <button type="button" onClick={async () => {
-                                            try {
-                                                if (navigator.share) {
-                                                    await navigator.share({
-                                                        title: 'Treino Concluído!',
-                                                        text: `Mais um treino pago no Treino Fit! Intensidade: ${dadosShare.intensidade.split(" ")[0]}. Treinador: ${dadosShare.nomePersonal}. Bora! 💪`,
-                                                    });
-                                                } else {
-                                                    alert("Tire um print desta tela e poste no seu Instagram marcando seu personal! 📸");
-                                                }
-                                            } catch (err) {
-                                                console.log("Erro ao compartilhar", err);
-                                            }
-                                        }} className="w-full bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white font-bold py-4 rounded-xl text-xs uppercase tracking-widest transition-all shadow-[0_10px_20px_rgba(16,185,129,0.3)] flex items-center justify-center gap-2">
-                                            <span>📸 Compartilhar no Insta</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
-                            {modalAvaliacaoAluno && renderModalAvaliacao(alunoLogado, () => setModalAvaliacaoAluno(false))}
-
-                        </main>
+    // ✅ PAINEL DO ALUNO AGORA ESTÁ FORA DO BLOCO DO PERSONAL!
+    if (etapa === "aluno") {
+        return (
+            <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col p-6 overflow-y-auto font-sans z-40">
+                <header className="w-full max-w-md mx-auto flex justify-between items-center border-b border-neutral-800 pb-4 mb-6">
+                    <div>
+                        <p className="text-[9px] text-blue-400 font-mono font-bold uppercase tracking-wider">Consultoria Privada Treino Fit</p>
+                        <h2 className="text-md font-bold text-white uppercase tracking-tight">{alunoLogado?.nome}</h2>
+                        <p className="text-[10px] text-neutral-500 font-mono mt-0.5">Objetivo: {alunoLogado?.objetivo}</p>
                     </div>
-                )}
+                    <div className="flex gap-2">
+                        <button type="button" onClick={() => setModalAvaliacaoAluno(true)} className="px-3 py-1.5 bg-blue-600/10 border border-blue-500/20 text-blue-400 hover:bg-blue-600/20 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors flex items-center gap-1">
+                            📋 Avaliação
+                        </button>
+                        <button type="button" onClick={() => { setEtapa("triagem"); setAlunoLogado(null); }} className="px-3 py-1.5 bg-red-500 border border-neutral-800 rounded-md text-[10px] font-bold uppercase tracking-wider text-neutral-50 transition-all duration-200 hover:bg-red-600 hover:scale-105 hover:cursor-pointer">
+                            Sair
+                        </button>
+                    </div>
+                </header>
 
+                <main className="w-full max-w-md mx-auto flex-1 space-y-6 pb-10">
+                    <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl flex items-center justify-between">
+                        <div><p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Check-ins Validados</p><h3 className="text-3xl font-bold text-white mt-1">{alunoLogado?.checkins?.length || 0}</h3></div>
+                        <button type="button" onClick={iniciarCheckin} className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-3 rounded-lg text-xs uppercase tracking-wider transition-colors shadow-lg">Confirmar Treino Hoje</button>
+                    </div>
+
+                    {alunoLogado?.checkins?.[0]?.respostaPersonal && (
+                        <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl shadow-xl mt-4">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 mb-1">💬 Mensagem do seu Treinador</p>
+                            <p className="text-xs text-neutral-300 italic">"{alunoLogado.checkins[0].respostaPersonal}"</p>
+                        </div>
+                    )}
+
+                    {alunoLogado?.metaAgua && (
+                        <div className="bg-blue-600/10 border border-blue-500/20 p-5 rounded-xl shadow-xl flex items-center justify-between">
+                            <div><p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">💧 Hidratação Diária</p><h3 className="text-xl font-bold text-white mt-1">{alunoLogado.metaAgua}</h3></div>
+                            <span className="text-3xl">🚰</span>
+                        </div>
+                    )}
+
+                    {alunoLogado?.dietaPrescrita && alunoLogado.dietaPrescrita.length > 0 && (
+                        <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-xl shadow-xl space-y-3">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400 mb-2">🍽️ Seu Plano Alimentar</p>
+                            <div className="space-y-2">
+                                {alunoLogado.dietaPrescrita.map((ref, idx) => (
+                                    <div key={idx} className="bg-[#0d0e12] border border-neutral-850 p-3 rounded-lg">
+                                        <p className="text-[11px] font-bold text-white tracking-tight uppercase mb-1">{ref.refeicao}</p>
+                                        <p className="text-[10px] text-neutral-400">{ref.itens}</p>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="mt-4 bg-gradient-to-r from-emerald-900/20 to-blue-900/20 border border-emerald-500/20 p-4 rounded-xl text-center">
+                                <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-400 mb-1">🛒 Facilite sua Dieta!</p>
+                                <p className="text-[10px] text-neutral-300 mb-3">Peça as carnes, frutas e verduras do seu plano sem sair de casa.</p>
+                                <a href="https://hortilife-praticidade.kyte.site/pt-BR" target="_blank" rel="noopener noreferrer" className="inline-block w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-lg text-[10px] uppercase tracking-wider transition-colors shadow-lg">
+                                    👉 Pedir na Hortilife
+                                </a>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="space-y-3">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 mb-2">Calendário de Treinos Semanal</p>
+                        <div className="flex gap-1.5 overflow-x-auto pb-2 scrollbar-none">
+                            {DIAS_SEMANA.map((dia) => {
+                                const diaAtualSistema = new Date().toLocaleDateString("pt-BR", { weekday: 'long' });
+                                const ehHoje = diaAtualSistema.toLowerCase().includes(dia.toLowerCase().slice(0, 4));
+                                const ativo = diaAbaAluno === dia;
+                                return (
+                                    <button
+                                        key={dia}
+                                        type="button"
+                                        onClick={() => setDiaAbaAluno(dia)}
+                                        className={`px-3 py-2 rounded-lg text-[11px] font-bold uppercase transition-all flex-shrink-0 border ${ativo
+                                            ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-600/10'
+                                            : ehHoje
+                                                ? 'bg-neutral-900 border-blue-500/40 text-blue-400'
+                                                : 'bg-[#16171d] border-neutral-800 text-neutral-400 hover:bg-neutral-800'
+                                            }`}
+                                    >
+                                        {dia.slice(0, 3)} {ehHoje && "•"}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {(() => {
+                            const rotinaDoDia = alunoLogado?.treinoSemanal?.find(t => t.dia === diaAbaAluno);
+                            if (!rotinaDoDia || !rotinaDoDia.exercicios || rotinaDoDia.exercicios.length === 0) {
+                                return (
+                                    <div className="bg-[#16171d] border border-neutral-800 p-8 rounded-xl text-center shadow-xl">
+                                        <p className="text-xs text-neutral-500 font-semibold uppercase font-mono">Nenhum treino para {diaAbaAluno}. Descanso! 🧘‍♂️</p>
+                                    </div>
+                                );
+                            }
+
+                            return rotinaDoDia.exercicios.map((ex, i) => {
+                                const chaveUnicaExercicio = `${diaAbaAluno}-${i}`;
+                                const estaconcluido = exerciciosConcluidos.includes(chaveUnicaExercicio);
+                                const todasSeriesFeitas = Array.from({ length: ex.series || 0 }).every((_, sIdx) => seriesFeitas[`${diaAbaAluno}-${i}-s${sIdx + 1}`]);
+
+                                return (
+                                    <div key={i} className={`bg-[#16171d] border transition-all rounded-xl overflow-hidden shadow-xl ${estaconcluido || todasSeriesFeitas ? 'border-emerald-500/30 opacity-80' : 'border-neutral-800'}`}>
+                                        <div className="p-5 flex items-start justify-between gap-4">
+                                            <div className="flex-1">
+                                                <h4 className={`font-bold uppercase text-base tracking-tight text-white ${estaconcluido || todasSeriesFeitas ? 'text-emerald-400' : ''}`}>{ex.nome}</h4>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <span className="bg-blue-500/10 text-blue-400 font-mono text-[10px] font-bold uppercase px-2 py-0.5 rounded">{ex.series} Séries × {ex.reps} Reps</span>
+                                                    <button type="button" onClick={() => abrirExercicioVisual(ex, setModalGifAberto)} className="bg-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-700 text-[9px] font-bold px-2 py-1 rounded transition-colors uppercase border border-neutral-700">
+                                                        ▶ Ver GIF
+                                                    </button>
+                                                </div>
+                                                {ex.obs && <p className="text-xs text-neutral-400 mt-2 bg-[#0d0e12] border border-neutral-800 p-2 rounded-lg font-sans">📌 Obs: {ex.obs}</p>}
+                                            </div>
+
+                                            <button type="button" onClick={() => alternarConclusaoExercicio(chaveUnicaExercicio)} className={`w-6 h-6 rounded-md border flex items-center justify-center font-bold text-xs transition-colors ${estaconcluido || todasSeriesFeitas ? 'bg-emerald-600 border-emerald-500 text-white' : 'border-neutral-700 bg-transparent text-transparent hover:border-neutral-500'}`}>✓</button>
+                                        </div>
+
+                                        <div className="px-5 pb-5">
+                                            <div className="grid grid-cols-4 gap-2 pt-3 border-t border-neutral-800/50 mt-2">
+                                                {Array.from({ length: ex.series || 0 }).map((_, sIdx) => {
+                                                    const numSerie = sIdx + 1;
+                                                    const chaveSerie = `${diaAbaAluno}-${i}-s${numSerie}`;
+                                                    const isFeita = seriesFeitas[chaveSerie];
+
+                                                    return (
+                                                        <button
+                                                            key={numSerie}
+                                                            type="button"
+                                                            onClick={() => marcarSerie(i, numSerie, ex.series)}
+                                                            className={`py-2 rounded-lg flex flex-col items-center justify-center transition-all ${isFeita ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20' : 'bg-[#0d0e12] border border-neutral-700 text-neutral-400 hover:border-neutral-500'}`}
+                                                        >
+                                                            <span className="text-[9px] font-bold uppercase tracking-wider mb-0.5">Série {numSerie}</span>
+                                                            <span className="text-sm font-black">{isFeita ? '✓' : '⬜'}</span>
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            });
+                        })()}
+                    </div>
+
+                    {timerAtivo && timerDescanso > 0 && (
+                        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-6 py-3 rounded-full shadow-[0_10px_40px_rgba(37,99,235,0.4)] flex items-center gap-3 z-50 animate-bounce">
+                            <span className="text-xl">⏱️</span>
+                            <div>
+                                <p className="text-[10px] uppercase tracking-wider font-bold opacity-80 leading-none mb-0.5">Descanso</p>
+                                <p className="text-lg font-black font-mono leading-none">{timerDescanso}s</p>
+                            </div>
+                            <button type="button" onClick={() => setTimerAtivo(false)} className="ml-2 bg-white/20 hover:bg-white/30 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold transition-colors">✕</button>
+                        </div>
+                    )}
+
+                    {modalGifAberto && (
+                        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setModalGifAberto(null)}>
+                            <div className="w-full max-w-sm bg-[#16171d] border border-neutral-800 rounded-2xl overflow-hidden shadow-2xl relative" onClick={e => e.stopPropagation()}>
+                                <button onClick={() => setModalGifAberto(null)} className="absolute top-3 right-3 z-10 w-8 h-8 bg-black/50 hover:bg-red-500 text-white rounded-full flex items-center justify-center text-xs transition-colors">✕</button>
+                                <div className="p-4 bg-[#1c1d26] border-b border-neutral-800">
+                                    <h3 className="font-bold text-white uppercase text-sm pr-8">{modalGifAberto.nome}</h3>
+                                </div>
+                                <div className="w-full bg-[#0d0e12] flex justify-center p-4 min-h-[200px] items-center">
+                                    <img src={modalGifAberto.url} alt={modalGifAberto.nome} className="max-w-full rounded-lg shadow-lg border border-neutral-800" />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {modalFeedbackAberto && (
+                        <div className="fixed inset-0 z-[999] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setModalFeedbackAberto(false)}>
+                            <div className="w-full max-w-sm bg-[#16171d] border border-neutral-800 rounded-3xl p-6 shadow-2xl relative" onClick={e => e.stopPropagation()}>
+                                <button onClick={() => setModalFeedbackAberto(false)} className="absolute top-4 right-4 text-neutral-500 font-bold hover:text-white">✕</button>
+                                <div className="text-center mb-6">
+                                    <span className="text-4xl mb-2 block">🔥</span>
+                                    <h3 className="text-lg font-bold text-white uppercase tracking-tight">Treino Concluído!</h3>
+                                    <p className="text-[10px] text-neutral-400 uppercase tracking-widest mt-1">Dê o feedback para seu treinador</p>
+                                </div>
+
+                                <form onSubmit={confirmarCheckinComFeedback} className="space-y-5">
+                                    <div>
+                                        <label className="text-[10px] font-bold uppercase text-neutral-500 block mb-2">Qual foi a Intensidade?</label>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {["Leve 🟢", "Moderado 🟡", "Intenso 🔴", "Extremo ☠️"].map(nivel => (
+                                                <button key={nivel} type="button" onClick={() => setFeedbackTreino({ ...feedbackTreino, intensidade: nivel })} className={`py-2 rounded-xl text-xs font-bold uppercase transition-all ${feedbackTreino.intensidade === nivel ? 'bg-orange-600 text-white shadow-lg shadow-orange-600/20' : 'bg-[#0d0e12] border border-neutral-800 text-neutral-500'}`}>
+                                                    {nivel.split(" ")[0]}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-[10px] font-bold uppercase text-neutral-500 block mb-2">E os Pesos / Cargas?</label>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {["Pouca ⬇️", "Na medida ✅", "Pesado ⬆️"].map(peso => (
+                                                <button key={peso} type="button" onClick={() => setFeedbackTreino({ ...feedbackTreino, carga: peso })} className={`py-2 rounded-xl text-[10px] font-bold uppercase transition-all ${feedbackTreino.carga === peso ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-[#0d0e12] border border-neutral-800 text-neutral-500'}`}>
+                                                    {peso.split(" ")[0]}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-[10px] font-bold uppercase text-neutral-500 block mb-2">Observações (Opcional)</label>
+                                        <textarea
+                                            placeholder="Observações de hoje..."
+                                            className="w-full bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl text-xs text-white outline-none h-20 resize-none"
+                                            value={feedbackTreino.comentario}
+                                            onChange={e => setFeedbackTreino({ ...feedbackTreino, comentario: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-4 rounded-xl font-bold uppercase tracking-wider transition-colors shadow-lg mt-2">
+                                        Enviar e Registrar Check-in
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 📸 NOVO MODAL: CARD DE COMPARTILHAMENTO DO INSTAGRAM */}
+                    {modalShareAberto && dadosShare && (
+                        <div className="fixed inset-0 z-[1000] bg-black/90 backdrop-blur-md flex items-center justify-center p-6" onClick={() => setModalShareAberto(false)}>
+                            <div className="w-full max-w-[320px] bg-gradient-to-br from-neutral-900 to-[#0d0e12] border border-emerald-500/30 rounded-3xl p-6 relative shadow-[0_0_50px_rgba(16,185,129,0.2)] flex flex-col items-center" onClick={e => e.stopPropagation()}>
+                                <button onClick={() => setModalShareAberto(false)} className="absolute top-4 right-4 text-neutral-500 hover:text-white font-bold z-10">✕</button>
+
+                                {/* O "Story" Card que o aluno vai printar/compartilhar */}
+                                <div id="instagram-card" className="w-full aspect-[9/16] bg-gradient-to-b from-emerald-900/40 to-[#0d0e12] border border-emerald-500/20 rounded-2xl flex flex-col items-center justify-between p-6 relative overflow-hidden mb-6">
+                                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-blue-500"></div>
+
+                                    <div className="text-center w-full mt-4">
+                                        <p className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest mb-1">Treino Fit App</p>
+                                        <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter">TREINO PAGO!</h3>
+                                        <p className="text-xs text-neutral-400 mt-1">{dadosShare.data}</p>
+                                    </div>
+
+                                    <div className="w-full space-y-3 my-auto">
+                                        <div className="bg-[#16171d]/80 backdrop-blur-sm border border-neutral-700/50 p-3 rounded-xl text-center">
+                                            <p className="text-[9px] uppercase text-neutral-500 font-bold mb-0.5">Foco de Hoje</p>
+                                            <p className="text-sm font-bold text-white uppercase">{dadosShare.treino}</p>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <div className="flex-1 bg-[#16171d]/80 backdrop-blur-sm border border-neutral-700/50 p-3 rounded-xl text-center">
+                                                <p className="text-[9px] uppercase text-neutral-500 font-bold mb-0.5">Intensidade</p>
+                                                <p className="text-xs font-bold text-white uppercase truncate">{dadosShare.intensidade.split(" ")[0]}</p>
+                                            </div>
+                                            <div className="flex-1 bg-[#16171d]/80 backdrop-blur-sm border border-neutral-700/50 p-3 rounded-xl text-center">
+                                                <p className="text-[9px] uppercase text-neutral-500 font-bold mb-0.5">Carga</p>
+                                                <p className="text-xs font-bold text-white uppercase truncate">{dadosShare.carga.split(" ")[0]}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="w-full text-center mb-2">
+                                        <div className="w-12 h-12 bg-neutral-800 rounded-full mx-auto mb-2 border-2 border-emerald-500 flex items-center justify-center text-lg">
+                                            💪
+                                        </div>
+                                        <p className="text-[10px] uppercase font-bold text-neutral-400 tracking-wider">Treinador</p>
+                                        <p className="text-xs font-bold text-emerald-400">{dadosShare.nomePersonal}</p>
+                                    </div>
+                                </div>
+
+                                <button type="button" onClick={async () => {
+                                    try {
+                                        if (navigator.share) {
+                                            await navigator.share({
+                                                title: 'Treino Concluído!',
+                                                text: `Mais um treino pago no Treino Fit! Intensidade: ${dadosShare.intensidade.split(" ")[0]}. Treinador: ${dadosShare.nomePersonal}. Bora! 💪`,
+                                            });
+                                        } else {
+                                            alert("Tire um print desta tela e poste no seu Instagram marcando seu personal! 📸");
+                                        }
+                                    } catch (err) {
+                                        console.log("Erro ao compartilhar", err);
+                                    }
+                                }} className="w-full bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white font-bold py-4 rounded-xl text-xs uppercase tracking-widest transition-all shadow-[0_10px_20px_rgba(16,185,129,0.3)] flex items-center justify-center gap-2">
+                                    <span>📸 Compartilhar no Insta</span>
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {modalAvaliacaoAluno && renderModalAvaliacao(alunoLogado, () => setModalAvaliacaoAluno(false))}
+
+                </main>
             </div>
         );
     }
