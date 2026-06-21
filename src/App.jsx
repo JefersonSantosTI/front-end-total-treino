@@ -18,6 +18,10 @@ function App() {
     // =========================================================================
     // 1. TODOS OS ESTADOS (HOOKS)
     // =========================================================================
+    // =========================================================================
+    // 1. TODOS OS ESTADOS (HOOKS)
+    // =========================================================================
+    const [configAgua, setConfigAgua] = useState({ ativo: false, horaInicio: 8, horaFim: 22, intervaloHoras: 2 });
     const [usuario, setUsuario] = useState(() => localStorage.getItem("usuario_whatsapp"));
     const [etapa, setEtapa] = useState("verificando");
     const [abaAtiva, setAbaAtiva] = useState(() => localStorage.getItem("treino_fit_aba") || "home");
@@ -1658,6 +1662,56 @@ function App() {
                         <div className="bg-blue-600/10 border border-blue-500/20 p-5 rounded-xl shadow-xl flex items-center justify-between">
                             <div><p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">💧 Hidratação Diária</p><h3 className="text-xl font-bold text-white mt-1">{alunoLogado.metaAgua}</h3></div>
                             <span className="text-3xl">🚰</span>
+                        </div>
+                    )}
+                    {alunoLogado?.metaAgua && (
+                        <div className="bg-blue-600/10 border border-blue-500/20 p-5 rounded-xl shadow-xl flex flex-col mt-4">
+                            <div className="flex items-center justify-between mb-3">
+                                <div>
+                                    <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">💧 Hidratação Inteligente</p>
+                                    <h3 className="text-xl font-bold text-white mt-1">{alunoLogado.metaAgua}</h3>
+                                </div>
+                                <span className="text-3xl">🚰</span>
+                            </div>
+
+                            {/* Formulário Embutido para Configurar as Notificações */}
+                            <div className="border-t border-blue-500/20 pt-3">
+                                <p className="text-[10px] text-neutral-400 mb-2 uppercase font-bold">Configurar Alerta no WhatsApp</p>
+                                <div className="grid grid-cols-3 gap-2 mb-3">
+                                    <div>
+                                        <label className="text-[9px] text-neutral-500">Início (Hora)</label>
+                                        <input type="number" min="0" max="23" className="w-full bg-[#16171d] border border-neutral-800 p-2 rounded text-xs text-white" value={configAgua.horaInicio} onChange={e => setConfigAgua({ ...configAgua, horaInicio: e.target.value })} />
+                                    </div>
+                                    <div>
+                                        <label className="text-[9px] text-neutral-500">Fim (Hora)</label>
+                                        <input type="number" min="0" max="23" className="w-full bg-[#16171d] border border-neutral-800 p-2 rounded text-xs text-white" value={configAgua.horaFim} onChange={e => setConfigAgua({ ...configAgua, horaFim: e.target.value })} />
+                                    </div>
+                                    <div>
+                                        <label className="text-[9px] text-neutral-500">Intervalo (Hrs)</label>
+                                        <select className="w-full bg-[#16171d] border border-neutral-800 p-2 rounded text-xs text-white" value={configAgua.intervaloHoras} onChange={e => setConfigAgua({ ...configAgua, intervaloHoras: e.target.value })}>
+                                            <option value="1">1 em 1h</option>
+                                            <option value="2">2 em 2h</option>
+                                            <option value="3">3 em 3h</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <button onClick={async () => {
+                                    try {
+                                        const id = alunoLogado.id || alunoLogado._id;
+                                        const payload = { ...configAgua, ativo: true };
+                                        const res = await fetch(`${API_URL}/aluno/${id}/agua`, {
+                                            method: 'PUT',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify(payload)
+                                        });
+                                        if (res.ok) alert("✅ Notificações de água ativadas! Calcularemos as doses automaticamente.");
+                                    } catch {
+                                        alert("Erro ao salvar.");
+                                    }
+                                }} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-lg text-[10px] uppercase transition-colors">
+                                    Ativar Automação IA
+                                </button>
+                            </div>
                         </div>
                     )}
 
