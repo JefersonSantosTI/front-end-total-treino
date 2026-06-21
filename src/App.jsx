@@ -7,6 +7,9 @@ import ChatReceitas from "./pages/ChatReceitas";
 import Login from "./components/Login";
 import TelaPlanos from "./components/TelaPlanos";
 
+// ✅ IMPORT DO NOVO ONBOARDING ADICIONADO AQUI
+import OnboardingNotificacao from "./components/OnboardingNotificacao";
+
 // eslint-disable-next-line no-unused-vars
 import { abrirExercicioVisual } from "./components/visual";
 
@@ -15,9 +18,6 @@ const DIAS_SEMANA = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'
 const parseNumeroSeguro = (val) => Number(String(val).replace(',', '.')) || 0;
 
 function App() {
-    // =========================================================================
-    // 1. TODOS OS ESTADOS (HOOKS)
-    // =========================================================================
     // =========================================================================
     // 1. TODOS OS ESTADOS (HOOKS)
     // =========================================================================
@@ -94,14 +94,27 @@ function App() {
     const [quizStep, setQuizStep] = useState(1);
     const [alimentosFavoritos, setAlimentosFavoritos] = useState([]);
 
-    // ✅ ESTADOS PARA O CARD DO INSTAGRAM
+    // ESTADOS PARA O CARD DO INSTAGRAM
     const [modalShareAberto, setModalShareAberto] = useState(false);
     const [dadosShare, setDadosShare] = useState(null);
+
+    // ✅ NOVO ESTADO DO ONBOARDING DE NOTIFICAÇÃO
+    const [mostrarOnboardingNotificacao, setMostrarOnboardingNotificacao] = useState(false);
 
     const API_URL = "https://api-backend-treino-fit.onrender.com/api";
     const verificandoRef = useRef(false);
     const KIWIFY_MENSAL = "https://pay.kiwify.com.br/O5ggnzX";
     const KIWIFY_ANUAL = "https://pay.kiwify.com.br/vbvKtGY";
+
+    // =========================================================================
+    // ✅ NOVO EFFECT DO ONBOARDING (Aparece ao entrar como aluno)
+    // =========================================================================
+    useEffect(() => {
+        if (etapa === "aluno" && typeof Notification !== 'undefined' && Notification.permission === 'default') {
+            setMostrarOnboardingNotificacao(true);
+        }
+    }, [etapa]);
+
 
     // =========================================================================
     // 2. LÓGICAS DE CRONÔMETRO, SÉRIES E EXERCÍCIOS
@@ -1625,7 +1638,7 @@ function App() {
         );
     }
 
-    // ✅ PAINEL DO ALUNO AGORA ESTÁ FORA DO BLOCO DO PERSONAL!
+    // ✅ PAINEL DO ALUNO
     if (etapa === "aluno") {
         return (
             <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col p-6 overflow-y-auto font-sans z-40">
@@ -1994,6 +2007,14 @@ function App() {
                     )}
 
                     {modalAvaliacaoAluno && renderModalAvaliacao(alunoLogado, () => setModalAvaliacaoAluno(false))}
+
+                    {/* ✅ MODAL ONBOARDING DE NOTIFICAÇÃO RENDERIZADO AQUI NO FINAL DO MAIN */}
+                    {mostrarOnboardingNotificacao && (
+                        <OnboardingNotificacao
+                            alunoLogado={alunoLogado}
+                            aoConcluir={() => setMostrarOnboardingNotificacao(false)}
+                        />
+                    )}
 
                 </main>
             </div>
