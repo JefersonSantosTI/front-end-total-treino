@@ -1690,18 +1690,31 @@ function App() {
                                         </select>
                                     </div>
                                 </div>
+                                {/* Substitua o botão do "Ativar Automação IA" por este: */}
                                 <button onClick={async () => {
                                     try {
+                                        // 1. Registro do Navegador
+                                        const publicVapidKey = 'BH1RQXRkaFukYxIKfMfqqN1MEh_ruMEMk1toExeB_3K2nrVHzS_Px5WNtoPto0i5LosEdNNQ_MTV6amGefJyoXc';
+                                        const registration = await navigator.serviceWorker.register('/service-worker.js');
+                                        const subscription = await registration.pushManager.subscribe({
+                                            userVisibleOnly: true,
+                                            applicationServerKey: publicVapidKey
+                                        });
+
+                                        // 2. Salvar no Backend
                                         const id = alunoLogado.id || alunoLogado._id;
-                                        const payload = { ...configAgua, ativo: true };
+                                        const payload = { ...configAgua, ativo: true, subscription };
+
                                         const res = await fetch(`${API_URL}/aluno/${id}/agua`, {
                                             method: 'PUT',
                                             headers: { 'Content-Type': 'application/json' },
                                             body: JSON.stringify(payload)
                                         });
-                                        if (res.ok) alert("✅ Notificações de água ativadas! Calcularemos as doses automaticamente.");
-                                    } catch {
-                                        alert("Erro ao salvar.");
+
+                                        if (res.ok) alert("✅ Notificações ativadas! Você receberá avisos da água aqui no celular.");
+                                    } catch (e) {
+                                        console.error(e);
+                                        alert("Erro ao ativar. Verifique se você permitiu notificações no navegador.");
                                     }
                                 }} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-lg text-[10px] uppercase transition-colors">
                                     Ativar Automação IA
