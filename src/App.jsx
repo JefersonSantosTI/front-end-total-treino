@@ -639,12 +639,58 @@ function App() {
         salvarOnboarding(e);
     };
 
+    // =========================================================================
+    // 📊 RENDERIZADOR DO MODAL DE AVALIAÇÃO (VISÃO DO ALUNO E DO PERSONAL)
+    // =========================================================================
     const renderModalAvaliacao = (alunoData, fecharModal) => {
         if (!alunoData) return null;
+
+        // --- CÁLCULOS DO RADAR DE EVOLUÇÃO ---
+        const p = parseFloat(String(alunoData.peso).replace(',', '.')) || 0;
+        const a = parseFloat(String(alunoData.altura).replace(',', '.')) || 0;
+        const bf = parseFloat(alunoData.medidas?.percentualGordura) || 0;
+
+        let metaPeso = p;
+        let textMeta = "Manutenção / Saúde";
+        let progressoMeta = 100;
+
+        if (p > 0 && a > 0) {
+            const objetivoAluno = alunoData.objetivo || alunoData.meta || "";
+            if (objetivoAluno.includes("Emagrecimento")) {
+                metaPeso = (23 * (a * a)).toFixed(1); // Meta de IMC 23 para emagrecimento
+                textMeta = `Meta Ideal: ${metaPeso}kg`;
+                progressoMeta = (metaPeso / p) * 100;
+            } else if (objetivoAluno.includes("Hipertrofia")) {
+                metaPeso = (26 * (a * a)).toFixed(1); // Meta de IMC 26 para massa muscular
+                textMeta = `Meta de Massa: ${metaPeso}kg`;
+                progressoMeta = (p / metaPeso) * 100;
+            }
+        }
+
+        let bfPercent = 0;
+        let bfColor = "bg-neutral-500";
+        let bfStatus = "N/A";
+
+        if (bf > 0) {
+            bfPercent = Math.min(Math.max(((bf - 5) / (40 - 5)) * 100, 0), 100);
+            if (alunoData.genero === 'Masculino') {
+                if (bf < 10) { bfStatus = "Nível Atleta"; bfColor = "bg-blue-500"; }
+                else if (bf < 18) { bfStatus = "Em Forma"; bfColor = "bg-emerald-500"; }
+                else if (bf < 25) { bfStatus = "Na Média"; bfColor = "bg-amber-500"; }
+                else { bfStatus = "Acima do Ideal"; bfColor = "bg-red-500"; }
+            } else {
+                if (bf < 18) { bfStatus = "Nível Atleta"; bfColor = "bg-blue-500"; }
+                else if (bf < 25) { bfStatus = "Em Forma"; bfColor = "bg-emerald-500"; }
+                else if (bf < 32) { bfStatus = "Na Média"; bfColor = "bg-amber-500"; }
+                else { bfStatus = "Acima do Ideal"; bfColor = "bg-red-500"; }
+            }
+        }
+        // -------------------------------------
+
         return (
             <div className="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={fecharModal}>
                 <div className="w-full max-w-md bg-[#16171d] border border-neutral-800 rounded-3xl p-6 relative shadow-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-                    <button onClick={fecharModal} className="absolute top-4 right-4 text-neutral-500 hover:text-white font-bold">✕</button>
+                    <button onClick={fecharModal} className="absolute top-4 right-4 text-neutral-500 hover:text-white font-bold text-lg">✕</button>
 
                     <div className="flex items-center gap-3 mb-6 border-b border-neutral-800 pb-4">
                         <div className="w-10 h-10 bg-blue-500/10 border border-blue-500/20 rounded-full flex items-center justify-center text-xl">📊</div>
@@ -654,16 +700,51 @@ function App() {
                         </div>
                     </div>
 
+                    {/* 🚀 NOVO RADAR DE EVOLUÇÃO VISUAL */}
+                    <div className="bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl mb-6 shadow-inner">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 mb-4 flex items-center gap-2">
+                            <span>🚀</span> Radar de Evolução Visual
+                        </p>
+
+                        <div className="mb-5">
+                            <div className="flex justify-between text-[9px] uppercase font-bold text-neutral-400 mb-1.5">
+                                <span>Peso Atual: {p}kg</span>
+                                <span className="text-emerald-500">{textMeta}</span>
+                            </div>
+                            <div className="w-full bg-neutral-800 h-3 rounded-full overflow-hidden relative shadow-inner">
+                                <div className="h-full bg-gradient-to-r from-blue-600 to-emerald-500 rounded-full transition-all duration-1000 ease-out" style={{ width: `${Math.min(progressoMeta, 100)}%` }}></div>
+                            </div>
+                            <p className="text-[8px] text-right mt-1.5 text-neutral-500 font-mono uppercase">Proximidade do objetivo: {Math.round(Math.min(progressoMeta, 100))}%</p>
+                        </div>
+
+                        {bf > 0 && (
+                            <div className="pt-2 border-t border-neutral-800/50">
+                                <div className="flex justify-between text-[9px] uppercase font-bold text-neutral-400 mb-1.5">
+                                    <span>Gordura Atual: {bf}%</span>
+                                    <span className={bfColor.replace('bg-', 'text-')}>{bfStatus}</span>
+                                </div>
+                                <div className="w-full bg-neutral-800 h-3 rounded-full overflow-hidden relative shadow-inner">
+                                    <div className={`h-full ${bfColor} transition-all duration-1000 ease-out`} style={{ width: `${bfPercent}%` }}></div>
+                                </div>
+                            </div>
+                        )}
+                        {bf === 0 && (
+                            <div className="pt-2 border-t border-neutral-800/50 text-center">
+                                <p className="text-[9px] text-neutral-600 italic">Percentual de gordura não registrado nas dobras.</p>
+                            </div>
+                        )}
+                    </div>
+
                     <div className="space-y-6">
                         <div>
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-3">Perfil Biométrico</p>
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-3">Dados Biométricos Gerais</p>
                             <div className="grid grid-cols-2 gap-2">
                                 <div className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl">
-                                    <p className="text-[9px] text-neutral-500 uppercase font-bold mb-1">Peso</p>
+                                    <p className="text-[9px] text-neutral-500 uppercase font-bold mb-1">Peso Bruto</p>
                                     <p className="text-sm font-bold text-white">{alunoData.peso ? alunoData.peso : '--'} kg</p>
                                 </div>
                                 <div className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl">
-                                    <p className="text-[9px] text-neutral-500 uppercase font-bold mb-1">Altura</p>
+                                    <p className="text-[9px] text-neutral-500 uppercase font-bold mb-1">Estatura</p>
                                     <p className="text-sm font-bold text-white">{alunoData.altura ? alunoData.altura : '--'} m</p>
                                 </div>
                                 <div className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl">
@@ -671,7 +752,7 @@ function App() {
                                     <p className="text-sm font-bold text-white">{alunoData.idade ? alunoData.idade : '--'} anos</p>
                                 </div>
                                 <div className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl">
-                                    <p className="text-[9px] text-neutral-500 uppercase font-bold mb-1">Gênero</p>
+                                    <p className="text-[9px] text-neutral-500 uppercase font-bold mb-1">Gênero Bio</p>
                                     <p className="text-sm font-bold text-white">{alunoData.genero ? alunoData.genero : '--'}</p>
                                 </div>
                             </div>
@@ -696,19 +777,11 @@ function App() {
                             )}
                         </div>
 
-                        {alunoData.medidas && Object.keys(alunoData.medidas).length > 0 ? (
+                        {alunoData.medidas && Object.keys(alunoData.medidas).length > 0 && (
                             <div className="mt-6">
                                 <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400 mb-3 pt-2 border-t border-neutral-800">
-                                    📏 Medidas Extras (cm)
+                                    📏 Circunferências Extras (cm)
                                 </p>
-
-                                {alunoData.medidas.percentualGordura && (
-                                    <div className="mb-3 bg-emerald-900/20 border border-emerald-500/20 rounded-xl p-3 flex justify-between items-center">
-                                        <span className="text-[10px] font-bold uppercase text-emerald-500">Percentual de Gordura:</span>
-                                        <span className="text-lg font-black text-white">{alunoData.medidas.percentualGordura}%</span>
-                                    </div>
-                                )}
-
                                 <div className="grid grid-cols-2 gap-3">
                                     {Object.entries(alunoData.medidas).map(([key, value]) => {
                                         if (!value || value === "" || value === "0" || key === "_id" || key === "percentualGordura") return null;
@@ -722,8 +795,6 @@ function App() {
                                     })}
                                 </div>
                             </div>
-                        ) : (
-                            <p className="text-[10px] text-neutral-600 italic mt-4">Nenhuma medida extra cadastrada.</p>
                         )}
                     </div>
                 </div>
