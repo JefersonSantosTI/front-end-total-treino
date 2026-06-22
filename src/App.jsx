@@ -17,6 +17,18 @@ const DIAS_SEMANA = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'
 
 const parseNumeroSeguro = (val) => Number(String(val).replace(',', '.')) || 0;
 
+// ✅ FUNÇÃO OBRIGATÓRIA PARA O PUSH FUNCIONAR NO IPHONE/ANDROID
+const urlBase64ToUint8Array = (base64String) => {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+};
+
 function App() {
     // =========================================================================
     // 1. TODOS OS ESTADOS (HOOKS)
@@ -1706,15 +1718,21 @@ function App() {
                                 {/* Substitua o botão do "Ativar Automação IA" por este: */}
                                 <button onClick={async () => {
                                     try {
-                                        // 1. Registro do Navegador
+                                        // 1. Chave e Conversão (A mágica que faltava)
                                         const publicVapidKey = 'BH1RQXRkaFukYxIKfMfqqN1MEh_ruMEMk1toExeB_3K2nrVHzS_Px5WNtoPto0i5LosEdNNQ_MTV6amGefJyoXc';
+                                        const convertedVapidKey = urlBase64ToUint8Array(publicVapidKey);
+
+                                        // 2. Registro do Service Worker (Verifique se o seu arquivo se chama sw.js ou service-worker.js!)
+                                        // Se o arquivo que você criou na pasta public se chamar sw.js, use '/sw.js' abaixo:
                                         const registration = await navigator.serviceWorker.register('/service-worker.js');
+
+                                        // 3. Criando a Assinatura Real
                                         const subscription = await registration.pushManager.subscribe({
                                             userVisibleOnly: true,
-                                            applicationServerKey: publicVapidKey
+                                            applicationServerKey: convertedVapidKey // ✅ AGORA SIM, CRIPTOGRAFADO!
                                         });
 
-                                        // 2. Salvar no Backend
+                                        // 4. Salvar no Backend
                                         const id = alunoLogado.id || alunoLogado._id;
                                         const payload = { ...configAgua, ativo: true, subscription };
 
@@ -1724,7 +1742,7 @@ function App() {
                                             body: JSON.stringify(payload)
                                         });
 
-                                        if (res.ok) alert("✅ Notificações ativadas! Você receberá avisos da água aqui no celular.");
+                                        if (res.ok) alert("✅ Notificações ativadas! O seu celular agora pode ler as mensagens.");
                                     } catch (e) {
                                         console.error(e);
                                         alert("Erro ao ativar. Verifique se você permitiu notificações no navegador.");
