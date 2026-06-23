@@ -1325,8 +1325,14 @@ function App() {
                                             </button>
                                         </div>
                                     </div>
-                                    <div className="text-center pt-5 border-t-2 border-neutral-800 mt-auto">
-                                        <button type="button" onClick={handleSair} className="text-xs font-black font-mono uppercase text-neutral-500 hover:text-red-500 transition-colors bg-neutral-900/50 px-4 py-2 rounded-lg">Encerrar sessão no dispositivo</button>
+                                    <div className="text-center pt-5 border-t-2 border-neutral-800 mt-auto"><button
+                                        type="button"
+                                        onClick={handleSair}
+                                        className="flex items-center justify-center gap-2 mx-auto px-6 py-3 bg-[#0d0e12] border border-red-500/20 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider text-red-400 hover:bg-red-500 hover:text-white hover:border-red-500 hover:shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all duration-300 active:scale-95"
+                                    >
+                                        <span>Encerrar Sessão no Dispositivo</span>
+                                        <span className="text-sm">🚪</span>
+                                    </button>
                                     </div>
                                 </div>
 
