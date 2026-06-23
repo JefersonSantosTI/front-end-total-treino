@@ -1,3 +1,4 @@
+import './Home.css';
 import { toBlob } from 'html-to-image';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { jwtDecode } from "jwt-decode";
@@ -849,35 +850,87 @@ function App() {
 
     if (etapa === "triagem") {
         return (
-            <div className="fixed inset-0 flex flex-col items-center justify-center p-6 text-white font-sans z-50 bg-[#0d0e12] bg-[url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop')] bg-cover bg-center">
-                <div className="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
-                <div className="relative z-10 w-full max-w-sm bg-[#16171d]/80 border border-neutral-700/50 p-8 rounded-3xl shadow-[0_0_50px_rgba(16,185,129,0.15)] backdrop-blur-md">
-                    <div className="flex justify-center mb-8">
-                        <img src="/logo512.png" alt="Logo Treino Fit" className="h-20 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.2)]" />
-                    </div>
-                    <div className="space-y-4">
-                        <button type="button" onClick={() => setEtapa(usuario ? "home" : "login")} className="w-full bg-[#1e2029]/90 hover:bg-[#252834] border border-neutral-700/50 hover:border-emerald-500/50 text-left p-4 rounded-2xl flex items-center justify-between transition-all group shadow-lg">
-                            <div>
-                                <p className="text-[10px] uppercase font-black text-emerald-500 tracking-widest mb-0.5">Módulo Consultoria</p>
-                                <p className="text-sm font-bold text-neutral-200">Acessar Chat Inteligência Artificial</p>
-                            </div>
-                            <span className="text-neutral-500 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all text-lg font-bold">→</span>
+            <div className="home-container fixed inset-0 z-50 overflow-y-auto">
+                <div className="home-content">
+
+                    {/* Menu Superior */}
+                    <header className="home-header">
+                        <div className="home-logo">Treino Fit</div>
+                        <div>
+                            <button onClick={() => setEtapa("login")} className="text-white hover:text-emerald-400 font-bold text-sm bg-transparent border-none cursor-pointer transition-colors">
+                                Entrar
+                            </button>
+                        </div>
+                    </header>
+
+                    {/* Bloco 1: Usuário Comum / IA */}
+                    <section className="home-hero">
+                        <h1 className="home-hero-title">Seu Personal e Nutricionista<br /><span>Impulsionados por Inteligência Artificial</span></h1>
+                        <p className="home-subtitle">Não tem acompanhamento profissional? Sem problemas. Nossa IA monta sua estrutura de treinos e rotina alimentar ideal de forma 100% personalizada e automática.</p>
+
+                        {/* Botão conectado direto para o Login do Usuário Final */}
+                        <button onClick={() => setEtapa("login")} className="home-btn home-btn-whatsapp">
+                            <span style={{ marginRight: '10px', fontSize: '20px' }}>💬</span> Iniciar com WhatsApp
                         </button>
-                        <button type="button" onClick={() => setEtapa("login_personal")} className="w-full bg-[#1e2029]/90 hover:bg-[#252834] border border-neutral-700/50 hover:border-neutral-400/50 text-left p-4 rounded-2xl flex items-center justify-between transition-all group shadow-lg">
-                            <div>
-                                <p className="text-[10px] uppercase font-black text-neutral-400 tracking-widest mb-0.5">Módulo Treinador</p>
-                                <p className="text-sm font-bold text-neutral-200">Painel Geral do Personal Trainer</p>
+                    </section>
+
+                    {/* Bloco 2: Personal Trainer */}
+                    <section className="home-section-block">
+                        <div className="home-grid">
+                            <div className="home-content-left text-left">
+                                <h2>Você é Personal Trainer?<br /><span style={{ color: '#60efff' }}>Ganhe tempo e multiplique alunos.</span></h2>
+                                <p>Esqueça planilhas confusas. Deixe a IA estruturar a base das rotinas e os check-ins enquanto você foca no ajuste fino e no atendimento premium.</p>
+
+                                {/* Botão conectado direto para o Login do Personal */}
+                                <button onClick={() => setEtapa("login_personal")} className="home-btn home-btn-primary">
+                                    Acessar Painel do Personal
+                                </button>
                             </div>
-                            <span className="text-neutral-500 group-hover:text-white group-hover:translate-x-1 transition-all text-lg font-bold">→</span>
-                        </button>
-                        <button type="button" onClick={() => setEtapa("login_aluno")} className="w-full bg-[#1e2029]/90 hover:bg-[#252834] border border-neutral-700/50 hover:border-blue-500/50 text-left p-4 rounded-2xl flex items-center justify-between transition-all group shadow-lg">
-                            <div>
-                                <p className="text-[10px] uppercase font-black text-blue-400 tracking-widest mb-0.5">Módulo Aluno</p>
-                                <p className="text-sm font-bold text-neutral-200">Portal de Planilhas e Treinos Pro</p>
+                            <div className="home-app-mockup text-left">
+                                <div className="home-mockup-header">
+                                    <span>📊 Painel do Treinador</span>
+                                    <span>v1.2</span>
+                                </div>
+                                <div className="home-feature-item"><span style={{ marginRight: '10px', fontSize: '20px' }}>🤖</span> Previsão inteligente de evolução</div>
+                                <div className="home-feature-item"><span style={{ marginRight: '10px', fontSize: '20px' }}>📝</span> Criação de treinos automáticos</div>
+                                <div className="home-feature-item"><span style={{ marginRight: '10px', fontSize: '20px' }}>✅</span> Histórico e Check-ins simplificados</div>
                             </div>
-                            <span className="text-neutral-500 group-hover:text-blue-400 group-hover:translate-x-1 transition-all text-lg font-bold">→</span>
-                        </button>
-                    </div>
+                        </div>
+                    </section>
+
+                    {/* Bloco 3: Área do Aluno */}
+                    <section className="home-section-block">
+                        <div className="home-grid" style={{ direction: 'rtl' }}>
+                            <div className="home-content-left text-left" style={{ direction: 'ltr' }}>
+                                <h2>A Área do Aluno<br /><span style={{ color: '#00ff87' }}>Tudo integrado e na palma da mão.</span></h2>
+                                <p>Seu personal te cadastrou? Acesse sua divisão exata de treinos diários e sua base alimentar calculada conforme suas metas.</p>
+
+                                {/* Botão conectado direto para o Login do Aluno */}
+                                <button onClick={() => setEtapa("login_aluno")} className="home-btn" style={{ background: 'transparent', border: '2px solid #00ff87', color: '#00ff87' }}>
+                                    Acessar Como Aluno
+                                </button>
+                            </div>
+                            <div className="home-app-mockup text-left" style={{ direction: 'ltr' }}>
+                                <div className="home-mockup-header">
+                                    <span>💪 Meu Treino Diário</span>
+                                    <span>Meta Batida 🔥</span>
+                                </div>
+                                <div className="home-feature-item"><span style={{ marginRight: '10px', fontSize: '20px' }}>🍎</span> Base Alimentar Ajustada</div>
+                                <div className="home-feature-item"><span style={{ marginRight: '10px', fontSize: '20px' }}>💧</span> Controle de Água Integrado</div>
+                                <div className="home-notification-badge">
+                                    <span style={{ fontSize: '24px' }}>💧</span>
+                                    <div style={{ marginLeft: '12px', fontSize: '13px', textAlign: 'left', color: '#fff' }}>
+                                        <strong>Notificação Treino Fit:</strong><br />
+                                        Hora de beber água! Faltam 1.2L para bater a meta.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <footer style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8', borderTop: '1px solid #1e293b', fontSize: '14px' }}>
+                        &copy; 2026 Treino Fit. Todos os direitos reservados.
+                    </footer>
                 </div>
             </div>
         );
