@@ -34,7 +34,8 @@ function App() {
     // =========================================================================
     // 1. TODOS OS ESTADOS (HOOKS)
     // =========================================================================
-    const [configAgua, setConfigAgua] = useState({ ativo: false, horaInicio: 8, horaFim: 22, intervaloHoras: 2 });
+    // Troque a sua linha atual por esta:
+    const [configAgua, setConfigAgua] = useState({ ativo: false, horaInicio: 8, horaFim: 22, intervaloHoras: 2, tipoFrequencia: 'Definitivo' });
     const [usuario, setUsuario] = useState(() => localStorage.getItem("usuario_whatsapp"));
     const [etapa, setEtapa] = useState("verificando");
     const [abaAtiva, setAbaAtiva] = useState(() => localStorage.getItem("treino_fit_aba") || "home");
@@ -2045,7 +2046,9 @@ function App() {
                             {/* Formulário Embutido para Configurar as Notificações */}
                             <div className="border-t-2 border-neutral-800/60 pt-5 mt-2">
                                 <p className="text-xs text-neutral-300 mb-3 uppercase font-black">Configurar Alerta no Celular</p>
-                                <div className="grid grid-cols-3 gap-3 mb-5">
+
+                                {/* ✅ AJUSTE AQUI: Mudamos para grid-cols-2 e adicionamos a Duração */}
+                                <div className="grid grid-cols-2 gap-3 mb-5">
                                     <div>
                                         <label className="text-[10px] font-black text-neutral-400 uppercase">Início (Hora)</label>
                                         <input type="number" min="0" max="23" className="w-full bg-[#0d0e12] border-2 border-neutral-800 p-3 rounded-xl text-base font-black text-white outline-none focus:border-blue-500/50 text-center" value={configAgua.horaInicio} onChange={e => setConfigAgua({ ...configAgua, horaInicio: e.target.value })} />
@@ -2062,7 +2065,17 @@ function App() {
                                             <option value="3">3h</option>
                                         </select>
                                     </div>
+                                    <div>
+                                        {/* ✅ NOVA CAIXINHA DE TIPO DE FREQUÊNCIA AQUI */}
+                                        <label className="text-[10px] font-black text-neutral-400 uppercase">Duração</label>
+                                        <select className="w-full bg-[#0d0e12] border-2 border-neutral-800 p-3 rounded-xl text-sm font-black text-white outline-none focus:border-blue-500/50 text-center" value={configAgua.tipoFrequencia} onChange={e => setConfigAgua({ ...configAgua, tipoFrequencia: e.target.value })}>
+                                            <option value="Diário">Apenas Hoje</option>
+                                            <option value="Mensal">Mensal</option>
+                                            <option value="Definitivo">Definitivo</option>
+                                        </select>
+                                    </div>
                                 </div>
+
                                 <button onClick={async () => {
                                     try {
                                         const publicVapidKey = 'BH1RQXRkaFukYxIKfMfqqN1MEh_ruMEMk1toExeB_3K2nrVHzS_Px5WNtoPto0i5LosEdNNQ_MTV6amGefJyoXc';
