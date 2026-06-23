@@ -27,7 +27,6 @@ const ListaExercicios = ({ whatsapp, aoFechar, API_URL, modalidade, perfil, trei
     return nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
   };
 
-  // ✅ ESTRUTURA PROFISSIONAL: 4 exercícios por foco
   const treinosFixosData = {
     A: [
       { nome: "Supino Reto", series: 4, reps: "10", arquivo: "supino-reto", obs: "Foco na contração peitoral." },
@@ -91,16 +90,16 @@ const ListaExercicios = ({ whatsapp, aoFechar, API_URL, modalidade, perfil, trei
   return (
     <div className="fixed inset-0 z-[800] bg-[#0d0e12] flex flex-col p-6 overflow-y-auto text-white">
       <header className="flex justify-between items-center mb-6">
-        <button onClick={aoFechar} className="text-sky-400 font-bold text-[10px] uppercase tracking-widest hover:text-white">← Sair</button>
+        <button onClick={aoFechar} className="text-sky-400 font-bold text-xs uppercase tracking-widest hover:text-white">← Sair</button>
         <h3 className="font-black italic text-sky-400 uppercase tracking-widest">{modalidade === 'ia' ? 'Mentor IA Pro' : 'Treino Fixo'}</h3>
       </header>
 
       {gifAtivo && (
         <div className="fixed inset-0 z-[9999] bg-black/95 flex flex-col items-center justify-center p-4" onClick={() => setGifAtivo(null)}>
           <div className="w-full max-w-sm bg-gray-900 rounded-[2rem] p-4 border border-sky-500/50" onClick={e => e.stopPropagation()}>
-            <h4 className="text-center font-bold uppercase text-sky-400 mb-4">{gifAtivo.nome}</h4>
+            <h4 className="text-center font-black uppercase text-sky-400 mb-4 text-lg">{gifAtivo.nome}</h4>
             <img src={`/exercicios/${gifAtivo.arquivo}.gif`} className="w-full rounded-xl" onError={(e) => { e.target.src = "https://media.giphy.com/media/3o7TKMGpxxS06DclhS/giphy.gif"; }} />
-            <button onClick={() => setGifAtivo(null)} className="w-full mt-4 bg-sky-600 text-white py-3 rounded-xl font-bold uppercase hover:bg-sky-500 transition-all">Fechar</button>
+            <button onClick={() => setGifAtivo(null)} className="w-full mt-4 bg-sky-600 text-white py-3 rounded-xl font-black uppercase hover:bg-sky-500 transition-all text-base">Fechar</button>
           </div>
         </div>
       )}
@@ -109,22 +108,22 @@ const ListaExercicios = ({ whatsapp, aoFechar, API_URL, modalidade, perfil, trei
         <div className="flex-1 flex flex-col justify-center gap-6">
           <div className="text-center mb-4">
             <div className={`text-6xl mb-4 ${carregandoIA ? 'animate-pulse' : ''}`}>🤖</div>
-            <h2 className="text-xl font-bold uppercase tracking-tighter">{carregandoIA ? "Calculando..." : "Defina seu Foco"}</h2>
+            <h2 className="text-2xl font-black uppercase tracking-tighter">{carregandoIA ? "Calculando..." : "Defina seu Foco"}</h2>
           </div>
-          <button disabled={carregandoIA} onClick={() => gerarTreinoIA("Hipertrofia")} className="w-full bg-sky-600 p-8 rounded-[2rem] font-black uppercase italic shadow-lg shadow-sky-900/50 active:scale-95 transition-all">💪 Hipertrofia</button>
-          <button disabled={carregandoIA} onClick={() => gerarTreinoIA("Emagrecimento")} className="w-full bg-white/5 border border-white/10 p-8 rounded-[2rem] font-black uppercase italic active:scale-95 transition-all">🔥 Emagrecimento</button>
+          <button disabled={carregandoIA} onClick={() => gerarTreinoIA("Hipertrofia")} className="w-full bg-sky-600 p-8 rounded-[2rem] font-black uppercase italic shadow-lg shadow-sky-900/50 active:scale-95 transition-all text-lg">💪 Hipertrofia</button>
+          <button disabled={carregandoIA} onClick={() => gerarTreinoIA("Emagrecimento")} className="w-full bg-white/10 border border-white/20 p-8 rounded-[2rem] font-black uppercase italic active:scale-95 transition-all text-lg">🔥 Emagrecimento</button>
         </div>
       ) : (
         <div className="flex flex-col gap-5 pb-10">
           {modalidade === 'ia' && planoSemanalIA.length > 0 && (
             <>
-              <div className="bg-gray-900 border border-sky-500/20 p-4 rounded-[1.5rem] mb-2 text-center">
-                <p className="text-[10px] text-sky-400 uppercase font-bold tracking-widest mb-1">Planejamento Ativo</p>
-                <h4 className="text-sm font-black uppercase italic">{faseTreino}</h4>
+              <div className="bg-gray-900 border border-sky-500/30 p-4 rounded-[1.5rem] mb-2 text-center">
+                <p className="text-xs text-sky-400 uppercase font-black tracking-widest mb-1">Planejamento Ativo</p>
+                <h4 className="text-base font-black uppercase italic">{faseTreino}</h4>
               </div>
               <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
                 {diasSemanas.map((dia) => (
-                  <button key={dia} onClick={() => setDiaSelecionado(dia)} className={`px-4 py-2 rounded-full text-[10px] font-bold uppercase transition-all ${diaSelecionado === dia ? 'bg-sky-600 text-white shadow-lg shadow-sky-500/30' : 'bg-gray-800 text-gray-400'}`}>{dia.slice(0, 3)}</button>
+                  <button key={dia} onClick={() => setDiaSelecionado(dia)} className={`px-4 py-2 rounded-full text-xs font-black uppercase transition-all ${diaSelecionado === dia ? 'bg-sky-600 text-white shadow-lg shadow-sky-500/30' : 'bg-gray-800 text-gray-300'}`}>{dia.slice(0, 3)}</button>
                 ))}
               </div>
             </>
@@ -133,7 +132,7 @@ const ListaExercicios = ({ whatsapp, aoFechar, API_URL, modalidade, perfil, trei
           {modalidade !== 'ia' && (
             <div className="flex gap-2 mb-4">
               {['A', 'B', 'C', 'D'].map(letra => (
-                <button key={letra} onClick={() => setTreinoFixosAtivo(letra)} className={`px-4 py-2 rounded-full text-xs font-bold ${treinoFixosAtivo === letra ? 'bg-sky-600' : 'bg-white/10'}`}>Ficha {letra}</button>
+                <button key={letra} onClick={() => setTreinoFixosAtivo(letra)} className={`px-4 py-2 rounded-full text-sm font-black ${treinoFixosAtivo === letra ? 'bg-sky-600' : 'bg-white/20 text-gray-200'}`}>Ficha {letra}</button>
               ))}
             </div>
           )}
@@ -143,17 +142,17 @@ const ListaExercicios = ({ whatsapp, aoFechar, API_URL, modalidade, perfil, trei
             if (modalidade === 'ia') {
               const rotina = planoSemanalIA.find(t => t.dia === diaSelecionado);
               exerciciosDoDia = rotina ? rotina.exercicios : [];
-              if (exerciciosDoDia.length === 0) return <div className="bg-gray-900 p-8 rounded-[2rem] text-center border border-white/5"><p className="text-gray-500 text-xs font-bold uppercase italic">Descanso! 🧘‍♂️</p></div>;
+              if (exerciciosDoDia.length === 0) return <div className="bg-gray-900 p-8 rounded-[2rem] text-center border border-white/10"><p className="text-gray-400 text-sm font-black uppercase italic">Descanso! 🧘‍♂️</p></div>;
             } else { exerciciosDoDia = treinosFixosData[treinoFixosAtivo]; }
 
             return exerciciosDoDia.map((ex, i) => (
-              <div key={i} className="bg-gray-900 border border-white/5 p-5 rounded-[2rem] shadow-xl">
-                <h4 className="text-sm font-bold uppercase italic text-white mb-2">{ex.nome}</h4>
+              <div key={i} className="bg-gray-900 border border-white/10 p-5 rounded-[2rem] shadow-xl">
+                <h4 className="text-base font-black uppercase italic text-white mb-3">{ex.nome}</h4>
                 <div className="flex gap-2">
-                  <span className="bg-sky-600/20 text-sky-400 border border-sky-500/30 text-[9px] font-bold px-2 py-1 rounded uppercase">{ex.series}X {ex.reps} REPS</span>
-                  <button onClick={() => setGifAtivo({ nome: ex.nome, arquivo: ex.arquivo || formatarNomeArquivo(ex.nome) })} className="bg-white/10 text-white text-[9px] font-bold px-3 py-1 rounded-full uppercase hover:bg-sky-600 transition-all">▶ Ver GIF</button>
+                  <span className="bg-sky-600/20 text-sky-400 border border-sky-500/40 text-xs font-black px-3 py-1.5 rounded uppercase">{ex.series}X {ex.reps} REPS</span>
+                  <button onClick={() => setGifAtivo({ nome: ex.nome, arquivo: ex.arquivo || formatarNomeArquivo(ex.nome) })} className="bg-white/20 text-white text-xs font-black px-4 py-1.5 rounded-full uppercase hover:bg-sky-600 transition-all">▶ Ver GIF</button>
                 </div>
-                {ex.obs && <div className="bg-black/40 p-3 rounded-xl mt-3 border-l-2 border-sky-500"><p className="text-gray-400 text-[9px] font-bold uppercase italic"><span className="text-sky-500 font-black">Coach:</span> {ex.obs}</p></div>}
+                {ex.obs && <div className="bg-black/50 p-3 rounded-xl mt-3 border-l-4 border-sky-500"><p className="text-gray-300 text-xs font-bold uppercase italic"><span className="text-sky-400 font-black">Coach:</span> {ex.obs}</p></div>}
               </div>
             ));
           })()}

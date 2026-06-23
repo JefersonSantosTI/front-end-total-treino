@@ -13,14 +13,13 @@ const ListaMessagens = ({ mensagens, loading }) => {
     }, [mensagens, loading])
 
     return (
-        <div className="flex flex-col space-y-6 w-full">
+        <div className="flex flex-col space-y-6 w-full font-bold">
             {mensagens.map((mensagem) => (
                 <Mensagem key={mensagem.id} mensagem={mensagem} />
             ))}
 
             {loading && (
                 <div className="flex justify-start">
-                    {/* Estilo combinando com os cards da Home */}
                     <div className="bg-gray-900/80 border border-gray-800 px-5 py-4 rounded-3xl rounded-bl-none shadow-lg">
                         <div className="flex space-x-2">
                             <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>

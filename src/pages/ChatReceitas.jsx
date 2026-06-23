@@ -17,7 +17,6 @@ const ChatReceitas = ({ whatsapp, isVip, aoPedirUpgrade, aoAtualizarPerfil, setT
         }
     };
 
-    // Extrai dados e salva treino gerado pela IA no estado global
     const extrairEGuardarDados = (texto) => {
         if (!texto) return;
         const txt = texto.toLowerCase();
@@ -46,7 +45,6 @@ const ChatReceitas = ({ whatsapp, isVip, aoPedirUpgrade, aoAtualizarPerfil, setT
                 return;
             }
 
-            // Conta quantas vezes o usuário já falou
             const totalMsgUsuario = dados.filter(m => m.role === "user").length;
             const detectouBloqueio = !isVip && totalMsgUsuario >= LIMITE_FREE;
 
@@ -72,7 +70,6 @@ const ChatReceitas = ({ whatsapp, isVip, aoPedirUpgrade, aoAtualizarPerfil, setT
     const onEnviarMensagem = async (textoDigitado, silencioso = false) => {
         if (!textoDigitado.trim()) return;
 
-        // Se for Free e atingiu o limite, bloqueia o envio
         if (!silencioso) {
             const msgsEnviadas = mensagens.filter(m => m.remetente === "usuario").length;
             if (!isVip && msgsEnviadas >= LIMITE_FREE) {
@@ -108,7 +105,6 @@ const ChatReceitas = ({ whatsapp, isVip, aoPedirUpgrade, aoAtualizarPerfil, setT
                 remetente: "bot"
             }]);
 
-            // Se for a última mensagem permitida, mostra o botão logo após a resposta da IA
             const totalAposEnvio = mensagens.filter(m => m.remetente === "usuario").length + 1;
             if (!isVip && totalAposEnvio >= LIMITE_FREE) {
                 setMostrarBotãoUpgrade(true);
@@ -128,12 +124,11 @@ const ChatReceitas = ({ whatsapp, isVip, aoPedirUpgrade, aoAtualizarPerfil, setT
                     <div className="max-w-2xl mx-auto w-full pb-10">
                         <ListaMessagens mensagens={mensagens} loading={loading} />
 
-                        {/* BOTÃO VIP APARECE AQUI APÓS 6 MENSAGENS */}
                         {mostrarBotãoUpgrade && !isVip && (
                             <div className="w-full mt-8 flex flex-col items-center animate-in zoom-in duration-300">
                                 <div className="bg-orange-500/10 border border-orange-500/20 p-6 rounded-[2.5rem] text-center mb-6">
-                                    <p className="text-orange-500 font-black uppercase text-xs tracking-widest mb-2">Limite do Teste Atingido</p>
-                                    <p className="text-gray-400 text-sm italic">Assine o Plano VIP para liberar dietas ilimitadas e seu Mentor de Treino IA.</p>
+                                    <p className="text-orange-500 font-black uppercase text-sm tracking-widest mb-2">Limite do Teste Atingido</p>
+                                    <p className="text-gray-300 text-base font-bold italic">Assine o Plano VIP para liberar dietas ilimitadas e seu Mentor de Treino IA.</p>
                                 </div>
                                 <button onClick={aoPedirUpgrade} className="w-full max-w-xs bg-orange-500 text-white font-black py-5 rounded-[2rem] shadow-[0_10px_30px_rgba(249,115,22,0.3)] uppercase text-sm active:scale-95 transition-all">
                                     🚀 Liberar Acesso VIP Agora
@@ -146,7 +141,6 @@ const ChatReceitas = ({ whatsapp, isVip, aoPedirUpgrade, aoAtualizarPerfil, setT
             </main>
             <footer className="bg-gray-950 px-4 pb-6 pt-2 z-30">
                 <div className="max-w-2xl mx-auto">
-                    {/* O ChatBox fica desabilitado se atingir o limite e não for VIP */}
                     <ChatBox
                         onEnviarMensagem={onEnviarMensagem}
                         desabilitado={loading || (mostrarBotãoUpgrade && !isVip)}
