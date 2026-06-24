@@ -624,7 +624,15 @@ function App() {
     const salvarOnboarding = async (e) => {
         e.preventDefault();
         if (!perfil.nome || !perfil.peso || !perfil.altura || !perfil.idade) { alert("Preencha todos os campos!"); return; }
+
+        const preferenciasIA = alimentosFavoritos.length > 0
+            ? `Alimentos OBRIGATÓRIOS na dieta: ${alimentosFavoritos.join(", ")}.`
+            : "";
+
+        const restricoesFinais = `${perfil.restricoes || ""} ${preferenciasIA}`.trim();
+
         try {
+            // 3. Salva no banco de dados usando a variável garantida (restricoesFinais)
             const response = await fetch(`${API_URL}/usuarios/atualizar`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -637,17 +645,22 @@ function App() {
                     genero: perfil.genero,
                     nivel: perfil.nivel,
                     diasTreino: perfil.diasTreino,
-                    restricoes: perfil.restricoes,
+                    restricoes: restricoesFinais, // <-- A MÁGICA ACONTECE AQUI
                     lesoes: perfil.lesoes,
-                    medidas: {} // Inicializa vazio para o personal preencher
+                    medidas: {}
                 })
             });
+
+
             if (response.ok) {
                 const saude = calcularSaude(perfil.peso, perfil.altura, perfil.idade);
-                setPerfil(prev => ({ ...prev, ...saude }));
+                // Atualiza o perfil na tela com as restrições preenchidas
+                setPerfil(prev => ({ ...prev, restricoes: restricoesFinais, ...saude }));
                 setEtapa("home");
             }
-        } catch { alert("Erro de conexão."); }
+        } catch {
+            alert("Erro de conexão com o servidor.");
+        }
     };
 
     const toggleAlimento = (alimento) => {

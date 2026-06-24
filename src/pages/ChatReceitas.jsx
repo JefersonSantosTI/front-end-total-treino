@@ -92,7 +92,9 @@ const ChatReceitas = ({ whatsapp, isVip, aoPedirUpgrade, aoAtualizarPerfil, setT
                     idade: perfil?.idade || 25,
                     meta: perfil?.meta || "Emagrecimento",
                     imc: perfil?.imc || "0",
-                    tmb: perfil?.tmb || "0"
+                    tmb: perfil?.tmb || "0",
+                    // 👇 ADICIONE ESTA LINHA EXATAMENTE AQUI 👇
+                    restricoes: perfil?.restricoes || ""
                 }
             });
 
@@ -116,6 +118,7 @@ const ChatReceitas = ({ whatsapp, isVip, aoPedirUpgrade, aoAtualizarPerfil, setT
             setLoading(false);
         }
     };
+
 
     return (
         <div className="flex flex-col h-full font-sans bg-gray-950 text-white">
@@ -150,5 +153,7 @@ const ChatReceitas = ({ whatsapp, isVip, aoPedirUpgrade, aoAtualizarPerfil, setT
         </div>
     );
 };
+
+
 
 export default ChatReceitas;
