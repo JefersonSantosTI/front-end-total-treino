@@ -113,6 +113,8 @@ function App() {
 
     // ✅ NOVO ESTADO DO ONBOARDING DE NOTIFICAÇÃO
     const [mostrarOnboardingNotificacao, setMostrarOnboardingNotificacao] = useState(false);
+    const [menuEntrarAberto, setMenuEntrarAberto] = useState(false);
+
 
     const API_URL = "https://api-backend-treino-fit.onrender.com/api";
     const verificandoRef = useRef(false);
@@ -849,83 +851,118 @@ function App() {
     if (etapa === "login") return <Login aoLogar={handleLogin} aoVoltar={() => setEtapa("triagem")} />;
 
     if (etapa === "triagem") {
+        // Estado local simples criado para controlar a abertura do menu de login rápido
+        // eslint-disable-next-line react-hooks/rules-of-hooks
         return (
-            <div className="home-container fixed inset-0 z-50 overflow-y-auto">
+            <div className="home-container fixed inset-0 z-50 overflow-y-auto bg-[#0b0f19]">
                 <div className="home-content">
 
                     {/* Menu Superior */}
-                    <header className="home-header">
-                        <div className="home-logo text-3xl font-bold">Treino Fit</div>
-                        <div>
-                            <button onClick={() => setEtapa("login")} className="text-neutral-200 hover:text-emerald-400 font-semibold text-base bg-transparent border-none cursor-pointer transition-colors px-4 py-2">
-                                Entrar
+                    <header className="home-header relative">
+                        <div className="home-logo text-3xl font-black italic text-emerald-400">Treino Fit</div>
+                        <div className="relative">
+                            <button
+                                onClick={() => setMenuEntrarAberto(!menuEntrarAberto)}
+                                className="text-white hover:text-emerald-400 font-black text-base bg-transparent border-none cursor-pointer transition-colors px-4 py-2 flex items-center gap-1 uppercase tracking-wider"
+                            >
+                                Entrar <span className="text-xs">{menuEntrarAberto ? "▲" : "▼"}</span>
                             </button>
+
+                            {/* Dropdown de Entrada Rápida */}
+                            {menuEntrarAberto && (
+                                <div className="absolute right-0 mt-2 w-56 bg-[#16171d] border-2 border-neutral-800 rounded-2xl shadow-2xl z-[60] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                                    <div className="p-2 flex flex-col gap-1 bg-[#16171d]">
+                                        <button
+                                            onClick={() => { setEtapa("login"); setMenuEntrarAberto(false); }}
+                                            className="w-full text-left px-4 py-3 text-sm font-black text-white hover:bg-emerald-500 hover:text-black rounded-xl transition-all uppercase tracking-wide flex items-center gap-2 bg-transparent border-none cursor-pointer"
+                                        >
+                                            <span>💬</span> Consultoria IA
+                                        </button>
+                                        <button
+                                            onClick={() => { setEtapa("login_personal"); setMenuEntrarAberto(false); }}
+                                            className="w-full text-left px-4 py-3 text-sm font-black text-white hover:bg-blue-500 hover:text-black rounded-xl transition-all uppercase tracking-wide flex items-center gap-2 bg-transparent border-none cursor-pointer"
+                                        >
+                                            <span>📊</span> Módulo Treinador
+                                        </button>
+                                        <button
+                                            onClick={() => { setEtapa("login_aluno"); setMenuEntrarAberto(false); }}
+                                            className="w-full text-left px-4 py-3 text-sm font-black text-white hover:bg-amber-500 hover:text-black rounded-xl transition-all uppercase tracking-wide flex items-center gap-2 bg-transparent border-none cursor-pointer"
+                                        >
+                                            <span>💪</span> Módulo Aluno
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </header>
 
                     {/* Bloco 1: Usuário Comum / IA */}
                     <section className="home-hero">
-                        <h1 className="home-hero-title text-4xl sm:text-5xl font-bold">Seu Personal e Nutricionista<br /><span>Impulsionados por Inteligência Artificial</span></h1>
-                        <p className="home-subtitle font-medium text-lg text-neutral-300">Não tem acompanhamento profissional? Sem problemas. Nossa IA monta sua estrutura de treinos e rotina alimentar ideal de forma 100% personalizada e automática.</p>
+                        <h1 className="home-hero-title text-4xl sm:text-5xl font-black text-white leading-tight">Seu Personal e Nutricionista<br /><span>Impulsionados por Inteligência Artificial</span></h1>
+                        <p className="home-subtitle font-bold text-lg text-neutral-200 max-w-2xl mx-auto mt-4 leading-relaxed">Não tem acompanhamento profissional? Sem problemas. Nossa IA monta sua estrutura de treinos e rotina alimentar ideal de forma 100% personalizada e automática.</p>
 
-                        <button onClick={() => setEtapa("login")} className="home-btn home-btn-whatsapp py-4 px-8 text-base shadow-lg shadow-green-500/20">
-                            <span style={{ marginRight: '12px', fontSize: '22px' }}>💬</span> Iniciar com WhatsApp
+                        <button onClick={() => setEtapa("login")} className="home-btn home-btn-whatsapp py-4 px-10 text-base font-black uppercase tracking-wider shadow-xl shadow-green-500/20 mt-6 active:scale-95 transition-all">
+                            <span style={{ marginRight: '12px', fontSize: '24px' }}>💬</span> Iniciar com WhatsApp
                         </button>
                     </section>
 
                     {/* Bloco 2: Personal Trainer */}
-                    <section className="home-section-block">
+                    <section className="home-section-block border-t-2 border-neutral-900">
                         <div className="home-grid">
                             <div className="home-content-left text-left">
-                                <h2 className="text-3xl font-bold text-neutral-100">Você é Personal Trainer?<br /><span className="text-blue-400">Ganhe tempo e multiplique alunos.</span></h2>
-                                <p className="font-medium text-base text-neutral-300">Esqueça planilhas confusas. Deixe a IA estruturar a base das rotinas e os check-ins enquanto você foca no ajuste fino e no atendimento premium.</p>
+                                <h2 className="text-3xl font-black text-white uppercase italic leading-snug">Você é Personal Trainer?<br /><span className="text-blue-400 not-italic">Ganhe tempo e multiplique alunos.</span></h2>
+                                <p className="font-bold text-base text-neutral-300 mt-3 leading-relaxed">Esqueça planilhas confusas. Deixe a IA estruturar a base das rotinas e os check-ins enquanto você foca no ajuste fino e no atendimento premium dos seus alunos.</p>
 
-                                <button onClick={() => setEtapa("login_personal")} className="home-btn home-btn-primary py-3.5 px-6 text-sm shadow-lg shadow-emerald-500/20 mt-4">
+                                <button onClick={() => setEtapa("login_personal")} className="home-btn home-btn-primary py-4 px-8 text-sm font-black uppercase tracking-wider shadow-lg shadow-emerald-500/20 mt-6 active:scale-95 transition-all">
                                     Acessar Painel do Personal
                                 </button>
                             </div>
-                            <div className="home-app-mockup text-left border border-neutral-800 bg-[#16171d] shadow-xl rounded-2xl p-4">
-                                <div className="home-mockup-header text-base border-b border-neutral-800 pb-2 mb-3">
-                                    <span className="font-bold text-neutral-200">📊 Painel do Treinador</span>
-                                    <span className="font-medium opacity-50 ml-2 text-xs">v1.2</span>
+                            <div className="home-app-mockup text-left border-2 border-neutral-800 bg-[#16171d] shadow-2xl rounded-3xl p-6">
+                                <div className="home-mockup-header text-base border-b-2 border-neutral-800 pb-3 mb-4 flex justify-between items-center">
+                                    <span className="font-black text-white">📊 Painel do Treinador</span>
+                                    <span className="font-bold opacity-60 ml-2 text-xs bg-neutral-900 px-2 py-0.5 rounded text-blue-400 border border-neutral-800">v1.2</span>
                                 </div>
-                                <div className="font-medium text-sm text-neutral-300 py-2 flex items-center"><span className="mr-3 text-lg">🤖</span> Previsão inteligente de evolução</div>
-                                <div className="font-medium text-sm text-neutral-300 py-2 flex items-center"><span className="mr-3 text-lg">📝</span> Criação de treinos automáticos</div>
-                                <div className="font-medium text-sm text-neutral-300 py-2 flex items-center"><span className="mr-3 text-lg">✅</span> Histórico e Check-ins simplificados</div>
+                                <div className="font-black text-sm text-neutral-200 py-2.5 flex items-center"><span className="mr-3 text-xl">🤖</span> Previsão inteligente de evolução</div>
+                                <div className="font-black text-sm text-neutral-200 py-2.5 flex items-center"><span className="mr-3 text-xl">📝</span> Criação de treinos automáticos</div>
+                                <div className="font-black text-sm text-neutral-200 py-2.5 flex items-center"><span className="mr-3 text-xl">✅</span> Histórico e Check-ins simplificados</div>
                             </div>
                         </div>
                     </section>
 
                     {/* Bloco 3: Área do Aluno */}
-                    <section className="home-section-block">
+                    <section className="home-section-block border-t-2 border-neutral-900">
                         <div className="home-grid" style={{ direction: 'rtl' }}>
                             <div className="home-content-left text-left" style={{ direction: 'ltr' }}>
-                                <h2 className="text-3xl font-bold text-neutral-100">A Área do Aluno<br /><span className="text-emerald-400">Tudo integrado e na palma da mão.</span></h2>
-                                <p className="font-medium text-base text-neutral-300">Seu personal te cadastrou? Acesse sua divisão exata de treinos diários e sua base alimentar calculada conforme suas metas.</p>
+                                <h2 className="text-3xl font-black text-white uppercase italic leading-snug">A Área do Aluno<br /><span className="text-emerald-400 not-italic">Tudo integrado e na palma da mão.</span></h2>
+                                <p className="font-bold text-base text-neutral-300 mt-3 leading-relaxed">Seu personal te cadastrou? Acesse sua divisão exata de treinos diários e sua base alimentar calculada estritamente conforme suas metas.</p>
 
-                                <button onClick={() => setEtapa("login_aluno")} className="home-btn py-3.5 px-6 text-sm shadow-md mt-4 transition-colors" style={{ background: 'transparent', border: '1px solid #34d399', color: '#34d399' }}>
+                                <button
+                                    onClick={() => setEtapa("login_aluno")}
+                                    className="py-4 px-8 text-sm font-black uppercase tracking-wider mt-6 transition-all duration-300 active:scale-95 border-2 border-emerald-400 text-emerald-400 rounded-full hover:bg-emerald-400 hover:text-[#0d0e12] shadow-[0_5px_15px_rgba(52,211,153,0.1)] hover:shadow-[0_10px_30px_rgba(52,211,153,0.4)]"
+                                >
                                     Acessar Como Aluno
                                 </button>
                             </div>
-                            <div className="home-app-mockup text-left border border-neutral-800 bg-[#16171d] shadow-xl rounded-2xl p-4" style={{ direction: 'ltr' }}>
-                                <div className="home-mockup-header text-base border-b border-neutral-800 pb-2 mb-3 flex justify-between items-center">
-                                    <span className="font-bold text-neutral-200">💪 Meu Treino Diário</span>
-                                    <span className="font-semibold text-orange-400 text-xs">Meta Batida 🔥</span>
+                            <div className="home-app-mockup text-left border-2 border-neutral-800 bg-[#16171d] shadow-2xl rounded-3xl p-6" style={{ direction: 'ltr' }}>
+                                <div className="home-mockup-header text-base border-b-2 border-neutral-800 pb-3 mb-4 flex justify-between items-center">
+                                    <span className="font-black text-white">💪 Meu Treino Diário</span>
+                                    <span className="font-black text-orange-400 text-sm bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded animate-pulse">Meta Batida 🔥</span>
                                 </div>
-                                <div className="font-medium text-sm text-neutral-300 py-2 flex items-center"><span className="mr-3 text-lg">🍎</span> Base Alimentar Ajustada</div>
-                                <div className="font-medium text-sm text-neutral-300 py-2 flex items-center"><span className="mr-3 text-lg">💧</span> Controle de Água Integrado</div>
-                                <div className="bg-[#0d0e12] border border-neutral-800 rounded-xl p-4 mt-3 flex items-start shadow-sm">
-                                    <span className="text-2xl mr-3">💧</span>
-                                    <div className="text-xs text-neutral-300 leading-relaxed">
-                                        <strong className="text-blue-400 block mb-0.5">Notificação Treino Fit:</strong>
-                                        Hora de beber água! Faltam 1.2L para bater a meta.
+                                <div className="font-black text-sm text-neutral-200 py-2.5 flex items-center"><span className="mr-3 text-xl">🍎</span> Base Alimentar Ajustada</div>
+                                <div className="font-black text-sm text-neutral-200 py-2.5 flex items-center"><span className="mr-3 text-xl">💧</span> Controle de Água Integrado</div>
+                                <div className="bg-[#0d0e12] border-2 border-neutral-800 rounded-2xl p-5 mt-4 flex items-start shadow-inner relative overflow-hidden">
+                                    <div className="absolute left-0 top-0 h-full w-1.5 bg-blue-500"></div>
+                                    <span className="text-3xl mr-4 select-none">💧</span>
+                                    <div className="text-sm text-white font-bold leading-relaxed">
+                                        <strong className="text-blue-400 block mb-1 text-xs uppercase tracking-wider font-black">Notificação Treino Fit:</strong>
+                                        Hora de beber água! Faltam 1.2L para bater a sua meta de hoje.
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </section>
 
-                    <footer className="text-center py-8 text-neutral-500 border-t border-neutral-800 text-xs font-medium mt-10">
+                    <footer style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8', borderTop: '2px solid #1e293b', fontSize: '14px', fontWeight: 'black', textTransform: 'uppercase', trackingWidth: 'widest' }}>
                         &copy; 2026 Treino Fit. Todos os direitos reservados.
                     </footer>
                 </div>
