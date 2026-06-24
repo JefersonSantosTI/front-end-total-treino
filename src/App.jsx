@@ -638,7 +638,8 @@ function App() {
                     nivel: perfil.nivel,
                     diasTreino: perfil.diasTreino,
                     restricoes: perfil.restricoes,
-                    lesoes: perfil.lesoes
+                    lesoes: perfil.lesoes,
+                    medidas: {} // Inicializa vazio para o personal preencher
                 })
             });
             if (response.ok) {
@@ -721,11 +722,11 @@ function App() {
 
         return (
             <div className="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={fecharModal}>
-                <div className="w-full max-w-md bg-[#16171d] border border-neutral-800 rounded-3xl p-6 relative shadow-xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                <div className="w-full max-w-md bg-[#16171d] border-2 border-neutral-800 rounded-3xl p-6 relative shadow-xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
                     <button onClick={fecharModal} className="absolute top-4 right-4 text-neutral-400 hover:text-neutral-100 font-bold text-lg bg-[#0d0e12] w-8 h-8 rounded-lg flex items-center justify-center border border-neutral-800 transition-colors">✕</button>
 
                     <div className="flex items-center gap-3 mb-6 border-b border-neutral-800 pb-4">
-                        <div className="w-12 h-12 bg-blue-500/10 border border-blue-500/30 rounded-xl flex items-center justify-center text-2xl shadow-sm">📊</div>
+                        <div className="w-12 h-12 bg-blue-500/10 border-2 border-blue-500/30 rounded-xl flex items-center justify-center text-2xl shadow-sm">📊</div>
                         <div>
                             <h3 className="font-bold text-neutral-100 uppercase text-base tracking-tight">Avaliação Física</h3>
                             <p className="text-xs text-blue-400 font-semibold font-mono uppercase mt-1">{alunoData.nome}</p>
@@ -733,7 +734,7 @@ function App() {
                     </div>
 
                     {/* 🚀 NOVO RADAR DE EVOLUÇÃO VISUAL */}
-                    <div className="bg-[#0d0e12] border border-neutral-800 p-5 rounded-2xl mb-6 shadow-sm">
+                    <div className="bg-[#0d0e12] border-2 border-neutral-800 p-5 rounded-2xl mb-6 shadow-inner">
                         <p className="text-xs font-bold uppercase tracking-wider text-emerald-400 mb-4 flex items-center gap-2">
                             <span>🚀</span> Radar de Evolução Visual
                         </p>
@@ -743,7 +744,7 @@ function App() {
                                 <span>Peso Atual: {p}kg</span>
                                 <span className="text-emerald-400">{textMeta}</span>
                             </div>
-                            <div className="w-full bg-neutral-800 h-3 rounded-full overflow-hidden relative shadow-inner">
+                            <div className="w-full bg-neutral-800 h-4 rounded-full overflow-hidden relative shadow-inner">
                                 <div className="h-full bg-gradient-to-r from-blue-600 to-emerald-500 rounded-full transition-all duration-1000 ease-out" style={{ width: `${Math.min(progressoMeta, 100)}%` }}></div>
                             </div>
                             <p className="text-[10px] font-semibold text-right mt-2 text-neutral-400 font-mono uppercase">Proximidade do objetivo: {Math.round(Math.min(progressoMeta, 100))}%</p>
@@ -755,7 +756,7 @@ function App() {
                                     <span>Gordura Atual: {bf}%</span>
                                     <span className={bfColor.replace('bg-', 'text-')}>{bfStatus}</span>
                                 </div>
-                                <div className="w-full bg-neutral-800 h-3 rounded-full overflow-hidden relative shadow-inner">
+                                <div className="w-full bg-neutral-800 h-4 rounded-full overflow-hidden relative shadow-inner">
                                     <div className={`h-full ${bfColor} transition-all duration-1000 ease-out`} style={{ width: `${bfPercent}%` }}></div>
                                 </div>
                             </div>
@@ -771,26 +772,26 @@ function App() {
                         <div>
                             <p className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-3">Dados Biométricos Gerais</p>
                             <div className="grid grid-cols-2 gap-3">
-                                <div className="bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl shadow-sm">
+                                <div className="bg-[#0d0e12] border-2 border-neutral-800 p-4 rounded-xl shadow-sm">
                                     <p className="text-[11px] text-neutral-400 uppercase font-semibold mb-1">Peso Bruto</p>
                                     <p className="text-lg font-bold text-neutral-100">{alunoData.peso ? alunoData.peso : '--'} <span className="text-xs text-neutral-500 font-semibold">kg</span></p>
                                 </div>
-                                <div className="bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl shadow-sm">
+                                <div className="bg-[#0d0e12] border-2 border-neutral-800 p-4 rounded-xl shadow-sm">
                                     <p className="text-[11px] text-neutral-400 uppercase font-semibold mb-1">Estatura</p>
                                     <p className="text-lg font-bold text-neutral-100">{alunoData.altura ? alunoData.altura : '--'} <span className="text-xs text-neutral-500 font-semibold">m</span></p>
                                 </div>
-                                <div className="bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl shadow-sm">
+                                <div className="bg-[#0d0e12] border-2 border-neutral-800 p-4 rounded-xl shadow-sm">
                                     <p className="text-[11px] text-neutral-400 uppercase font-semibold mb-1">Idade</p>
                                     <p className="text-lg font-bold text-neutral-100">{alunoData.idade ? alunoData.idade : '--'} <span className="text-xs text-neutral-500 font-semibold">anos</span></p>
                                 </div>
-                                <div className="bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl shadow-sm">
+                                <div className="bg-[#0d0e12] border-2 border-neutral-800 p-4 rounded-xl shadow-sm">
                                     <p className="text-[11px] text-neutral-400 uppercase font-semibold mb-1">Gênero Bio</p>
                                     <p className="text-base font-bold text-neutral-100 mt-1">{alunoData.genero ? alunoData.genero : '--'}</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="bg-[#0d0e12] border border-neutral-800 p-5 rounded-xl space-y-4 shadow-sm">
+                        <div className="bg-[#0d0e12] border-2 border-neutral-800 p-5 rounded-2xl space-y-4 shadow-sm">
                             <div>
                                 <p className="text-[11px] text-neutral-400 uppercase font-semibold mb-1">Nível de Treino</p>
                                 <p className="text-sm font-medium text-neutral-200">{alunoData.nivel ? alunoData.nivel : '--'}</p>
@@ -810,7 +811,7 @@ function App() {
                         </div>
 
                         {alunoData.medidas && Object.keys(alunoData.medidas).length > 0 && (
-                            <div className="mt-6 bg-[#0d0e12] border border-neutral-800 p-5 rounded-xl shadow-sm">
+                            <div className="mt-6 bg-[#0d0e12] border-2 border-neutral-800 p-5 rounded-2xl shadow-sm">
                                 <p className="text-xs font-bold uppercase tracking-wider text-blue-400 mb-4 border-b border-neutral-800 pb-2">
                                     📏 Circunferências (cm)
                                 </p>
@@ -851,7 +852,6 @@ function App() {
     if (etapa === "login") return <Login aoLogar={handleLogin} aoVoltar={() => setEtapa("triagem")} />;
 
     if (etapa === "triagem") {
-        // Estado local simples criado para controlar a abertura do menu de login rápido
         // eslint-disable-next-line react-hooks/rules-of-hooks
         return (
             <div className="home-container fixed inset-0 z-50 overflow-y-auto bg-[#0b0f19]">
@@ -975,7 +975,7 @@ function App() {
         return (
             <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
                 <div className="fixed inset-0 bg-[#0d0e12] flex flex-col items-center justify-center p-6 text-white font-sans z-50">
-                    <div className="w-full max-w-sm bg-[#16171d] border border-neutral-800 p-8 rounded-2xl shadow-xl">
+                    <div className="w-full max-w-sm bg-[#16171d] border-2 border-neutral-800 p-8 rounded-2xl shadow-xl">
                         {!googleUser ? (
                             <>
                                 <h2 className="text-xl font-bold uppercase tracking-tight text-neutral-100 mb-2">Acesso Técnico</h2>
@@ -1043,7 +1043,7 @@ function App() {
                         try {
                             const urlParams = new URLSearchParams(window.location.search);
                             const refPersonal = urlParams.get('ref');
-                            const payload = { ...perfil, nome: perfil.nome, peso: parseNumeroSeguro(perfil.peso), altura: parseNumeroSeguro(perfil.altura), idade: parseInt(perfil.idade) || 0, whatsapp: novoAlunoForm.whatsapp, objetivo: perfil.meta, meta: perfil.meta, genero: perfil.genero, nivel: perfil.nivel, diasTreino: perfil.diasTreino, restricoes: perfil.restricoes, lesoes: perfil.lesoes, personalRef: refPersonal };
+                            const payload = { ...perfil, nome: perfil.nome, peso: parseNumeroSeguro(perfil.peso), altura: parseNumeroSeguro(perfil.altura), idade: parseInt(perfil.idade) || 0, whatsapp: novoAlunoForm.whatsapp, objetivo: perfil.meta, meta: perfil.meta, genero: perfil.genero, nivel: perfil.nivel, diasTreino: perfil.diasTreino, restricoes: perfil.restricoes, lesoes: perfil.lesoes, personalRef: refPersonal, medidas: {} };
                             const res = await fetch(`${API_URL}/aluno/matricula-ia`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                             if (res.ok) { alert("🎉 Análise concluída! Sua ficha já está na mesa do Personal."); window.location.href = window.location.origin; }
                             else { const data = await res.json(); alert(data.mensagem || "Erro na análise."); setEtapa("matricula_externa"); }
@@ -1271,7 +1271,7 @@ function App() {
 
                             <div className="space-y-1">
                                 <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 ml-1">Lesões ou Dores? (Opcional)</label>
-                                <input type="text" placeholder="Ex: Dor no joelho direito..." className="w-full bg-[#0d0e12] border border-neutral-700 p-3.5 rounded-xl text-sm font-medium outline-none text-neutral-200 focus:border-emerald-500 placeholder-neutral-600 transition-colors" value={perfil.lesoes} onChange={(e) => setPerfil({ ...perfil, lesoes: e.target.value })} />
+                                <input type="text" placeholder="Ex: Dor no joelho direito, lombar..." className="w-full bg-[#0d0e12] border border-neutral-700 p-3.5 rounded-xl text-sm font-medium outline-none text-neutral-200 focus:border-emerald-500 placeholder-neutral-600 transition-colors" value={perfil.lesoes} onChange={(e) => setPerfil({ ...perfil, lesoes: e.target.value })} />
                             </div>
 
                             <div className="flex gap-3 pt-4 border-t border-neutral-800 mt-2">
@@ -1292,94 +1292,87 @@ function App() {
             <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col overflow-hidden font-sans z-30">
                 {abaAtiva === "home" && (
                     <div className="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col items-center custom-scrollbar">
-                        <header className="w-full max-w-4xl flex justify-between items-center border-b border-neutral-800 pb-5 mb-6">
-                            <div className="flex items-center space-x-3">
-                                <img src="/logo192.png" alt="Ícone Treino Fit" className="w-10 h-10 rounded-lg shadow-sm border border-neutral-700" />
+                        <header className="w-full max-w-4xl flex justify-between items-center border-b-2 border-neutral-800 pb-5 mb-8">
+                            <div className="flex items-center space-x-4">
+                                <img src="/logo192.png" alt="Ícone Treino Fit" className="w-12 h-12 rounded-xl shadow-lg border border-neutral-700" />
                                 <div>
-                                    <h2 className="text-lg font-bold text-neutral-100 uppercase tracking-tight">{perfil.nome}</h2>
-                                    <p className="text-[10px] font-semibold text-neutral-400 font-mono uppercase tracking-widest mt-0.5">Conta {isVip ? 'Premium Elite' : 'Free Tier'}</p>
+                                    <h2 className="text-xl font-black text-white uppercase tracking-tight">{perfil.nome}</h2>
+                                    <p className="text-xs font-black text-neutral-400 font-mono uppercase tracking-widest mt-1">Conta {isVip ? 'Premium Elite' : 'Free Tier'}</p>
                                 </div>
                             </div>
-                            <button type="button" onClick={() => !isVip && setBloqueado(true)} className={`px-3 py-2 rounded-lg text-[10px] font-bold uppercase font-mono border shadow-sm transition-all ${isVip ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' : 'border-amber-500/30 text-amber-400 bg-amber-500/10 hover:bg-amber-500/20'}`}>{isVip ? "✓ Vip Ativado" : "Upgrade Premium"}</button>
+                            <button type="button" onClick={() => !isVip && setBloqueado(true)} className={`px-4 py-2.5 rounded-lg text-xs font-black uppercase font-mono border-2 shadow-lg transition-all ${isVip ? 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10' : 'border-amber-500/40 text-amber-400 bg-amber-500/10 animate-pulse hover:bg-amber-500/20'}`}>{isVip ? "✓ Vip Ativado" : "Upgrade Premium"}</button>
                         </header>
 
-                        <main className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-6 items-start pb-12">
-                            <div className="md:col-span-1 flex flex-col gap-5">
-                                <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-2xl shadow-md relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/5 rounded-full blur-2xl -mr-8 -mt-8"></div>
-                                    <p className="text-neutral-400 text-[10px] font-bold uppercase tracking-widest mb-3">Composição Corporal</p>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div className="bg-[#0d0e12] p-3 border border-neutral-800 rounded-xl shadow-inner">
-                                            <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">Massa Global</span>
-                                            <span className="text-2xl font-bold text-neutral-100">{perfil.peso}<span className="text-xs text-neutral-500 font-medium ml-1">kg</span></span>
+                        <main className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-8 items-start pb-12">
+                            <div className="md:col-span-1 flex flex-col gap-6">
+                                <div className="bg-[#16171d] border-2 border-neutral-800 p-6 rounded-3xl shadow-xl relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                                    <p className="text-neutral-400 text-xs font-black uppercase tracking-widest mb-4">Composição Corporal</p>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-[#0d0e12] p-4 border border-neutral-700 rounded-2xl shadow-inner">
+                                            <span className="text-[10px] font-black text-neutral-400 uppercase tracking-wider block mb-1">Massa Global</span>
+                                            <span className="text-3xl font-black text-white">{perfil.peso}<span className="text-sm text-neutral-500 font-bold ml-1">kg</span></span>
                                         </div>
-                                        <div className="bg-[#0d0e12] p-3 border border-neutral-800 rounded-xl shadow-inner">
-                                            <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">Estatura</span>
-                                            <span className="text-2xl font-bold text-neutral-100">{perfil.altura}<span className="text-xs text-neutral-500 font-medium ml-1">m</span></span>
+                                        <div className="bg-[#0d0e12] p-4 border border-neutral-700 rounded-2xl shadow-inner">
+                                            <span className="text-[10px] font-black text-neutral-400 uppercase tracking-wider block mb-1">Estatura</span>
+                                            <span className="text-3xl font-black text-white">{perfil.altura}<span className="text-sm text-neutral-500 font-bold ml-1">m</span></span>
                                         </div>
                                     </div>
-                                    <div className="mt-4 text-[10px] text-neutral-300 font-semibold font-mono flex justify-between border-t border-neutral-800/60 pt-3 bg-[#0d0e12]/50 px-3 py-2 rounded-lg">
-                                        <span className="uppercase text-neutral-500">Planejamento:</span>
+                                    <div className="mt-5 text-xs text-neutral-300 font-black font-mono flex justify-between border-t border-neutral-800 pt-4 bg-neutral-900/30 p-3 rounded-lg">
+                                        <span className="uppercase">Planejamento:</span>
                                         <span className="text-emerald-400 uppercase">{perfil.meta}</span>
                                     </div>
                                 </div>
 
-                                <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-2xl shadow-md text-center relative overflow-hidden">
-                                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-blue-500 opacity-80"></div>
-                                    <p className="text-neutral-400 text-[10px] font-bold uppercase tracking-widest text-left mb-4 mt-1">Meta Metabólica Diária</p>
-                                    <div className="inline-flex flex-col items-center justify-center p-6 border-2 border-neutral-800 bg-[#0d0e12] rounded-full w-32 h-32 mx-auto mb-2 border-t-emerald-500 shadow-inner">
-                                        <span className="text-3xl font-bold text-neutral-100">{perfil.tmb}</span>
-                                        <span className="text-[9px] font-medium font-mono text-neutral-500 uppercase mt-1 tracking-widest">kcal/dia</span>
+                                <div className="bg-[#16171d] border-2 border-neutral-800 p-6 rounded-3xl shadow-xl text-center relative overflow-hidden">
+                                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-blue-500"></div>
+                                    <p className="text-neutral-400 text-xs font-black uppercase tracking-widest text-left mb-6">Meta Metabólica Diária</p>
+                                    <div className="inline-flex flex-col items-center justify-center p-8 border-4 border-neutral-800 bg-[#0d0e12] rounded-full w-40 h-40 mx-auto mb-2 border-t-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.1)]">
+                                        <span className="text-4xl font-black text-white">{perfil.tmb}</span>
+                                        <span className="text-xs font-bold font-mono text-neutral-500 uppercase mt-2 tracking-widest">kcal/dia</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="md:col-span-2 flex flex-col gap-5">
-                                <div className="bg-[#16171d] border border-neutral-800 p-6 rounded-2xl shadow-md bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-blend-soft-light">
-                                    <p className="text-emerald-400 text-[10px] font-bold uppercase tracking-widest font-mono mb-3 flex items-center gap-1.5">
-                                        <span className="text-base">⚡</span> Diretriz Técnica Operacional
+                            <div className="md:col-span-2 flex flex-col gap-6">
+                                <div className="bg-[#16171d] border-2 border-neutral-800 p-7 rounded-3xl shadow-xl bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
+                                    <p className="text-emerald-400 text-xs font-black uppercase tracking-widest font-mono mb-4 flex items-center gap-2">
+                                        <span className="text-lg">⚡</span> Diretriz Técnica Operacional
                                     </p>
-                                    <p className="text-sm font-medium text-neutral-200 leading-relaxed">
-                                        "<span className="text-emerald-300 font-semibold">{perfil.nome}</span>, seus parâmetros atuais indicam que o nosso foco principal deve ser a oxidação de gordura ativa. A Inteligência Artificial já está priorizando a ingestão de proteínas no seu cálculo."
+                                    <p className="text-base font-bold text-white leading-relaxed">
+                                        "<span className="text-emerald-300">{perfil.nome}</span>, seus parâmetros atuais indicam que o nosso foco principal deve ser a oxidação de gordura ativa. A Inteligência Artificial já está priorizando a ingestão de proteínas no seu cálculo."
                                     </p>
                                 </div>
 
-                                <div className="bg-[#16171d] border border-neutral-800 p-6 rounded-2xl shadow-md flex flex-col justify-between">
+                                <div className="bg-[#16171d] border-2 border-neutral-800 p-7 rounded-3xl shadow-xl flex flex-col justify-between">
                                     <div>
-                                        <p className="text-neutral-400 text-[10px] font-bold uppercase tracking-widest mb-4 border-b border-neutral-800 pb-2">Terminais de Execução</p>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
-                                            <button type="button" onClick={() => setAbaAtiva("chat")} className="bg-gradient-to-br from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold py-4 px-4 rounded-xl text-xs uppercase tracking-wider text-center transition-all shadow-md active:scale-95 flex flex-col items-center justify-center gap-1.5">
-                                                <span className="text-2xl opacity-90">🤖</span>
+                                        <p className="text-neutral-400 text-xs font-black uppercase tracking-widest mb-5 border-b border-neutral-800 pb-3">Terminais de Execução</p>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
+                                            <button type="button" onClick={() => setAbaAtiva("chat")} className="bg-gradient-to-br from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-black py-6 px-4 rounded-2xl text-sm uppercase tracking-wider text-center transition-all shadow-[0_10px_25px_rgba(16,185,129,0.3)] active:scale-95 flex flex-col items-center justify-center gap-2">
+                                                <span className="text-3xl">🤖</span>
                                                 Chat IA & Consultoria
                                             </button>
-                                            <button type="button" onClick={() => setAbaAtiva("treino")} className="bg-[#0d0e12] hover:bg-neutral-800 border border-neutral-700 text-neutral-200 font-bold py-4 px-4 rounded-xl text-xs uppercase tracking-wider text-center transition-all shadow-sm active:scale-95 flex flex-col items-center justify-center gap-1.5">
-                                                <span className="text-2xl opacity-90">🏋️‍♂️</span>
+                                            <button type="button" onClick={() => setAbaAtiva("treino")} className="bg-[#0d0e12] hover:bg-neutral-800 border-2 border-neutral-700 text-white font-black py-6 px-4 rounded-2xl text-sm uppercase tracking-wider text-center transition-all shadow-lg active:scale-95 flex flex-col items-center justify-center gap-2">
+                                                <span className="text-3xl">🏋️‍♂️</span>
                                                 Biblioteca de Treinos
                                             </button>
                                         </div>
                                     </div>
-                                    <div className="text-center pt-4 border-t border-neutral-800 mt-auto">
-                                        <button
-                                            type="button"
-                                            onClick={handleSair}
-                                            className="flex items-center justify-center gap-2 mx-auto px-5 py-2.5 bg-[#0d0e12] border border-red-500/20 rounded-lg text-[10px] sm:text-xs font-bold uppercase tracking-wider text-red-400 hover:bg-red-500 hover:text-white hover:border-red-500 shadow-sm transition-all duration-300 active:scale-95"
-                                        >
-                                            <span>Encerrar Sessão no Dispositivo</span>
-                                            <span className="text-sm">🚪</span>
-                                        </button>
+                                    <div className="text-center pt-5 border-t-2 border-neutral-800 mt-auto">
+                                        <button type="button" onClick={handleSair} className="text-xs font-black font-mono uppercase text-neutral-500 hover:text-red-500 transition-colors bg-neutral-900/50 px-4 py-2 rounded-lg">Encerrar sessão no dispositivo</button>
                                     </div>
                                 </div>
 
-                                <div className="bg-gradient-to-r from-[#16171d] to-emerald-900/10 border border-emerald-500/20 p-5 rounded-2xl shadow-md flex flex-col sm:flex-row items-center justify-between gap-5 relative overflow-hidden">
-                                    <div className="absolute -right-6 -bottom-6 text-[80px] opacity-5">🛒</div>
-                                    <div className="z-10 text-center sm:text-left flex-1">
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-400 mb-1.5 flex items-center justify-center sm:justify-start gap-1.5">
+                                <div className="bg-gradient-to-r from-[#16171d] to-emerald-900/20 border-2 border-emerald-500/30 p-7 rounded-3xl shadow-[0_15px_40px_rgba(16,185,129,0.1)] flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden">
+                                    <div className="absolute -right-10 -bottom-10 text-[120px] opacity-5">🛒</div>
+                                    <div className="z-10 text-center sm:text-left">
+                                        <p className="text-sm font-black uppercase tracking-widest text-emerald-400 mb-2 drop-shadow-md flex items-center justify-center sm:justify-start gap-2">
                                             🛒 Mercado Saudável Oficial
                                         </p>
-                                        <p className="text-xs font-medium text-neutral-300 leading-relaxed">A IA montou sua dieta? Peça os ingredientes agora mesmo e receba em casa sem perder o foco.</p>
+                                        <p className="text-sm font-bold text-neutral-200 leading-relaxed max-w-sm">A IA montou sua dieta? Peça os ingredientes agora mesmo e receba no conforto de casa sem sair do foco.</p>
                                     </div>
-                                    <a href="https://hortilife-praticidade.kyte.site/pt-BR" target="_blank" rel="noopener noreferrer" className="z-10 whitespace-nowrap bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-6 rounded-xl text-[10px] uppercase tracking-widest transition-all shadow-md active:scale-95 text-center w-full sm:w-auto">
-                                        👉 Fazer Pedido
+                                    <a href="https://hortilife-praticidade.kyte.site/pt-BR" target="_blank" rel="noopener noreferrer" className="z-10 whitespace-nowrap bg-emerald-600 hover:bg-emerald-500 text-white font-black py-4.5 px-8 rounded-2xl text-xs uppercase tracking-widest transition-all shadow-[0_10px_20px_rgba(16,185,129,0.4)] active:scale-95 text-center w-full sm:w-auto">
+                                        👉 Fazer Pedido Online
                                     </a>
                                 </div>
                             </div>
@@ -1388,11 +1381,11 @@ function App() {
                 )}
                 {abaAtiva === "chat" && (
                     <div className="flex-1 flex flex-col overflow-hidden">
-                        <header className="p-4 flex items-center justify-between border-b border-neutral-800 bg-[#16171d] shadow-sm z-20">
-                            <button type="button" onClick={() => { setAbaAtiva("home"); atualizarStatusVIP(); }} className="text-emerald-400 hover:text-emerald-300 font-bold text-xs uppercase font-mono flex items-center gap-1.5 bg-neutral-900 px-3 py-1.5 rounded-lg border border-neutral-800 transition-colors">
+                        <header className="p-5 flex items-center justify-between border-b-2 border-neutral-800 bg-[#16171d] shadow-md z-20">
+                            <button type="button" onClick={() => { setAbaAtiva("home"); atualizarStatusVIP(); }} className="text-emerald-400 hover:text-white font-black text-sm uppercase font-mono flex items-center gap-2 bg-neutral-900 px-4 py-2 rounded-xl border border-neutral-800 transition-colors">
                                 ← Voltar ao Início
                             </button>
-                            <span className="text-[10px] font-bold font-mono uppercase text-neutral-500 bg-[#0d0e12] px-2.5 py-1 rounded border border-neutral-800 hidden sm:block">
+                            <span className="text-xs font-black font-mono uppercase text-neutral-400 bg-[#0d0e12] px-3 py-1.5 rounded-lg border border-neutral-800 hidden sm:block">
                                 Módulo Nutrição IA
                             </span>
                         </header>
@@ -1400,42 +1393,42 @@ function App() {
                     </div>
                 )}
                 {abaAtiva === "treino" && (
-                    <div className="flex-1 flex flex-col bg-[#0d0e12] p-4 md:p-6 overflow-y-auto custom-scrollbar">
-                        <header className="w-full max-w-5xl mx-auto flex justify-between items-center border-b border-neutral-800 pb-4 mb-6">
-                            <button type="button" onClick={() => { setAbaAtiva("home"); atualizarStatusVIP(); }} className="text-emerald-400 hover:text-emerald-300 font-bold text-xs uppercase font-mono flex items-center gap-1.5 bg-neutral-900 px-3 py-1.5 rounded-lg border border-neutral-800 transition-colors">
+                    <div className="flex-1 flex flex-col bg-[#0d0e12] p-4 md:p-8 overflow-y-auto custom-scrollbar">
+                        <header className="w-full max-w-5xl mx-auto flex justify-between items-center border-b-2 border-neutral-800 pb-6 mb-8">
+                            <button type="button" onClick={() => { setAbaAtiva("home"); atualizarStatusVIP(); }} className="text-emerald-400 hover:text-white font-black text-sm uppercase font-mono flex items-center gap-2 bg-neutral-900 px-4 py-2 rounded-xl border border-neutral-800 transition-colors">
                                 ← Retornar
                             </button>
-                            <span className="text-neutral-100 font-bold uppercase text-sm tracking-widest">Planilhas de Treino</span>
+                            <span className="text-white font-black uppercase text-base tracking-widest">Planilhas de Treino</span>
                         </header>
 
-                        <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-5 mx-auto">
-                            <button type="button" onClick={() => isVip ? setModalidadeAberta('ia') : setBloqueado(true)} className="bg-gradient-to-br from-[#16171d] to-emerald-900/5 border border-neutral-800 hover:border-emerald-500/50 p-6 rounded-2xl flex flex-col sm:flex-row items-center sm:items-start justify-between transition-all text-center sm:text-left group shadow-md">
-                                <div className="order-2 sm:order-1 mt-3 sm:mt-0">
-                                    <p className="font-bold uppercase text-lg text-neutral-100 mb-1.5 group-hover:text-emerald-400 transition-colors">Treino Inteligência Artificial</p>
-                                    <p className={`text-[10px] font-bold font-mono uppercase tracking-widest px-2.5 py-1 rounded inline-block border ${!isVip ? 'bg-neutral-900 text-neutral-500 border-neutral-800' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}>
+                        <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-6 mx-auto">
+                            <button type="button" onClick={() => isVip ? setModalidadeAberta('ia') : setBloqueado(true)} className="bg-gradient-to-br from-[#16171d] to-emerald-900/10 border-2 border-neutral-700 hover:border-emerald-500 p-8 rounded-[2rem] flex flex-col sm:flex-row items-center sm:items-start justify-between transition-all text-center sm:text-left group shadow-xl">
+                                <div className="order-2 sm:order-1 mt-4 sm:mt-0">
+                                    <p className="font-black uppercase text-xl text-white mb-2 group-hover:text-emerald-400 transition-colors">Treino Inteligência Artificial</p>
+                                    <p className={`text-xs font-black font-mono uppercase tracking-widest px-3 py-1.5 rounded-lg inline-block border ${!isVip ? 'bg-neutral-900 text-neutral-500 border-neutral-800' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'}`}>
                                         {!isVip ? "Status: Bloqueado" : "Acesso Elite Ativado"}
                                     </p>
-                                    <p className="text-xs font-medium text-neutral-400 mt-3 leading-relaxed hidden sm:block max-w-[260px]">O seu personal virtual monta o treino exato para a sua biometria e ajusta a carga ideal.</p>
+                                    <p className="text-sm font-bold text-neutral-400 mt-4 leading-relaxed hidden sm:block max-w-[280px]">O seu personal virtual monta o treino exato para a sua biometria e ajusta a carga ideal.</p>
                                 </div>
-                                <span className="text-5xl order-1 sm:order-2 opacity-90 group-hover:scale-105 transition-transform">🤖</span>
+                                <span className="text-6xl order-1 sm:order-2 drop-shadow-[0_0_20px_rgba(16,185,129,0.3)] group-hover:scale-110 transition-transform">🤖</span>
                             </button>
 
-                            <button type="button" onClick={() => setModalidadeAberta('academia')} className="bg-[#16171d] hover:bg-neutral-800 border border-neutral-800 hover:border-blue-500/50 p-6 rounded-2xl flex flex-col sm:flex-row items-center sm:items-start justify-between transition-all text-center sm:text-left group shadow-md">
-                                <div className="order-2 sm:order-1 mt-3 sm:mt-0">
-                                    <p className="font-bold uppercase text-lg text-neutral-100 mb-1.5 group-hover:text-blue-400 transition-colors">Metodologia Tradicional (ABC)</p>
-                                    <p className="text-[10px] text-blue-400 font-bold font-mono uppercase tracking-widest bg-blue-500/10 px-2.5 py-1 rounded inline-block border border-blue-500/20">
+                            <button type="button" onClick={() => setModalidadeAberta('academia')} className="bg-[#16171d] hover:bg-neutral-800 border-2 border-neutral-700 hover:border-blue-500 p-8 rounded-[2rem] flex flex-col sm:flex-row items-center sm:items-start justify-between transition-all text-center sm:text-left group shadow-xl">
+                                <div className="order-2 sm:order-1 mt-4 sm:mt-0">
+                                    <p className="font-black uppercase text-xl text-white mb-2 group-hover:text-blue-400 transition-colors">Metodologia Tradicional (ABC)</p>
+                                    <p className="text-xs text-blue-400 font-black font-mono uppercase tracking-widest bg-blue-500/10 px-3 py-1.5 rounded-lg inline-block border border-blue-500/30">
                                         Acesso Livre Free
                                     </p>
-                                    <p className="text-xs font-medium text-neutral-400 mt-3 leading-relaxed hidden sm:block max-w-[260px]">Biblioteca clássica com separação padrão de grupamentos musculares da academia.</p>
+                                    <p className="text-sm font-bold text-neutral-400 mt-4 leading-relaxed hidden sm:block max-w-[280px]">Biblioteca clássica com separação padrão de grupamentos musculares da academia.</p>
                                 </div>
-                                <span className="text-5xl order-1 sm:order-2 opacity-90 group-hover:scale-105 transition-transform">🏋️‍♂️</span>
+                                <span className="text-6xl order-1 sm:order-2 drop-shadow-lg group-hover:scale-110 transition-transform">🏋️‍♂️</span>
                             </button>
                         </div>
 
                         {modalidadeAberta && <ListaExercicios modalidade={modalidadeAberta} whatsapp={usuario} API_URL={API_URL} perfil={perfil} treinoIA={treinoIAPescado} aoFechar={() => { setModalidadeAberta(null); atualizarStatusVIP(); }} />}
                     </div>
                 )}
-                {bloqueado && <div className="fixed inset-0 z-[500] bg-[#0d0e12]/95 backdrop-blur-md flex flex-col items-center p-4 md:p-8 overflow-y-auto custom-scrollbar"><button type="button" onClick={() => { setBloqueado(false); atualizarStatusVIP(); }} className="absolute top-6 right-6 text-neutral-500 hover:text-white bg-neutral-900 border border-neutral-800 w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold transition-colors z-[510]">✕</button><TelaPlanos /></div>}
+                {bloqueado && <div className="fixed inset-0 z-[500] bg-[#0d0e12]/95 backdrop-blur-md flex flex-col items-center p-4 md:p-8 overflow-y-auto custom-scrollbar"><button type="button" onClick={() => { setBloqueado(false); atualizarStatusVIP(); }} className="absolute top-6 right-6 text-neutral-400 hover:text-white bg-neutral-900 border-2 border-neutral-800 w-12 h-12 rounded-xl flex items-center justify-center text-lg font-black transition-colors z-[510] shadow-lg">✕</button><TelaPlanos /></div>}
             </div>
         );
     }
@@ -1444,69 +1437,69 @@ function App() {
         const hojeDataStr = new Date().toLocaleDateString("pt-BR", { day: '2-digit', month: '2-digit' });
 
         return (
-            <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col p-4 md:p-6 overflow-y-auto font-sans z-40 custom-scrollbar">
-                <header className="w-full max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center sm:items-end border-b border-neutral-800 pb-5 mb-6 gap-4 sm:gap-0">
+            <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col p-4 md:p-8 overflow-y-auto font-sans z-40 custom-scrollbar">
+                <header className="w-full max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center sm:items-end border-b-2 border-neutral-800 pb-6 mb-8 gap-4 sm:gap-0">
                     <div className="flex items-center gap-4 text-center sm:text-left flex-col sm:flex-row">
-                        <img src="/logo192.png" alt="Ícone Treino Fit" className="w-12 h-12 rounded-lg shadow-sm border border-neutral-700" />
+                        <img src="/logo192.png" alt="Ícone Treino Fit" className="w-14 h-14 rounded-xl shadow-lg border border-neutral-700" />
                         <div>
-                            <h2 className="text-xl font-bold text-neutral-100 uppercase tracking-tight">{personalLogado?.nome}</h2>
-                            <div className="flex items-center justify-center sm:justify-start gap-2 mt-1.5">
-                                <span className="text-[10px] text-neutral-400 font-semibold font-mono bg-neutral-900 border border-neutral-800 px-2 py-0.5 rounded">{personalLogado?.cref}</span>
-                                <span className={`text-[9px] font-bold font-mono uppercase tracking-widest px-2 py-0.5 rounded border ${personalLogado?.assinaturaAtiva ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-amber-500/10 text-amber-400 border-amber-500/30'}`}>
+                            <h2 className="text-2xl font-black text-white uppercase tracking-tight">{personalLogado?.nome}</h2>
+                            <div className="flex items-center justify-center sm:justify-start gap-2 mt-2">
+                                <span className="text-xs text-neutral-400 font-bold font-mono bg-neutral-900 border border-neutral-800 px-2 py-1 rounded">{personalLogado?.cref}</span>
+                                <span className={`text-[10px] font-black font-mono uppercase tracking-widest px-2 py-1 rounded border ${personalLogado?.assinaturaAtiva ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-amber-500/10 text-amber-400 border-amber-500/30'}`}>
                                     {personalLogado?.assinaturaAtiva ? "Licença PRO Ativa" : "Modo Teste Grátis"}
                                 </span>
                             </div>
                         </div>
                     </div>
-                    <button type="button" onClick={handleSair} className="px-5 py-2.5 bg-neutral-900 border border-neutral-800 rounded-lg hover:bg-neutral-800 text-[10px] text-neutral-300 font-bold uppercase transition-colors shadow-sm w-full sm:w-auto">Encerrar Sessão</button>
+                    <button type="button" onClick={handleSair} className="px-6 py-3 bg-neutral-900 border-2 border-neutral-800 rounded-xl hover:bg-neutral-800 text-xs text-neutral-300 font-black uppercase transition-colors shadow-md w-full sm:w-auto">Encerrar Sessão</button>
                 </header>
 
-                <main className="w-full max-w-6xl mx-auto flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 items-start pb-10">
-                    <div className="lg:col-span-1 flex flex-col gap-5">
-                        <div className="bg-[#16171d] border border-neutral-800 rounded-2xl p-5 shadow-md">
-                            <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-100 mb-4 border-b border-neutral-800 pb-2">Resumo da Assessoria</h3>
-                            <div className="grid grid-cols-2 gap-3 text-center mb-4">
-                                <div className="p-3 bg-[#0d0e12] border border-neutral-800 rounded-xl flex flex-col justify-center shadow-sm">
-                                    <p className="text-2xl font-bold text-neutral-100">{alunosPersonal.length}</p>
-                                    <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-500 mt-1">Alunos</p>
+                <main className="w-full max-w-6xl mx-auto flex-1 grid grid-cols-1 lg:grid-cols-4 gap-8 items-start pb-12">
+                    <div className="lg:col-span-1 flex flex-col gap-6">
+                        <div className="bg-[#16171d] border-2 border-neutral-800 rounded-3xl p-6 shadow-xl">
+                            <h3 className="text-sm font-black uppercase tracking-wider text-white mb-6 border-b border-neutral-800 pb-3">Resumo da Assessoria</h3>
+                            <div className="grid grid-cols-2 gap-3 text-center mb-6">
+                                <div className="p-4 bg-[#0d0e12] border border-neutral-800 rounded-2xl flex flex-col justify-center shadow-inner">
+                                    <p className="text-3xl font-black text-white">{alunosPersonal.length}</p>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500 mt-2">Alunos</p>
                                 </div>
-                                <div className="p-3 bg-[#0d0e12] border border-amber-900/30 rounded-xl flex flex-col justify-center shadow-sm">
-                                    <p className="text-2xl font-bold text-amber-500">{alunosPersonal.filter(a => a.statusTreino === "Rascunho IA").length}</p>
-                                    <p className="text-[9px] font-bold uppercase tracking-widest text-amber-500/70 mt-1">Alertas IA</p>
+                                <div className="p-4 bg-[#0d0e12] border border-amber-900/30 rounded-2xl flex flex-col justify-center shadow-inner">
+                                    <p className="text-3xl font-black text-amber-500">{alunosPersonal.filter(a => a.statusTreino === "Rascunho IA").length}</p>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-amber-500/70 mt-2">Alertas IA</p>
                                 </div>
-                                <div className="p-3 bg-[#0d0e12] border border-red-900/30 rounded-xl flex flex-col justify-center shadow-sm">
-                                    <p className="text-2xl font-bold text-red-500">{alunosPersonal.filter(a => calcularDiasSemTreino(a.checkins) >= 5 && a.statusConta !== 'Off').length}</p>
-                                    <p className="text-[9px] font-bold uppercase tracking-widest text-red-500/70 mt-1">Em Risco</p>
+                                <div className="p-4 bg-[#0d0e12] border border-red-900/30 rounded-2xl flex flex-col justify-center shadow-inner">
+                                    <p className="text-3xl font-black text-red-500">{alunosPersonal.filter(a => calcularDiasSemTreino(a.checkins) >= 5 && a.statusConta !== 'Off').length}</p>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-red-500/70 mt-2">Em Risco</p>
                                 </div>
-                                <div className="p-3 bg-[#0d0e12] border border-neutral-800 rounded-xl flex flex-col justify-center shadow-sm">
-                                    <p className="text-2xl font-bold text-neutral-500">{alunosPersonal.filter(a => a.statusConta === "Off").length}</p>
-                                    <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-600 mt-1">Inativos</p>
+                                <div className="p-4 bg-[#0d0e12] border border-neutral-800 rounded-2xl flex flex-col justify-center shadow-inner">
+                                    <p className="text-3xl font-black text-neutral-500">{alunosPersonal.filter(a => a.statusConta === "Off").length}</p>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-neutral-600 mt-2">Inativos</p>
                                 </div>
                             </div>
                             {!personalLogado?.assinaturaAtiva && (
-                                <div className="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-lg text-center">
-                                    <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Modo Teste Ativo</p>
-                                    <p className="text-lg font-bold text-neutral-100 mt-0.5">{alunosPersonal.length} <span className="text-xs text-neutral-400 font-medium">/ 2 Alunos</span></p>
+                                <div className="bg-emerald-500/10 border-2 border-emerald-500/30 p-4 rounded-xl text-center">
+                                    <p className="text-xs text-emerald-400 font-black uppercase tracking-wider">Modo Teste Ativo</p>
+                                    <p className="text-xl font-black text-white mt-1">{alunosPersonal.length} <span className="text-sm text-neutral-400">/ 2 Alunos</span></p>
                                 </div>
                             )}
                         </div>
 
-                        <div className="bg-gradient-to-br from-[#16171d] to-emerald-900/5 border border-emerald-500/20 rounded-2xl p-5 shadow-md relative overflow-hidden">
-                            <div className="absolute -top-4 -right-4 p-4 opacity-5 text-7xl transform rotate-12">🛒</div>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-400 mb-2 border-b border-emerald-500/10 pb-1.5 inline-block">🤝 Parceiro Oficial</p>
-                            <h4 className="text-base font-bold text-neutral-100 mb-1.5 mt-1">Hortilife Praticidade</h4>
-                            <p className="text-xs font-medium text-neutral-400 mb-5 leading-relaxed">Aumente a adesão dos seus alunos recomendando nosso parceiro. Eles compram a dieta no app e recebem em casa.</p>
-                            <a href="https://hortilife-praticidade.kyte.site/pt-BR" target="_blank" rel="noopener noreferrer" className="block w-full bg-emerald-600 hover:bg-emerald-500 border border-emerald-500/50 text-white text-center font-bold py-3.5 px-4 rounded-xl text-[10px] uppercase tracking-widest transition-all shadow-sm active:scale-95">
+                        <div className="bg-gradient-to-br from-[#16171d] to-emerald-900/10 border-2 border-emerald-500/30 rounded-3xl p-6 shadow-xl relative overflow-hidden">
+                            <div className="absolute -top-4 -right-4 p-4 opacity-5 text-8xl transform rotate-12">🛒</div>
+                            <p className="text-xs font-black uppercase tracking-widest text-emerald-400 mb-3 border-b border-emerald-500/20 pb-2 inline-block">🤝 Parceiro Oficial</p>
+                            <h4 className="text-lg font-black text-white mb-2 mt-2">Hortilife Praticidade</h4>
+                            <p className="text-sm font-bold text-neutral-300 mb-6 leading-relaxed">Aumente a adesão dos seus alunos recomendando nosso parceiro. Eles compram a dieta no app e recebem em casa.</p>
+                            <a href="https://hortilife-praticidade.kyte.site/pt-BR" target="_blank" rel="noopener noreferrer" className="block w-full bg-emerald-600 hover:bg-emerald-500 border border-emerald-400/50 text-white text-center font-black py-4 px-4 rounded-xl text-xs uppercase tracking-widest transition-all shadow-lg shadow-emerald-600/20 active:scale-95">
                                 👉 Ver Catálogo
                             </a>
                         </div>
                     </div>
 
-                    <div className="lg:col-span-3 bg-[#16171d] border border-neutral-800 rounded-2xl p-5 md:p-6 shadow-md overflow-hidden flex flex-col">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 border-b border-neutral-800 pb-5">
-                            <h3 className="text-lg font-bold uppercase tracking-tight text-neutral-100">Carteira de Clientes</h3>
-                            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                                <button type="button" onClick={carregarAlunosAssessoria} className="bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-[10px] font-bold px-4 py-2.5 rounded-lg transition-colors uppercase flex-1 sm:flex-none text-center border border-neutral-700 flex items-center justify-center gap-1.5">
+                    <div className="lg:col-span-3 bg-[#16171d] border-2 border-neutral-800 rounded-3xl p-5 md:p-8 shadow-xl overflow-hidden flex flex-col">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-8 border-b-2 border-neutral-800 pb-6">
+                            <h3 className="text-xl font-black uppercase tracking-tighter text-white">Carteira de Clientes</h3>
+                            <div className="flex flex-wrap gap-3 w-full sm:w-auto">
+                                <button type="button" onClick={carregarAlunosAssessoria} className="bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-black px-5 py-3.5 rounded-xl transition-colors uppercase flex-1 sm:flex-none text-center shadow-md border border-neutral-600 flex items-center justify-center gap-2">
                                     <span>🔄</span> Atualizar
                                 </button>
 
@@ -1517,7 +1510,7 @@ function App() {
                                     const link = `${window.location.origin}?ref=${personalLogado?._id}`;
                                     navigator.clipboard.writeText(link);
                                     alert(`🔗 Link copiado com sucesso!\n\nEnvie este link no WhatsApp do seu aluno:\n\n${link}`);
-                                }} className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold px-4 py-2.5 rounded-lg transition-colors uppercase flex-1 sm:flex-none text-center shadow-sm flex items-center justify-center gap-1.5">
+                                }} className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-black px-5 py-3.5 rounded-xl transition-colors uppercase flex-1 sm:flex-none text-center shadow-[0_5px_15px_rgba(37,99,235,0.3)] flex items-center justify-center gap-2">
                                     <span>🔗</span> Copiar Link
                                 </button>
 
@@ -1526,7 +1519,7 @@ function App() {
                                         return setModalPlanosPersonal(true);
                                     }
                                     setModalNovoAluno(true);
-                                }} className="bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold px-4 py-2.5 rounded-lg transition-colors uppercase w-full sm:w-auto text-center shadow-sm flex items-center justify-center gap-1.5 mt-2 sm:mt-0">
+                                }} className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black px-5 py-3.5 rounded-xl transition-colors uppercase w-full sm:w-auto text-center shadow-[0_5px_15px_rgba(16,185,129,0.3)] flex items-center justify-center gap-2 mt-2 sm:mt-0">
                                     <span>+</span> Novo Aluno
                                 </button>
                             </div>
@@ -1535,16 +1528,16 @@ function App() {
                         <div className="hidden md:block overflow-x-auto custom-scrollbar flex-1">
                             <table className="w-full text-left border-collapse min-w-[800px]">
                                 <thead>
-                                    <tr className="border-b border-neutral-800 text-[10px] uppercase text-neutral-500 tracking-wider bg-[#0d0e12]/50">
-                                        <th className="p-3 font-semibold rounded-tl-lg w-[25%]">Aluno & Contato</th>
-                                        <th className="p-3 font-semibold w-[15%]">Objetivo</th>
-                                        <th className="p-3 font-semibold w-[15%] text-center">Status Ficha</th>
-                                        <th className="p-3 font-semibold w-[15%] text-center">Último Treino</th>
-                                        <th className="p-3 font-semibold w-[15%] text-center">Retenção</th>
-                                        <th className="p-3 font-semibold text-right rounded-tr-lg w-[15%]">Ações</th>
+                                    <tr className="border-b-2 border-neutral-800 text-[11px] uppercase text-neutral-500 tracking-widest bg-[#0d0e12]">
+                                        <th className="p-4 font-black rounded-tl-xl w-[25%]">Aluno & Contato</th>
+                                        <th className="p-4 font-black w-[15%]">Objetivo</th>
+                                        <th className="p-4 font-black w-[15%] text-center">Status Ficha</th>
+                                        <th className="p-4 font-black w-[15%] text-center">Último Treino</th>
+                                        <th className="p-4 font-black w-[15%] text-center">Retenção</th>
+                                        <th className="p-4 font-black text-right rounded-tr-xl w-[15%]">Ações</th>
                                     </tr>
                                 </thead>
-                                <tbody className="text-xs font-medium divide-y divide-neutral-800/50">
+                                <tbody className="text-sm font-bold divide-y-2 divide-neutral-800/50">
                                     {alunosPersonal.map((aluno) => {
                                         const idUnico = aluno.id || aluno._id;
                                         const checkinDeHoje = aluno.checkins?.find(c => c.data === hojeDataStr);
@@ -1556,15 +1549,15 @@ function App() {
 
                                         if (diasSemTreino !== Infinity) {
                                             if (diasSemTreino < 3) {
-                                                corFarol = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+                                                corFarol = "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
                                                 iconeFarol = "🟢";
                                                 textoFarol = "Ativo";
                                             } else if (diasSemTreino >= 3 && diasSemTreino < 5) {
-                                                corFarol = "bg-amber-500/10 text-amber-400 border-amber-500/20";
+                                                corFarol = "bg-amber-500/10 text-amber-400 border-amber-500/30";
                                                 iconeFarol = "🟡";
                                                 textoFarol = "Atenção";
                                             } else {
-                                                corFarol = "bg-red-500/10 text-red-400 border-red-500/20";
+                                                corFarol = "bg-red-500/10 text-red-400 border-red-500/30";
                                                 iconeFarol = "🔴";
                                                 textoFarol = "Risco";
                                             }
@@ -1572,54 +1565,54 @@ function App() {
 
                                         return (
                                             <tr key={idUnico} className={`hover:bg-neutral-800/30 transition-colors ${aluno.statusConta === 'Off' ? 'opacity-40 grayscale-[50%]' : ''}`}>
-                                                <td className="p-3">
-                                                    <div className="font-bold text-neutral-100 text-sm cursor-pointer hover:text-emerald-400 transition-colors flex items-center gap-1.5 truncate max-w-[200px]" onClick={() => setAlunoVerFeedback(aluno)}>
-                                                        {aluno.nome} <span className="text-[10px] opacity-60 bg-neutral-800 px-1.5 py-0.5 rounded text-neutral-200">ℹ️</span>
+                                                <td className="p-4">
+                                                    <div className="font-black text-white text-base cursor-pointer hover:text-emerald-400 transition-colors flex items-center gap-2 truncate max-w-[200px]" onClick={() => setAlunoVerFeedback(aluno)}>
+                                                        {aluno.nome} <span className="text-xs opacity-50 bg-neutral-800 px-1.5 py-0.5 rounded text-white">ℹ️</span>
                                                     </div>
-                                                    <div className="text-[10px] text-neutral-400 font-mono mt-1">{aluno.whatsapp}</div>
+                                                    <div className="text-xs text-neutral-400 font-bold font-mono mt-1.5">{aluno.whatsapp}</div>
                                                 </td>
-                                                <td className="p-3 text-neutral-300 font-medium text-xs">{aluno.objetivo}</td>
-                                                <td className="p-3 text-center">
-                                                    <span className={`px-2.5 py-1 rounded-md text-[9px] font-bold font-mono uppercase inline-block border ${aluno.statusTreino === 'Rascunho IA' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : aluno.statusTreino === 'Enviado' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-neutral-900 text-neutral-400 border-neutral-700'}`}>
+                                                <td className="p-4 text-neutral-300 font-bold text-sm">{aluno.objetivo}</td>
+                                                <td className="p-4 text-center">
+                                                    <span className={`px-3 py-1.5 rounded-lg text-[10px] font-black font-mono uppercase inline-block border ${aluno.statusTreino === 'Rascunho IA' ? 'bg-amber-500/10 text-amber-400 border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.1)]' : aluno.statusTreino === 'Enviado' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-neutral-900 text-neutral-400 border-neutral-700'}`}>
                                                         {aluno.statusTreino}
                                                     </span>
                                                 </td>
-                                                <td className="p-3 text-center">
+                                                <td className="p-4 text-center">
                                                     {checkinDeHoje ? (
-                                                        <button type="button" onClick={() => setAlunoVerFeedback(aluno)} className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-md animate-pulse hover:bg-emerald-500/20 transition-colors cursor-pointer w-full shadow-sm">
+                                                        <button type="button" onClick={() => setAlunoVerFeedback(aluno)} className="text-[10px] font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1.5 rounded-lg animate-pulse hover:bg-emerald-500/20 transition-colors cursor-pointer w-full shadow-inner">
                                                             🔥 HOJE!
                                                         </button>
                                                     ) : aluno.checkins && aluno.checkins.length > 0 ? (
-                                                        <button type="button" onClick={() => setAlunoVerFeedback(aluno)} className="text-[10px] font-medium font-mono text-neutral-300 hover:text-white transition-colors cursor-pointer bg-neutral-900 px-2.5 py-1 rounded-md border border-neutral-800 w-full hover:border-neutral-600">
+                                                        <button type="button" onClick={() => setAlunoVerFeedback(aluno)} className="text-[11px] font-bold font-mono text-neutral-300 hover:text-white transition-colors cursor-pointer bg-neutral-900 px-3 py-1.5 rounded-lg border border-neutral-800 w-full hover:border-neutral-600">
                                                             {aluno.checkins[0].data}
                                                         </button>
                                                     ) : (
-                                                        <span className="text-[10px] text-neutral-600 font-medium font-mono block w-full text-center">--/--</span>
+                                                        <span className="text-[11px] text-neutral-600 font-bold font-mono block w-full text-center">--/--</span>
                                                     )}
                                                 </td>
-                                                <td className="p-3 text-center">
-                                                    <div className="flex justify-center items-center gap-1.5">
-                                                        <span className={`px-2.5 py-1 rounded-md text-[9px] font-bold uppercase border flex items-center gap-1.5 ${corFarol}`}>
+                                                <td className="p-4 text-center">
+                                                    <div className="flex justify-center items-center gap-2">
+                                                        <span className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase border flex items-center gap-1.5 shadow-inner ${corFarol}`}>
                                                             {iconeFarol} {textoFarol}
                                                         </span>
                                                         {(diasSemTreino >= 3 || diasSemTreino === Infinity) && aluno.statusConta !== 'Off' && (
-                                                            <button type="button" onClick={() => enviarZapRetencao(aluno, diasSemTreino)} className="text-[#25D366] hover:scale-110 transition-transform bg-[#25D366]/10 p-1 rounded-md border border-[#25D366]/20" title="Chamar no WhatsApp">
-                                                                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.305-.885-.653-1.482-1.46-1.656-1.758-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" /></svg>
+                                                            <button type="button" onClick={() => enviarZapRetencao(aluno, diasSemTreino)} className="text-[#25D366] hover:scale-110 transition-transform bg-[#25D366]/10 p-1.5 rounded-lg border border-[#25D366]/30 shadow-sm" title="Chamar no WhatsApp">
+                                                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.305-.885-.653-1.482-1.46-1.656-1.758-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" /></svg>
                                                             </button>
                                                         )}
                                                     </div>
                                                 </td>
-                                                <td className="p-3 text-right">
-                                                    <div className="flex flex-col gap-1.5 w-[110px] ml-auto">
-                                                        <div className="flex gap-1.5">
-                                                            <button type="button" onClick={() => abrirGeradorTreino(aluno)} className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] font-bold py-1.5 rounded transition-colors uppercase shadow-sm">
+                                                <td className="p-4 text-right">
+                                                    <div className="flex flex-col gap-2 w-[120px] ml-auto">
+                                                        <div className="flex gap-2">
+                                                            <button type="button" onClick={() => abrirGeradorTreino(aluno)} className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black py-2 rounded-lg transition-colors uppercase shadow-sm">
                                                                 {aluno.statusTreino === "Rascunho IA" ? "Ver IA" : "Treino"}
                                                             </button>
-                                                            <button type="button" onClick={() => setAlunoVerAvaliacao(aluno)} className="flex-1 bg-blue-600/10 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 text-[9px] font-bold py-1.5 rounded transition-colors uppercase">
+                                                            <button type="button" onClick={() => setAlunoVerAvaliacao(aluno)} className="flex-1 bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 text-[10px] font-black py-2 rounded-lg transition-colors uppercase">
                                                                 Perfil
                                                             </button>
                                                         </div>
-                                                        <div className="flex gap-1.5">
+                                                        <div className="flex gap-2">
                                                             <button type="button" onClick={() => {
                                                                 setModoEdicaoBiometria(false);
                                                                 setAlunoEditandoPerfil({
@@ -1635,13 +1628,13 @@ function App() {
                                                                     lesoes: aluno.lesoes ?? "",
                                                                     medidas: aluno.medidas ?? {}
                                                                 });
-                                                            }} className="flex-1 bg-neutral-800 text-neutral-300 hover:bg-neutral-700 hover:text-white border border-neutral-700 text-[9px] font-bold py-1.5 rounded transition-colors uppercase">
+                                                            }} className="flex-1 bg-neutral-800 text-neutral-300 hover:bg-neutral-700 hover:text-white border border-neutral-600/50 text-[10px] font-black py-2 rounded-lg transition-colors uppercase">
                                                                 Editar
                                                             </button>
-                                                            <button type="button" onClick={() => alterStatusContaAluno(idUnico, aluno.statusConta === "Ativo" ? "Off" : "Ativo")} className={`flex-1 border text-[9px] font-bold py-1.5 rounded transition-colors uppercase ${aluno.statusConta === 'Ativo' ? 'border-neutral-700 text-neutral-400 hover:bg-neutral-800 hover:text-white' : 'border-emerald-500 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500 hover:text-white'}`}>
+                                                            <button type="button" onClick={() => alterStatusContaAluno(idUnico, aluno.statusConta === "Ativo" ? "Off" : "Ativo")} className={`flex-1 border text-[10px] font-black py-2 rounded-lg transition-colors uppercase ${aluno.statusConta === 'Ativo' ? 'border-neutral-700 text-neutral-400 hover:bg-neutral-800 hover:text-white' : 'border-emerald-500 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500 hover:text-white'}`}>
                                                                 {aluno.statusConta === "Ativo" ? "Off" : "On"}
                                                             </button>
-                                                            <button type="button" onClick={() => deletarAluno(idUnico)} className="w-7 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 rounded font-bold text-xs transition-colors flex items-center justify-center">
+                                                            <button type="button" onClick={() => deletarAluno(idUnico)} className="w-8 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 rounded-lg font-black text-xs transition-colors flex items-center justify-center">
                                                                 ✕
                                                             </button>
                                                         </div>
@@ -1653,14 +1646,14 @@ function App() {
                                 </tbody>
                             </table>
                             {alunosPersonal.length === 0 && (
-                                <div className="text-center py-12 bg-[#0d0e12]/50 rounded-b-lg">
-                                    <p className="text-xs font-bold text-neutral-500 uppercase">Sua carteira de alunos está vazia.</p>
-                                    <p className="text-[10px] font-medium text-neutral-600 mt-1.5">Clique em "+ Novo Aluno" ou envie seu Link IA para começar.</p>
+                                <div className="text-center py-16 bg-[#0d0e12] rounded-b-xl">
+                                    <p className="text-sm font-black text-neutral-500 uppercase">Sua carteira de alunos está vazia.</p>
+                                    <p className="text-xs font-bold text-neutral-600 mt-2">Clique em "+ Novo Aluno" ou envie seu Link IA para começar.</p>
                                 </div>
                             )}
                         </div>
 
-                        <div className="md:hidden flex flex-col space-y-4">
+                        <div className="md:hidden flex flex-col space-y-6">
                             {alunosPersonal.map((aluno) => {
                                 const idUnico = aluno.id || aluno._id;
                                 const checkinDeHoje = aluno.checkins?.find(c => c.data === hojeDataStr);
@@ -1672,74 +1665,75 @@ function App() {
 
                                 if (diasSemTreino !== Infinity) {
                                     if (diasSemTreino < 3) {
-                                        corFarol = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+                                        corFarol = "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
                                         iconeFarol = "🟢";
                                         textoFarol = "Ativo";
                                     } else if (diasSemTreino >= 3 && diasSemTreino < 5) {
-                                        corFarol = "bg-amber-500/10 text-amber-400 border-amber-500/20";
+                                        corFarol = "bg-amber-500/10 text-amber-400 border-amber-500/30";
                                         iconeFarol = "🟡";
                                         textoFarol = "Atenção";
                                     } else {
-                                        corFarol = "bg-red-500/10 text-red-400 border-red-500/20";
+                                        corFarol = "bg-red-500/10 text-red-400 border-red-500/30";
                                         iconeFarol = "🔴";
                                         textoFarol = "Risco";
                                     }
                                 }
 
                                 return (
-                                    <div key={idUnico} className={`bg-[#0d0e12] border border-neutral-800 p-5 rounded-2xl flex flex-col space-y-4 shadow-sm ${aluno.statusConta === 'Off' ? 'opacity-50 grayscale-[50%]' : ''}`}>
-                                        <div className="flex justify-between items-start border-b border-neutral-800/60 pb-3">
-                                            <div className="flex-1 pr-3">
-                                                <p className="font-bold text-neutral-100 text-sm cursor-pointer hover:text-emerald-400 transition-colors inline-flex items-center gap-1.5" onClick={() => setAlunoVerFeedback(aluno)}>
-                                                    {aluno.nome} <span className="text-[10px] opacity-60 bg-neutral-800 px-1.5 py-0.5 rounded text-neutral-200 shadow-inner">ℹ️</span>
+                                    <div key={idUnico} className={`bg-[#0d0e12] border-2 border-neutral-800 p-6 rounded-3xl flex flex-col space-y-5 shadow-lg ${aluno.statusConta === 'Off' ? 'opacity-50 grayscale-[50%]' : ''}`}>
+                                        <div className="flex justify-between items-start border-b border-neutral-800 pb-4">
+                                            <div className="flex-1 pr-4">
+                                                <p className="font-black text-white text-lg cursor-pointer hover:text-emerald-400 transition-colors inline-flex items-center gap-2" onClick={() => setAlunoVerFeedback(aluno)}>
+                                                    {aluno.nome} <span className="text-xs opacity-60 bg-neutral-800 px-2 py-1 rounded text-white shadow-inner">ℹ️</span>
                                                 </p>
-                                                <p className="text-[11px] text-neutral-400 font-medium font-mono mt-1">{aluno.whatsapp}</p>
+                                                <p className="text-sm text-neutral-400 font-bold font-mono mt-1.5">{aluno.whatsapp}</p>
                                             </div>
-                                            <span className={`px-2.5 py-1 rounded-md text-[9px] font-bold font-mono uppercase text-center border ${aluno.statusTreino === 'Rascunho IA' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : aluno.statusTreino === 'Enviado' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-neutral-800 text-neutral-300 border-neutral-700'}`}>
+                                            <span className={`px-3 py-1.5 rounded-lg text-[10px] font-black font-mono uppercase text-center shadow-inner border ${aluno.statusTreino === 'Rascunho IA' ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' : aluno.statusTreino === 'Enviado' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-neutral-800 text-neutral-300 border-neutral-700'}`}>
                                                 {aluno.statusTreino}
                                             </span>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div className="bg-[#16171d] p-3 rounded-xl border border-neutral-800/50">
-                                                <p className="text-[9px] uppercase text-neutral-500 font-bold mb-1">Objetivo Base</p>
-                                                <p className="text-xs font-semibold text-neutral-200 truncate">{aluno.objetivo}</p>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="bg-[#16171d] p-4 rounded-2xl border border-neutral-800/50 shadow-inner">
+                                                <p className="text-[10px] uppercase text-neutral-500 font-black mb-1">Objetivo Base</p>
+                                                <p className="text-sm font-black text-white truncate">{aluno.objetivo}</p>
                                             </div>
-                                            <div className="bg-[#16171d] p-3 rounded-xl border border-neutral-800/50 flex flex-col justify-center">
-                                                <p className="text-[9px] uppercase text-neutral-500 font-bold mb-1">Último Treino</p>
+                                            <div className="bg-[#16171d] p-4 rounded-2xl border border-neutral-800/50 shadow-inner flex flex-col justify-center">
+                                                <p className="text-[10px] uppercase text-neutral-500 font-black mb-1.5">Último Treino</p>
                                                 {checkinDeHoje ? (
-                                                    <button type="button" onClick={() => setAlunoVerFeedback(aluno)} className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-md animate-pulse cursor-pointer w-full">
+                                                    <button type="button" onClick={() => setAlunoVerFeedback(aluno)} className="text-xs font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-md animate-pulse cursor-pointer w-full shadow-sm">
                                                         🔥 HOJE!
                                                     </button>
                                                 ) : aluno.checkins && aluno.checkins.length > 0 ? (
-                                                    <button type="button" onClick={() => setAlunoVerFeedback(aluno)} className="text-[10px] font-medium font-mono text-neutral-300 cursor-pointer hover:text-white bg-neutral-900 border border-neutral-800 py-1 rounded-md w-full">
+                                                    <button type="button" onClick={() => setAlunoVerFeedback(aluno)} className="text-xs font-black font-mono text-neutral-300 cursor-pointer hover:text-white bg-neutral-900 border border-neutral-800 py-1.5 rounded-lg w-full">
                                                         {aluno.checkins[0].data}
                                                     </button>
                                                 ) : (
-                                                    <span className="text-[10px] text-neutral-500 font-medium font-mono block w-full text-center">--/--</span>
+                                                    <span className="text-xs text-neutral-500 font-black font-mono block w-full text-center">--/--</span>
                                                 )}
                                             </div>
                                         </div>
 
-                                        <div className="bg-[#16171d] p-3 rounded-xl border border-neutral-800/50 mt-1 flex justify-between items-center">
+                                        <div className="bg-[#16171d] p-4 rounded-2xl border border-neutral-800/50 mt-1 flex justify-between items-center shadow-inner">
                                             <div className="flex items-center gap-2">
-                                                <span className={`px-2.5 py-1 rounded-md text-[9px] font-bold uppercase border flex items-center gap-1.5 ${corFarol}`}>
+                                                <span className={`px-4 py-2 rounded-lg text-xs font-black uppercase border flex items-center gap-2 shadow-sm ${corFarol}`}>
                                                     {iconeFarol} {textoFarol}
                                                 </span>
                                             </div>
                                             {(diasSemTreino >= 3 || diasSemTreino === Infinity) && aluno.statusConta !== 'Off' && (
-                                                <button type="button" onClick={() => enviarZapRetencao(aluno, diasSemTreino)} className="flex items-center gap-1.5 bg-[#25D366]/10 border border-[#25D366]/20 text-[#25D366] px-2.5 py-1.5 rounded-md text-[9px] font-bold uppercase transition-all hover:bg-[#25D366]/20">
-                                                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.305-.885-.653-1.482-1.46-1.656-1.758-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" /></svg>
+                                                <button type="button" onClick={() => enviarZapRetencao(aluno, diasSemTreino)} className="flex items-center gap-2 bg-[#25D366]/10 border border-[#25D366]/30 text-[#25D366] px-4 py-2 rounded-lg text-xs font-black uppercase transition-all hover:bg-[#25D366]/20 shadow-sm">
+                                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.305-.885-.653-1.482-1.46-1.656-1.758-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" /></svg>
+                                                    WhatsApp
                                                 </button>
                                             )}
                                         </div>
 
-                                        <div className="pt-2 grid grid-cols-2 gap-2 border-t border-neutral-800/60 mt-1">
-                                            <button type="button" onClick={() => abrirGeradorTreino(aluno)} className="col-span-2 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold py-2.5 rounded-lg transition-colors uppercase shadow-sm flex items-center justify-center gap-1.5">
+                                        <div className="pt-2 grid grid-cols-2 gap-3 border-t border-neutral-800 mt-2">
+                                            <button type="button" onClick={() => abrirGeradorTreino(aluno)} className="col-span-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black py-4 rounded-xl transition-colors uppercase shadow-[0_5px_15px_rgba(16,185,129,0.3)] flex items-center justify-center gap-2">
                                                 <span>{aluno.statusTreino === "Rascunho IA" ? "🤖" : "📝"}</span> {aluno.statusTreino === "Rascunho IA" ? "Revisar Plano IA" : "Editar Treino Atual"}
                                             </button>
 
-                                            <button type="button" onClick={() => setAlunoVerAvaliacao(aluno)} className="bg-blue-600/10 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/20 text-[10px] font-bold py-2 rounded-lg transition-colors uppercase flex items-center justify-center gap-1">
+                                            <button type="button" onClick={() => setAlunoVerAvaliacao(aluno)} className="bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white border-2 border-blue-500/30 text-[11px] font-black py-3.5 rounded-xl transition-colors uppercase flex items-center justify-center gap-1.5 shadow-sm">
                                                 📊 Avaliação Fís.
                                             </button>
 
@@ -1758,15 +1752,15 @@ function App() {
                                                     lesoes: aluno.lesoes ?? "",
                                                     medidas: aluno.medidas ?? {}
                                                 });
-                                            }} className="bg-neutral-800 text-neutral-300 hover:bg-neutral-700 hover:text-white border border-neutral-700 text-[10px] font-bold py-2 rounded-lg transition-colors uppercase flex items-center justify-center gap-1">
+                                            }} className="bg-neutral-800 text-neutral-300 hover:bg-neutral-700 hover:text-white border-2 border-neutral-700 text-[11px] font-black py-3.5 rounded-xl transition-colors uppercase flex items-center justify-center gap-1.5 shadow-sm">
                                                 ✏️ Dados / Perfil
                                             </button>
 
-                                            <button type="button" onClick={() => alterStatusContaAluno(idUnico, aluno.statusConta === "Ativo" ? "Off" : "Ativo")} className={`border text-[10px] font-bold py-2 rounded-lg transition-colors uppercase ${aluno.statusConta === 'Ativo' ? 'border-neutral-700 text-neutral-400 hover:bg-neutral-800 hover:text-white' : 'border-emerald-500 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500 hover:text-white'}`}>
+                                            <button type="button" onClick={() => alterStatusContaAluno(idUnico, aluno.statusConta === "Ativo" ? "Off" : "Ativo")} className={`border-2 text-[11px] font-black py-3 rounded-xl transition-colors uppercase shadow-sm ${aluno.statusConta === 'Ativo' ? 'border-neutral-700 text-neutral-400 hover:bg-neutral-800 hover:text-white' : 'border-emerald-500 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500 hover:text-white'}`}>
                                                 {aluno.statusConta === "Ativo" ? "⏸️ Pausar Conta" : "▶️ Ativar Conta"}
                                             </button>
 
-                                            <button type="button" onClick={() => deletarAluno(idUnico)} className="bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 rounded-lg font-bold text-[10px] py-2 uppercase transition-colors flex items-center justify-center gap-1">
+                                            <button type="button" onClick={() => deletarAluno(idUnico)} className="bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border-2 border-red-500/20 rounded-xl font-black text-[11px] py-3 uppercase transition-colors flex items-center justify-center gap-1.5 shadow-sm">
                                                 ✕ Excluir Aluno
                                             </button>
                                         </div>
@@ -1779,40 +1773,37 @@ function App() {
 
                 {/* MODAL PRESCREVER TREINO MANUAL */}
                 {alunoEmEdicao && (
-                    <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
-                        <div className="w-full max-w-4xl bg-[#16171d] border border-neutral-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh] h-full sm:h-auto">
-                            <header className="p-5 md:p-6 border-b border-neutral-800 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#1c1d26] gap-3 sm:gap-0">
+                    <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center p-4">
+                        <div className="w-full max-w-4xl bg-[#16171d] border-2 border-neutral-800 rounded-[2rem] shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col max-h-[95vh] h-full sm:h-auto">
+                            <header className="p-6 md:p-8 border-b-2 border-neutral-800 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gradient-to-r from-[#1c1d26] to-[#16171d] gap-4 sm:gap-0">
                                 <div>
-                                    <span className="inline-block px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-md text-[10px] font-mono font-bold uppercase tracking-widest mb-1.5">⚡ Prescrevendo Plano Pro</span>
-                                    <h3 className="text-xl font-bold text-white uppercase tracking-tight">{alunoEmEdicao.nome}</h3>
+                                    <span className="inline-block px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg text-xs font-mono font-black uppercase tracking-widest mb-2 shadow-inner">⚡ Prescrevendo Plano Pro</span>
+                                    <h3 className="text-3xl font-black text-white uppercase tracking-tight">{alunoEmEdicao.nome}</h3>
                                 </div>
-                                <button type="button" onClick={() => setAlunoEmEdicao(null)} className="text-neutral-400 hover:text-white text-[11px] uppercase font-mono font-bold border border-neutral-700 hover:bg-neutral-800 px-3.5 py-2 rounded-lg transition-all">Fechar ✕</button>
+                                <button type="button" onClick={() => setAlunoEmEdicao(null)} className="text-neutral-400 hover:text-white text-xs uppercase font-mono font-black border-2 border-neutral-700 hover:bg-neutral-800 px-4 py-2.5 rounded-xl transition-all shadow-sm">Fechar ✕</button>
                             </header>
-                            <form onSubmit={salvarTreinoPersonal} className="flex-1 overflow-y-auto p-5 md:p-6 space-y-6 custom-scrollbar">
+                            <form onSubmit={salvarTreinoPersonal} className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 custom-scrollbar">
 
-                                <div className="bg-[#0d0e12] p-5 rounded-xl border border-blue-500/20 shadow-sm relative overflow-hidden">
-                                    <div className="absolute -right-2 -top-2 text-5xl opacity-10">💧</div>
-                                    <label className="text-[11px] uppercase font-bold tracking-wider text-blue-400 block mb-3 flex items-center gap-1.5">
-                                        <span className="text-base">🚰</span> Meta de Hidratação Diária <span className="text-[9px] bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.5 rounded text-blue-400 ml-2 hidden sm:inline-block">Calculada pela IA</span>
+                                <div className="bg-gradient-to-br from-[#0d0e12] to-blue-900/10 p-6 rounded-3xl border-2 border-blue-500/30 shadow-inner relative overflow-hidden">
+                                    <div className="absolute -right-4 -top-4 text-7xl opacity-10">💧</div>
+                                    <label className="text-sm uppercase font-black tracking-wider text-blue-400 block mb-4 flex items-center gap-2">
+                                        <span className="text-xl">🚰</span> Meta de Hidratação Diária <span className="text-[9px] bg-blue-500/20 px-2 py-1 rounded text-blue-300 ml-2 hidden sm:inline-block">Calculada pela IA</span>
                                     </label>
-                                    <input required type="text" className="w-full bg-[#16171d] border border-neutral-800 p-3.5 rounded-lg text-sm text-neutral-100 font-semibold outline-none focus:border-blue-500/50 transition-colors placeholder-neutral-600" value={aguaForm} onChange={(e) => setAguaForm(e.target.value)} placeholder="Ex: 3.5 Litros" />
+                                    <input required type="text" className="w-full bg-[#16171d] border-2 border-blue-500/30 p-4 rounded-xl text-lg text-white font-black outline-none focus:border-blue-400 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all placeholder-neutral-600" value={aguaForm} onChange={(e) => setAguaForm(e.target.value)} placeholder="Ex: 3.5 Litros" />
                                 </div>
 
-                                <div className="bg-[#0d0e12] border border-neutral-800 p-5 rounded-xl shadow-sm">
-                                    <div className="flex items-center gap-2 mb-5 border-b border-neutral-800/60 pb-3">
-                                        <span className="text-xl">🏋️‍♂️</span>
-                                        <p className="text-sm font-bold uppercase tracking-widest text-neutral-300">Estrutura de Exercícios Semanal</p>
-                                    </div>
+                                <div>
+                                    <p className="text-sm font-black uppercase tracking-wider text-neutral-300 mb-4 border-b border-neutral-800/60 pb-2">Estrutura de Exercícios Semanal</p>
 
-                                    <div className="flex gap-2 overflow-x-auto pb-3 border-b border-neutral-800/40 mb-5 scrollbar-none snap-x">
+                                    <div className="flex gap-2 overflow-x-auto pb-3 border-b border-neutral-800/40 mb-5 scrollbar-none">
                                         {DIAS_SEMANA.map(dia => (
                                             <button
                                                 key={dia}
                                                 type="button"
                                                 onClick={() => setDiaAbaPersonal(dia)}
-                                                className={`px-5 py-2.5 rounded-xl text-[11px] font-bold uppercase transition-all flex-shrink-0 border snap-center ${diaAbaPersonal === dia
-                                                    ? 'bg-neutral-800 border-emerald-500 text-emerald-400 shadow-sm'
-                                                    : 'border-neutral-800/50 text-neutral-500 hover:bg-neutral-800 hover:border-neutral-700 hover:text-neutral-300'
+                                                className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase transition-all flex-shrink-0 border-2 ${diaAbaPersonal === dia
+                                                    ? 'bg-neutral-800/50 border-emerald-500 text-emerald-400 shadow-lg'
+                                                    : 'border-transparent text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200'
                                                     }`}
                                             >
                                                 {dia}
@@ -1820,223 +1811,56 @@ function App() {
                                         ))}
                                     </div>
 
-                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 bg-[#16171d] p-3.5 rounded-lg border border-neutral-800 gap-3 sm:gap-0">
-                                        <p className="text-xs font-mono text-emerald-400 font-bold uppercase tracking-widest flex items-center gap-2">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                            Ficha de {diaAbaPersonal}
-                                        </p>
-                                        <button type="button" onClick={adicionarExercicioForm} className="w-full sm:w-auto bg-emerald-600/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold px-4 py-2.5 rounded-lg hover:bg-emerald-600/20 transition-all uppercase flex items-center justify-center gap-1.5">
-                                            <span className="text-sm leading-none">+</span> Adicionar Exercício
-                                        </button>
+                                    <div className="flex justify-between items-center mb-4">
+                                        <p className="text-xs font-mono text-emerald-400 font-black uppercase">Treino de {diaAbaPersonal}</p>
+                                        <button type="button" onClick={adicionarExercicioForm} className="bg-emerald-600/10 text-emerald-400 border-2 border-emerald-500/30 text-xs font-black px-4 py-2 rounded-xl hover:bg-emerald-600/20 transition-all uppercase shadow-sm">+ Exercício</button>
                                     </div>
 
                                     <div className="space-y-4">
                                         {(() => {
                                             const diaObj = treinoForm.find(d => d.dia === diaAbaPersonal) || { exercicios: [] };
                                             if (diaObj.exercicios.length === 0) {
-                                                return <p className="text-xs text-neutral-500 font-medium uppercase italic text-center py-8 bg-[#16171d] rounded-xl border border-neutral-800 border-dashed">Nenhum exercício para este dia.<br /><span className="text-[10px] text-neutral-600 mt-1.5 block normal-case">O aluno verá como "Dia de Descanso".</span></p>;
+                                                return <p className="text-sm text-neutral-400 font-bold uppercase italic text-center py-6 bg-[#0d0e12] rounded-2xl border-2 border-neutral-800">Nenhum exercício cadastrado.</p>;
                                             }
 
                                             return diaObj.exercicios.map((ex, idx) => (
-                                                <div key={idx} className="bg-[#16171d] border border-neutral-800 hover:border-neutral-700 p-4 sm:p-5 rounded-xl space-y-4 relative group shadow-sm transition-colors">
-                                                    <div className="absolute top-3 right-3 z-10">
-                                                        <button type="button" onClick={() => removerExercicioForm(idx)} className="text-neutral-500 hover:text-white bg-[#0d0e12] hover:bg-red-600 border border-neutral-700 hover:border-red-500 text-[9px] uppercase font-mono font-bold tracking-widest transition-colors px-2.5 py-1.5 rounded-md flex items-center gap-1">✕ Remover</button>
+                                                <div key={idx} className="bg-[#0d0e12] border-2 border-neutral-800 p-5 rounded-2xl space-y-4 relative group shadow-sm">
+                                                    <button type="button" onClick={() => removerExercicioForm(idx)} className="absolute top-4 right-4 text-neutral-500 hover:text-red-400 text-[10px] uppercase font-mono font-black tracking-wider transition-colors bg-[#16171d] px-2 py-1 rounded border border-neutral-800">Remover</button>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 sm:pt-0">
+                                                        <div className="sm:col-span-1"><label className="text-[10px] uppercase font-black text-neutral-400 block mb-1.5">Movimento</label><input required type="text" className="w-full bg-[#16171d] border-2 border-neutral-800 p-3 rounded-xl text-sm font-bold outline-none text-white focus:border-emerald-500/50" value={ex.nome} onChange={(e) => handleExercicioChange(idx, "nome", e.target.value)} /></div>
+                                                        <div><label className="text-[10px] uppercase font-black text-neutral-400 block mb-1.5">Séries</label><input required type="number" className="w-full bg-[#16171d] border-2 border-neutral-800 p-3 rounded-xl text-sm font-bold outline-none text-white focus:border-emerald-500/50" value={ex.series} onChange={(e) => handleExercicioChange(idx, "series", Number(e.target.value))} /></div>
+                                                        <div><label className="text-[10px] uppercase font-black text-neutral-400 block mb-1.5">Repetições/Tempo</label><input required type="text" className="w-full bg-[#16171d] border-2 border-neutral-800 p-3 rounded-xl text-sm font-bold outline-none text-white focus:border-emerald-500/50" value={ex.reps} onChange={(e) => handleExercicioChange(idx, "reps", e.target.value)} /></div>
                                                     </div>
-
-                                                    <div className="flex items-center gap-2 mb-1 border-b border-neutral-800/60 pb-2 pr-20">
-                                                        <div className="bg-neutral-800 text-neutral-300 font-bold text-[10px] px-2 py-0.5 rounded font-mono">{idx + 1}</div>
-                                                        <p className="text-[10px] font-bold uppercase text-neutral-500 tracking-widest">Detalhes do Movimento</p>
-                                                    </div>
-
-                                                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
-                                                        <div className="sm:col-span-6">
-                                                            <label className="text-[10px] uppercase font-bold text-neutral-400 block mb-1.5 tracking-wider">Nome do Exercício</label>
-                                                            <input required type="text" className="w-full bg-[#0d0e12] border border-neutral-700 p-3 rounded-lg text-sm font-semibold outline-none text-neutral-100 focus:border-emerald-500/50 transition-colors placeholder-neutral-600" value={ex.nome} onChange={(e) => handleExercicioChange(idx, "nome", e.target.value)} placeholder="Ex: Supino Reto com Halteres" />
-                                                        </div>
-                                                        <div className="sm:col-span-3">
-                                                            <label className="text-[10px] uppercase font-bold text-neutral-400 block mb-1.5 tracking-wider">Qtd. Séries</label>
-                                                            <div className="relative">
-                                                                <input required type="number" min="1" max="10" className="w-full bg-[#0d0e12] border border-neutral-700 p-3 rounded-lg text-sm font-semibold outline-none text-neutral-100 focus:border-emerald-500/50 transition-colors text-center pr-8" value={ex.series} onChange={(e) => handleExercicioChange(idx, "series", Number(e.target.value))} />
-                                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 font-bold text-[10px] uppercase">x</span>
-                                                            </div>
-                                                        </div>
-                                                        <div className="sm:col-span-3">
-                                                            <label className="text-[10px] uppercase font-bold text-neutral-400 block mb-1.5 tracking-wider">Repetições</label>
-                                                            <input required type="text" className="w-full bg-[#0d0e12] border border-neutral-700 p-3 rounded-lg text-sm font-semibold outline-none text-neutral-100 focus:border-emerald-500/50 transition-colors text-center placeholder-neutral-600" value={ex.reps} onChange={(e) => handleExercicioChange(idx, "reps", e.target.value)} placeholder="8 a 12" />
-                                                        </div>
-                                                        <div className="sm:col-span-12 pt-1 border-t border-neutral-800/40">
-                                                            <label className="text-[10px] uppercase font-bold text-neutral-400 block mb-1.5 tracking-wider flex items-center gap-1.5"><span>📌</span> Observação / Instrução do Coach (Opcional)</label>
-                                                            <input type="text" className="w-full bg-[#0d0e12] border border-neutral-700 p-3 rounded-lg text-xs font-medium outline-none text-emerald-400 focus:border-emerald-500/50 transition-colors placeholder-neutral-700 italic" value={ex.obs || ""} onChange={(e) => handleExercicioChange(idx, "obs", e.target.value)} placeholder="Ex: Focar na fase excêntrica, 3 segundos descendo..." />
-                                                        </div>
-                                                    </div>
+                                                    <div><label className="text-[10px] uppercase font-black text-neutral-400 block mb-1.5">Observação</label><input type="text" className="w-full bg-[#16171d] border-2 border-neutral-800 p-3 rounded-xl text-sm font-bold outline-none text-white focus:border-emerald-500/50 placeholder-neutral-600" value={ex.obs || ""} onChange={(e) => handleExercicioChange(idx, "obs", e.target.value)} /></div>
                                                 </div>
                                             ));
                                         })()}
                                     </div>
                                 </div>
 
-                                <div className="bg-[#0d0e12] border border-neutral-800 p-5 rounded-xl shadow-sm">
-                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 border-b border-neutral-800/60 mb-5 gap-3 sm:gap-0">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xl">🍽️</span>
-                                            <p className="text-sm font-bold uppercase tracking-widest text-neutral-300">Planejamento Nutricional</p>
-                                        </div>
-                                        <button type="button" onClick={adicionarDietaForm} className="w-full sm:w-auto bg-blue-600/10 text-blue-400 border border-blue-500/30 text-[10px] font-bold px-4 py-2.5 rounded-lg hover:bg-blue-600/20 transition-all uppercase flex items-center justify-center gap-1.5">
-                                            <span className="text-sm leading-none">+</span> Nova Refeição
-                                        </button>
-                                    </div>
-                                    <div className="space-y-3">
-                                        {dietaForm.length === 0 && (
-                                            <p className="text-xs text-neutral-500 font-medium uppercase italic text-center py-5 bg-[#16171d] rounded-xl border border-neutral-800 border-dashed mb-1">Plano alimentar vazio.</p>
-                                        )}
+                                <div className="pt-6 border-t border-neutral-800/60">
+                                    <div className="flex justify-between items-center pb-3 border-b border-neutral-800/60 mb-4"><p className="text-sm font-black uppercase tracking-wider text-neutral-300">Planejamento Nutricional</p><button type="button" onClick={adicionarDietaForm} className="bg-blue-600/10 text-blue-400 border-2 border-blue-500/30 text-xs font-black px-4 py-2 rounded-xl hover:bg-blue-600/20 transition-all uppercase shadow-sm">+ Refeição</button></div>
+                                    <div className="space-y-4">
                                         {dietaForm.map((ref, idx) => (
-                                            <div key={idx} className="bg-[#16171d] border border-neutral-800 p-4 rounded-xl flex flex-col sm:flex-row gap-4 relative sm:items-start shadow-sm hover:border-neutral-700 transition-colors pt-8 sm:pt-4 pr-4 sm:pr-12">
-                                                <div className="absolute top-3 left-3 sm:hidden bg-neutral-800 text-neutral-400 font-bold text-[9px] px-2 py-0.5 rounded font-mono">Refeição {idx + 1}</div>
-
-                                                <div className="w-full sm:w-1/3">
-                                                    <label className="text-[10px] uppercase font-bold text-neutral-400 block mb-1.5 tracking-wider">Horário / Nome</label>
-                                                    <input required type="text" placeholder="Ex: Café da Manhã (08:00)" className="w-full bg-[#0d0e12] border border-neutral-700 p-3 rounded-lg text-xs font-semibold outline-none text-neutral-100 focus:border-blue-500/50 transition-colors placeholder-neutral-600" value={ref.refeicao} onChange={(e) => handleDietaChange(idx, "refeicao", e.target.value)} />
-                                                </div>
-                                                <div className="w-full sm:w-2/3">
-                                                    <label className="text-[10px] uppercase font-bold text-neutral-400 block mb-1.5 tracking-wider">Alimentos e Quantidades</label>
-                                                    <input required type="text" placeholder="Ex: 3 Ovos inteiros, 2 fatias de pão integral..." className="w-full bg-[#0d0e12] border border-neutral-700 p-3 rounded-lg text-xs font-semibold outline-none text-neutral-100 focus:border-blue-500/50 transition-colors placeholder-neutral-600" value={ref.itens} onChange={(e) => handleDietaChange(idx, "itens", e.target.value)} />
-                                                </div>
-
-                                                <button type="button" onClick={() => removerDietaForm(idx)} className="absolute top-3 right-3 text-neutral-500 hover:text-white font-bold text-sm bg-[#0d0e12] hover:bg-red-600 border border-neutral-700 hover:border-red-500 w-8 h-8 rounded-lg flex items-center justify-center transition-colors" title="Remover refeição">✕</button>
+                                            <div key={idx} className="bg-[#0d0e12] border-2 border-neutral-800 p-4 rounded-2xl flex flex-col sm:flex-row gap-4 relative sm:items-center shadow-sm">
+                                                <div className="w-full sm:w-1/3"><label className="text-[10px] uppercase font-black text-neutral-400 block mb-1.5">Horário/Refeição</label><input required type="text" placeholder="Ex: Almoço" className="w-full bg-[#16171d] border-2 border-neutral-800 p-3 rounded-xl text-sm font-bold outline-none text-white focus:border-blue-500/50 placeholder-neutral-600" value={ref.refeicao} onChange={(e) => handleDietaChange(idx, "refeicao", e.target.value)} /></div>
+                                                <div className="w-full sm:w-2/3 pr-8"><label className="text-[10px] uppercase font-black text-neutral-400 block mb-1.5">Alimentos e Gramas</label><input required type="text" placeholder="Ex: 100g Frango" className="w-full bg-[#16171d] border-2 border-neutral-800 p-3 rounded-xl text-sm font-bold outline-none text-white focus:border-blue-500/50 placeholder-neutral-600" value={ref.itens} onChange={(e) => handleDietaChange(idx, "itens", e.target.value)} /></div>
+                                                <button type="button" onClick={() => removerDietaForm(idx)} className="absolute top-4 right-4 sm:top-auto sm:bottom-4 text-neutral-500 hover:text-red-400 font-black text-lg bg-[#16171d] w-8 h-8 rounded-lg border border-neutral-800 flex items-center justify-center transition-colors">✕</button>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
 
-                                <footer className="pt-6 mt-4 border-t border-neutral-800 flex flex-col sm:flex-row gap-3 justify-end text-xs font-bold sticky bottom-0 bg-[#16171d] pb-5 sm:pb-0 z-20">
-                                    <button type="button" onClick={() => setAlunoEmEdicao(null)} className="bg-[#0d0e12] border border-neutral-700 text-neutral-300 p-4 rounded-lg uppercase tracking-widest hover:bg-neutral-800 hover:text-white transition-colors w-full sm:w-auto text-center">Cancelar Alterações</button>
-                                    <button type="submit" className="bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-lg uppercase tracking-widest transition-all shadow-md px-8 w-full sm:w-auto text-center active:scale-95 flex items-center justify-center gap-2">
-                                        <span>✓</span> Salvar Planilhas e Enviar
-                                    </button>
-                                </footer>
+                                <footer className="pt-6 border-t border-neutral-800 flex gap-4 justify-end text-sm font-black"><button type="button" onClick={() => setAlunoEmEdicao(null)} className="bg-transparent border-2 border-neutral-800 text-neutral-300 p-4 rounded-xl uppercase tracking-wider hover:bg-neutral-800 transition-colors">Cancelar</button><button type="submit" className="bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-xl uppercase tracking-wider transition-colors shadow-[0_10px_20px_rgba(16,185,129,0.2)] px-8">Salvar e Enviar</button></footer>
                             </form>
                         </div>
                     </div>
                 )}
 
-                {/* MODAL DETALHES DO FEEDBACK (RPE E RESPOSTAS) */}
-                {alunoVerFeedback && (
-                    <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setAlunoVerFeedback(null)}>
-                        <div className="w-full max-w-sm bg-[#16171d] border border-neutral-800 rounded-2xl p-6 relative shadow-xl" onClick={e => e.stopPropagation()}>
-                            <button onClick={() => setAlunoVerFeedback(null)} className="absolute top-4 right-4 text-neutral-400 hover:text-white font-bold bg-neutral-800 w-7 h-7 rounded flex items-center justify-center transition-colors">✕</button>
-
-                            <div className="flex items-center gap-3 mb-5 border-b border-neutral-800 pb-4">
-                                <div className="w-10 h-10 bg-emerald-500/10 border border-emerald-500/20 rounded-lg flex items-center justify-center text-xl">📋</div>
-                                <div>
-                                    <h3 className="font-bold text-white uppercase text-sm tracking-tight">Relatório de Treino</h3>
-                                    <p className="text-[10px] text-emerald-400 font-bold font-mono uppercase mt-0.5">{alunoVerFeedback.nome}</p>
-                                </div>
-                            </div>
-
-                            {alunoVerFeedback.checkins && alunoVerFeedback.checkins.length > 0 ? (
-                                <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar">
-                                    {alunoVerFeedback.checkins.slice(0, 3).map((checkin, index) => (
-                                        <div key={index} className="bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl shadow-inner">
-                                            <div className="flex justify-between items-center mb-3">
-                                                <span className="text-xs font-bold text-neutral-100 uppercase">{checkin.data} - {checkin.diaSemana}</span>
-                                                {index === 0 && <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-bold px-2 py-0.5 rounded uppercase">Último</span>}
-                                            </div>
-
-                                            {checkin.feedback ? (
-                                                <div className="space-y-3">
-                                                    <div className="grid grid-cols-2 gap-2.5">
-                                                        <div className="bg-[#16171d] p-2.5 rounded-lg border border-neutral-800/50">
-                                                            <p className="text-[9px] text-neutral-400 font-bold uppercase mb-1">Intensidade</p>
-                                                            <p className="text-xs font-semibold text-neutral-100">{checkin.feedback.intensidade}</p>
-                                                        </div>
-                                                        <div className="bg-[#16171d] p-2.5 rounded-lg border border-neutral-800/50">
-                                                            <p className="text-[9px] text-neutral-400 font-bold uppercase mb-1">Carga</p>
-                                                            <p className="text-xs font-semibold text-neutral-100">{checkin.feedback.carga}</p>
-                                                        </div>
-                                                    </div>
-                                                    {checkin.feedback.comentario && (
-                                                        <div className="bg-[#16171d] p-3 rounded-lg border border-neutral-800/50">
-                                                            <p className="text-[9px] text-neutral-400 font-bold uppercase mb-1">Observações do Aluno</p>
-                                                            <p className="text-xs font-medium text-neutral-300 italic">"{checkin.feedback.comentario}"</p>
-                                                        </div>
-                                                    )}
-
-                                                    {/* CAIXA DE RESPOSTA DO PERSONAL */}
-                                                    {checkin.respostaPersonal ? (
-                                                        <div className="bg-emerald-900/10 p-3 rounded-lg border-l-2 border-emerald-500 mt-3">
-                                                            <p className="text-[9px] text-emerald-400 font-bold uppercase mb-1">Sua Resposta</p>
-                                                            <p className="text-xs font-medium text-neutral-300 italic">"{checkin.respostaPersonal}"</p>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="mt-3 flex flex-col gap-2 border-t border-neutral-800/60 pt-3">
-                                                            <input type="text" placeholder="Responder feedback..." className="w-full bg-[#16171d] border border-neutral-800 p-2.5 rounded-lg text-xs font-medium outline-none text-neutral-100 focus:border-neutral-600 placeholder-neutral-500"
-                                                                value={respostasFeedback[checkin.data] || ""}
-                                                                onChange={e => setRespostasFeedback({ ...respostasFeedback, [checkin.data]: e.target.value })}
-                                                            />
-                                                            <button type="button" onClick={() => enviarRespostaFeedback(alunoVerFeedback.id || alunoVerFeedback._id, checkin.data)} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold p-2.5 rounded-lg text-[10px] uppercase transition-colors shadow-sm">Responder Aluno</button>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                <p className="text-xs text-neutral-500 font-medium italic">Check-in simples (Sem feedback detalhado).</p>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="text-center p-6 bg-[#0d0e12] rounded-xl border border-neutral-800">
-                                    <p className="text-xs text-neutral-500 uppercase font-bold">Nenhum treino registrado ainda.</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                {/* ✅ TELA DE BLOQUEIO DE PLANOS DA KIWIFY */}
-                {modalPlanosPersonal && (
-                    <div className="fixed inset-0 z-[500] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
-                        <div className="w-full max-w-md bg-[#16171d] border border-emerald-500/30 p-6 md:p-8 rounded-2xl shadow-xl relative text-center">
-                            <button onClick={() => setModalPlanosPersonal(false)} className="absolute top-4 right-4 text-neutral-400 hover:text-white font-bold bg-neutral-800 w-7 h-7 rounded flex items-center justify-center transition-colors">✕</button>
-
-                            <span className="text-4xl block mb-3">🔒</span>
-                            <h3 className="text-xl font-bold uppercase tracking-tight text-neutral-100 mb-1.5">Limite Atingido</h3>
-                            <p className="text-neutral-400 font-medium text-xs mb-6 leading-relaxed">Você já possui {alunosPersonal.length} alunos cadastrados. Ative a licença PRO para ter alunos ilimitados + Inteligência Artificial.</p>
-
-                            <div className="grid grid-cols-1 gap-3 mb-5">
-                                <a href={KIWIFY_MENSAL} target="_blank" rel="noopener noreferrer" className="bg-[#0d0e12] border border-neutral-800 hover:border-emerald-500/50 p-4 rounded-xl flex items-center justify-between transition-all group text-left">
-                                    <div>
-                                        <p className="text-xs font-bold text-neutral-100 uppercase">Plano Mensal Recorrente</p>
-                                        <p className="text-[10px] font-medium text-neutral-500 mt-0.5">Cancele quando quiser</p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-base font-bold text-emerald-400">R$ 49,90</p>
-                                        <p className="text-[9px] font-bold text-neutral-500 uppercase font-mono">/mês</p>
-                                    </div>
-                                </a>
-
-                                <a href={KIWIFY_ANUAL} target="_blank" rel="noopener noreferrer" className="bg-[#0d0e12] border border-emerald-500/40 hover:border-emerald-500 p-5 rounded-xl flex items-center justify-between transition-all relative text-left group shadow-sm">
-                                    <span className="absolute -top-2.5 right-4 bg-emerald-500 text-neutral-900 font-bold text-[8px] uppercase tracking-widest px-2.5 py-0.5 rounded-sm shadow-sm">Melhor Custo-Benefício</span>
-                                    <div>
-                                        <p className="text-xs font-bold text-neutral-100 uppercase">Plano Anual Elite</p>
-                                        <p className="text-[10px] font-medium text-emerald-400 mt-0.5">Economize mais de 30%</p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-xl font-bold text-emerald-400">R$ 399,00</p>
-                                        <p className="text-[9px] font-bold text-neutral-400 uppercase font-mono mt-0.5">Eq. R$ 33,25/mês</p>
-                                    </div>
-                                </a>
-                            </div>
-                            <p className="text-[9px] font-medium text-neutral-500 uppercase font-mono">Liberação automática após o pagamento.</p>
-                        </div>
-                    </div>
-                )}
-
-                {/* ✅ AQUI RENDERIZA A AVALIAÇÃO NO PAINEL DO PERSONAL E DO ALUNO */}
-                {alunoVerAvaliacao && renderModalAvaliacao(alunoVerAvaliacao, () => setAlunoVerAvaliacao(null))}
                 {/* MODAL DE EDIÇÃO DE PERFIL DO ALUNO */}
                 {alunoEditandoPerfil && (
                     <div className="fixed inset-0 z-[999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
-                        <div className="w-full max-w-2xl bg-[#16171d] border-2 border-neutral-800 rounded-[2rem] shadow-[0_0_50px_rgba(0,0,0,0.8)] flex flex-col max-h-[90vh] overflow-hidden">
+                        <div className="w-full max-w-2xl bg-[#16171d] border-2 border-neutral-800 rounded-[2rem] shadow-[0_0_50px_rgba(0,0,0,0.8)] flex flex-col max-h-[95vh] overflow-hidden">
                             <header className="p-6 border-b-2 border-neutral-800 flex justify-between items-center bg-gradient-to-r from-[#1c1d26] to-[#16171d]">
                                 <div>
                                     <h3 className="text-xl font-black text-white uppercase tracking-tight">Editar Ficha do Aluno</h3>
@@ -2046,18 +1870,29 @@ function App() {
                             </header>
                             <form onSubmit={atualizarBiometriaAluno} className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 custom-scrollbar">
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-3 gap-4">
                                     <div className="space-y-1.5">
-                                        <label className="text-[11px] font-black uppercase tracking-wider text-neutral-400 ml-1">Peso Atual (kg)</label>
-                                        <input required type="text" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-4 rounded-xl text-base font-bold text-white outline-none focus:border-emerald-500 transition-colors" value={alunoEditandoPerfil.peso} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, peso: e.target.value })} />
+                                        <label className="text-[11px] font-black uppercase tracking-wider text-neutral-400 ml-1">Peso (kg)</label>
+                                        <input required type="text" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-4 rounded-xl text-sm font-bold text-white outline-none focus:border-emerald-500 transition-colors text-center" value={alunoEditandoPerfil.peso} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, peso: e.target.value })} />
                                     </div>
                                     <div className="space-y-1.5">
                                         <label className="text-[11px] font-black uppercase tracking-wider text-neutral-400 ml-1">Altura (m)</label>
-                                        <input required type="text" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-4 rounded-xl text-base font-bold text-white outline-none focus:border-emerald-500 transition-colors" value={alunoEditandoPerfil.altura} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, altura: e.target.value })} />
+                                        <input required type="text" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-4 rounded-xl text-sm font-bold text-white outline-none focus:border-emerald-500 transition-colors text-center" value={alunoEditandoPerfil.altura} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, altura: e.target.value })} />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[11px] font-black uppercase tracking-wider text-neutral-400 ml-1">Idade</label>
+                                        <input required type="number" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-4 rounded-xl text-sm font-bold text-white outline-none focus:border-emerald-500 transition-colors text-center" value={alunoEditandoPerfil.idade} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, idade: e.target.value })} />
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-[11px] font-black uppercase tracking-wider text-neutral-400 ml-1">Gênero</label>
+                                        <select className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-4 rounded-xl text-sm font-bold text-white outline-none focus:border-emerald-500 transition-colors" value={alunoEditandoPerfil.genero} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, genero: e.target.value })}>
+                                            <option value="Masculino">Masculino</option>
+                                            <option value="Feminino">Feminino</option>
+                                        </select>
+                                    </div>
                                     <div className="space-y-1.5">
                                         <label className="text-[11px] font-black uppercase tracking-wider text-neutral-400 ml-1">Objetivo Base</label>
                                         <select className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-4 rounded-xl text-sm font-bold text-white outline-none focus:border-emerald-500 transition-colors" value={alunoEditandoPerfil.objetivo} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, objetivo: e.target.value })}>
@@ -2066,12 +1901,21 @@ function App() {
                                             <option value="Performance">Performance</option>
                                         </select>
                                     </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1.5">
-                                        <label className="text-[11px] font-black uppercase tracking-wider text-neutral-400 ml-1">Nível</label>
+                                        <label className="text-[11px] font-black uppercase tracking-wider text-neutral-400 ml-1">Nível de Treino</label>
                                         <select className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-4 rounded-xl text-sm font-bold text-white outline-none focus:border-emerald-500 transition-colors" value={alunoEditandoPerfil.nivel} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, nivel: e.target.value })}>
                                             <option value="Iniciante">Iniciante</option>
                                             <option value="Intermediário">Intermediário</option>
                                             <option value="Avançado">Avançado</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[11px] font-black uppercase tracking-wider text-neutral-400 ml-1">Dias de Treino</label>
+                                        <select className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-4 rounded-xl text-sm font-bold text-white outline-none focus:border-emerald-500 transition-colors" value={alunoEditandoPerfil.diasTreino} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, diasTreino: e.target.value })}>
+                                            <option value="3">3 Dias</option><option value="4">4 Dias</option><option value="5">5 Dias</option><option value="6">6 Dias</option>
                                         </select>
                                     </div>
                                 </div>
@@ -2086,6 +1930,87 @@ function App() {
                                     <input type="text" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-4 rounded-xl text-sm font-bold text-white outline-none focus:border-emerald-500 transition-colors" value={alunoEditandoPerfil.lesoes || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, lesoes: e.target.value })} placeholder="Nenhuma" />
                                 </div>
 
+                                {/* 🔥 BLOCO DE MEDIDAS E NOVA AVALIAÇÃO DE DOBRAS 🔥 */}
+                                <div className="pt-6 border-t-2 border-neutral-800 mt-6 mb-2">
+                                    <div className="flex justify-between items-center mb-5">
+                                        <p className="text-sm font-black uppercase tracking-wider text-emerald-400">📏 Perímetros (cm)</p>
+                                        <button type="button" onClick={() => setModalDobrasAberto(true)} className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black px-4 py-2 rounded-lg transition-colors uppercase shadow-sm flex items-center gap-1.5">
+                                            <span>✚</span> Protocolo 7 Dobras
+                                        </button>
+                                    </div>
+
+                                    {alunoEditandoPerfil.medidas?.percentualGordura && (
+                                        <div className="mb-5 bg-emerald-500/10 border-2 border-emerald-500/30 rounded-xl p-4 flex justify-between items-center shadow-inner">
+                                            <span className="text-xs font-black uppercase text-emerald-400">Percentual de Gordura Atual:</span>
+                                            <span className="text-xl font-black text-white">{alunoEditandoPerfil.medidas.percentualGordura}%</span>
+                                        </div>
+                                    )}
+
+                                    {/* Tronco */}
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
+                                        <div className="space-y-1.5">
+                                            <label className="text-[11px] font-black uppercase tracking-wider text-neutral-400 ml-1">Pescoço</label>
+                                            <input type="number" step="0.1" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-3.5 rounded-xl text-sm font-bold text-white outline-none focus:border-emerald-500 transition-colors" value={alunoEditandoPerfil.medidas?.pescoco || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), pescoco: e.target.value } })} />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[11px] font-black uppercase tracking-wider text-neutral-400 ml-1">Tórax</label>
+                                            <input type="number" step="0.1" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-3.5 rounded-xl text-sm font-bold text-white outline-none focus:border-emerald-500 transition-colors" value={alunoEditandoPerfil.medidas?.torax || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), torax: e.target.value } })} />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[11px] font-black uppercase tracking-wider text-neutral-400 ml-1">Cintura</label>
+                                            <input type="number" step="0.1" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-3.5 rounded-xl text-sm font-bold text-white outline-none focus:border-emerald-500 transition-colors" value={alunoEditandoPerfil.medidas?.cintura || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), cintura: e.target.value } })} />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[11px] font-black uppercase tracking-wider text-neutral-400 ml-1">Abdômen</label>
+                                            <input type="number" step="0.1" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-3.5 rounded-xl text-sm font-bold text-white outline-none focus:border-emerald-500 transition-colors" value={alunoEditandoPerfil.medidas?.abdomen || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), abdomen: e.target.value } })} />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[11px] font-black uppercase tracking-wider text-neutral-400 ml-1">Quadril</label>
+                                            <input type="number" step="0.1" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-3.5 rounded-xl text-sm font-bold text-white outline-none focus:border-emerald-500 transition-colors" value={alunoEditandoPerfil.medidas?.quadril || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), quadril: e.target.value } })} />
+                                        </div>
+                                    </div>
+
+                                    {/* Membros Superiores */}
+                                    <div className="grid grid-cols-2 gap-4 mb-4">
+                                        <div className="space-y-1.5">
+                                            <label className="text-[11px] font-black uppercase tracking-wider text-neutral-400 ml-1">Braço Dir.</label>
+                                            <input type="number" step="0.1" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-3.5 rounded-xl text-sm font-bold text-white outline-none focus:border-emerald-500 transition-colors" value={alunoEditandoPerfil.medidas?.bracoDir || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), bracoDir: e.target.value } })} />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[11px] font-black uppercase tracking-wider text-neutral-400 ml-1">Braço Esq.</label>
+                                            <input type="number" step="0.1" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-3.5 rounded-xl text-sm font-bold text-white outline-none focus:border-emerald-500 transition-colors" value={alunoEditandoPerfil.medidas?.bracoEsq || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), bracoEsq: e.target.value } })} />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[11px] font-black uppercase tracking-wider text-neutral-400 ml-1">Antebraço Dir.</label>
+                                            <input type="number" step="0.1" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-3.5 rounded-xl text-sm font-bold text-white outline-none focus:border-emerald-500 transition-colors" value={alunoEditandoPerfil.medidas?.antebracoDir || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), antebracoDir: e.target.value } })} />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[11px] font-black uppercase tracking-wider text-neutral-400 ml-1">Antebraço Esq.</label>
+                                            <input type="number" step="0.1" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-3.5 rounded-xl text-sm font-bold text-white outline-none focus:border-emerald-500 transition-colors" value={alunoEditandoPerfil.medidas?.antebracoEsq || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), antebracoEsq: e.target.value } })} />
+                                        </div>
+                                    </div>
+
+                                    {/* Membros Inferiores */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1.5">
+                                            <label className="text-[11px] font-black uppercase tracking-wider text-neutral-400 ml-1">Coxa Dir.</label>
+                                            <input type="number" step="0.1" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-3.5 rounded-xl text-sm font-bold text-white outline-none focus:border-emerald-500 transition-colors" value={alunoEditandoPerfil.medidas?.coxaDir || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), coxaDir: e.target.value } })} />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[11px] font-black uppercase tracking-wider text-neutral-400 ml-1">Coxa Esq.</label>
+                                            <input type="number" step="0.1" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-3.5 rounded-xl text-sm font-bold text-white outline-none focus:border-emerald-500 transition-colors" value={alunoEditandoPerfil.medidas?.coxaEsq || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), coxaEsq: e.target.value } })} />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[11px] font-black uppercase tracking-wider text-neutral-400 ml-1">Panturrilha Dir.</label>
+                                            <input type="number" step="0.1" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-3.5 rounded-xl text-sm font-bold text-white outline-none focus:border-emerald-500 transition-colors" value={alunoEditandoPerfil.medidas?.panturrilhaDir || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), panturrilhaDir: e.target.value } })} />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[11px] font-black uppercase tracking-wider text-neutral-400 ml-1">Panturrilha Esq.</label>
+                                            <input type="number" step="0.1" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-3.5 rounded-xl text-sm font-bold text-white outline-none focus:border-emerald-500 transition-colors" value={alunoEditandoPerfil.medidas?.panturrilhaEsq || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, medidas: { ...(alunoEditandoPerfil.medidas || {}), panturrilhaEsq: e.target.value } })} />
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <footer className="pt-6 border-t-2 border-neutral-800 flex flex-col sm:flex-row justify-end gap-4 mt-8">
                                     <button type="button" onClick={() => setAlunoEditandoPerfil(null)} className="bg-transparent border-2 border-neutral-800 text-neutral-300 px-6 py-4 rounded-xl font-black uppercase text-sm hover:bg-neutral-800 transition-colors">Cancelar</button>
                                     <button type="submit" disabled={isRecalculando} className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-4 rounded-xl font-black uppercase text-sm shadow-[0_10px_25px_rgba(16,185,129,0.3)] transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2">
@@ -2096,6 +2021,154 @@ function App() {
                         </div>
                     </div>
                 )}
+
+                {/* MODAL DETALHES DO FEEDBACK (RPE E RESPOSTAS) */}
+                {alunoVerFeedback && (
+                    <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setAlunoVerFeedback(null)}>
+                        <div className="w-full max-w-sm bg-[#16171d] border-2 border-neutral-800 rounded-3xl p-6 relative shadow-2xl" onClick={e => e.stopPropagation()}>
+                            <button onClick={() => setAlunoVerFeedback(null)} className="absolute top-5 right-5 text-neutral-400 hover:text-white font-black bg-neutral-800 w-8 h-8 rounded-lg flex items-center justify-center">✕</button>
+
+                            <div className="flex items-center gap-4 mb-6 border-b border-neutral-800 pb-5">
+                                <div className="w-12 h-12 bg-emerald-500/10 border-2 border-emerald-500/30 rounded-xl flex items-center justify-center text-2xl">📋</div>
+                                <div>
+                                    <h3 className="font-black text-white uppercase text-base tracking-tight">Relatório de Treino</h3>
+                                    <p className="text-xs text-emerald-400 font-bold font-mono uppercase mt-1">{alunoVerFeedback.nome}</p>
+                                </div>
+                            </div>
+
+                            {alunoVerFeedback.checkins && alunoVerFeedback.checkins.length > 0 ? (
+                                <div className="space-y-5 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                                    {alunoVerFeedback.checkins.slice(0, 3).map((checkin, index) => (
+                                        <div key={index} className="bg-[#0d0e12] border-2 border-neutral-800 p-5 rounded-2xl shadow-inner">
+                                            <div className="flex justify-between items-center mb-4">
+                                                <span className="text-sm font-black text-white uppercase">{checkin.data} - {checkin.diaSemana}</span>
+                                                {index === 0 && <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-black px-2 py-1 rounded uppercase">Último</span>}
+                                            </div>
+
+                                            {checkin.feedback ? (
+                                                <div className="space-y-4">
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <div className="bg-[#16171d] p-3 rounded-xl border border-neutral-800/50">
+                                                            <p className="text-[10px] text-neutral-400 font-black uppercase mb-1.5">Intensidade</p>
+                                                            <p className="text-sm font-bold text-white">{checkin.feedback.intensidade}</p>
+                                                        </div>
+                                                        <div className="bg-[#16171d] p-3 rounded-xl border border-neutral-800/50">
+                                                            <p className="text-[10px] text-neutral-400 font-black uppercase mb-1.5">Carga</p>
+                                                            <p className="text-sm font-bold text-white">{checkin.feedback.carga}</p>
+                                                        </div>
+                                                    </div>
+                                                    {checkin.feedback.comentario && (
+                                                        <div className="bg-[#16171d] p-4 rounded-xl border border-neutral-800/50">
+                                                            <p className="text-[10px] text-neutral-400 font-black uppercase mb-1.5">Observações do Aluno</p>
+                                                            <p className="text-sm font-bold text-neutral-200 italic">"{checkin.feedback.comentario}"</p>
+                                                        </div>
+                                                    )}
+
+                                                    {/* CAIXA DE RESPOSTA DO PERSONAL */}
+                                                    {checkin.respostaPersonal ? (
+                                                        <div className="bg-emerald-900/20 p-4 rounded-xl border-l-4 border-emerald-500 mt-4">
+                                                            <p className="text-[10px] text-emerald-400 font-black uppercase mb-1.5">Sua Resposta</p>
+                                                            <p className="text-sm font-bold text-neutral-200 italic">"{checkin.respostaPersonal}"</p>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="mt-4 flex flex-col gap-2 border-t border-neutral-800 pt-4">
+                                                            <input type="text" placeholder="Responder feedback..." className="w-full bg-[#16171d] border-2 border-neutral-800 p-3 rounded-xl text-sm font-bold outline-none text-white focus:border-neutral-600 placeholder-neutral-500"
+                                                                value={respostasFeedback[checkin.data] || ""}
+                                                                onChange={e => setRespostasFeedback({ ...respostasFeedback, [checkin.data]: e.target.value })}
+                                                            />
+                                                            <button type="button" onClick={() => enviarRespostaFeedback(alunoVerFeedback.id || alunoVerFeedback._id, checkin.data)} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black p-3 rounded-xl text-xs uppercase transition-colors shadow-md">Responder Aluno</button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <p className="text-sm text-neutral-400 font-bold italic">Check-in simples (Sem feedback detalhado).</p>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center p-8 bg-[#0d0e12] rounded-2xl border-2 border-neutral-800">
+                                    <p className="text-sm text-neutral-400 uppercase font-black">Nenhum treino registrado ainda.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* CALCULADORA DE DOBRAS (ANTROPOMETRIA) */}
+                {modalDobrasAberto && (
+                    <div className="fixed inset-0 z-[1000] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+                        <div className="w-full max-w-sm bg-[#16171d] border-2 border-blue-500/40 rounded-3xl p-6 shadow-2xl relative">
+                            <button onClick={() => setModalDobrasAberto(false)} className="absolute top-4 right-4 text-neutral-400 hover:text-white font-black bg-[#0d0e12] border border-neutral-700 w-8 h-8 rounded-lg flex items-center justify-center transition-colors">✕</button>
+
+                            <div className="flex items-center gap-4 mb-6 border-b-2 border-neutral-800 pb-4">
+                                <div className="w-12 h-12 bg-blue-500/10 border-2 border-blue-500/30 rounded-xl flex items-center justify-center text-2xl shadow-inner">📏</div>
+                                <div>
+                                    <h3 className="font-black text-white uppercase text-base tracking-tight">Avaliação Antropométrica</h3>
+                                    <p className="text-[10px] font-bold text-blue-400 font-mono uppercase tracking-widest mt-1">Protocolo 7 Dobras</p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4 mb-6">
+                                <div className="space-y-1.5"><label className="text-[11px] font-black uppercase text-neutral-400 block ml-1">Tríceps (mm)</label><input type="number" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-3 rounded-xl text-sm font-bold text-white outline-none focus:border-blue-500/70 transition-colors text-center" value={dobrasForm.triceps} onChange={e => setDobrasForm({ ...dobrasForm, triceps: e.target.value })} /></div>
+                                <div className="space-y-1.5"><label className="text-[11px] font-black uppercase text-neutral-400 block ml-1">Tórax (mm)</label><input type="number" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-3 rounded-xl text-sm font-bold text-white outline-none focus:border-blue-500/70 transition-colors text-center" value={dobrasForm.torax} onChange={e => setDobrasForm({ ...dobrasForm, torax: e.target.value })} /></div>
+                                <div className="space-y-1.5"><label className="text-[11px] font-black uppercase text-neutral-400 block ml-1">Subescapular</label><input type="number" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-3 rounded-xl text-sm font-bold text-white outline-none focus:border-blue-500/70 transition-colors text-center" value={dobrasForm.subescapular} onChange={e => setDobrasForm({ ...dobrasForm, subescapular: e.target.value })} /></div>
+                                <div className="space-y-1.5"><label className="text-[11px] font-black uppercase text-neutral-400 block ml-1">Axilar Média</label><input type="number" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-3 rounded-xl text-sm font-bold text-white outline-none focus:border-blue-500/70 transition-colors text-center" value={dobrasForm.axilar} onChange={e => setDobrasForm({ ...dobrasForm, axilar: e.target.value })} /></div>
+                                <div className="space-y-1.5"><label className="text-[11px] font-black uppercase text-neutral-400 block ml-1">Suprailíaca</label><input type="number" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-3 rounded-xl text-sm font-bold text-white outline-none focus:border-blue-500/70 transition-colors text-center" value={dobrasForm.iliaca} onChange={e => setDobrasForm({ ...dobrasForm, iliaca: e.target.value })} /></div>
+                                <div className="space-y-1.5"><label className="text-[11px] font-black uppercase text-neutral-400 block ml-1">Abdominal</label><input type="number" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-3 rounded-xl text-sm font-bold text-white outline-none focus:border-blue-500/70 transition-colors text-center" value={dobrasForm.abdominal} onChange={e => setDobrasForm({ ...dobrasForm, abdominal: e.target.value })} /></div>
+                                <div className="space-y-1.5"><label className="text-[11px] font-black uppercase text-neutral-400 block ml-1">Coxa (mm)</label><input type="number" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-3 rounded-xl text-sm font-bold text-white outline-none focus:border-blue-500/70 transition-colors text-center" value={dobrasForm.coxa} onChange={e => setDobrasForm({ ...dobrasForm, coxa: e.target.value })} /></div>
+                            </div>
+
+                            <div className="flex gap-3">
+                                <button type="button" onClick={() => setModalDobrasAberto(false)} className="w-1/3 bg-transparent border-2 border-neutral-800 hover:bg-neutral-800 text-neutral-300 font-black p-4 rounded-xl text-xs uppercase transition-colors">Cancelar</button>
+                                <button type="button" onClick={calcularDobras} className="w-2/3 bg-blue-600 hover:bg-blue-500 text-white font-black p-4 rounded-xl text-xs uppercase transition-colors shadow-[0_5px_15px_rgba(37,99,235,0.3)]">Calcular BF %</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* ✅ TELA DE BLOQUEIO DE PLANOS DA KIWIFY */}
+                {modalPlanosPersonal && (
+                    <div className="fixed inset-0 z-[500] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+                        <div className="w-full max-w-md bg-[#16171d] border-2 border-emerald-500/40 p-8 rounded-[2rem] shadow-[0_0_50px_rgba(16,185,129,0.2)] relative text-center">
+                            <button onClick={() => setModalPlanosPersonal(false)} className="absolute top-4 right-4 text-neutral-400 hover:text-white font-black bg-neutral-800 w-8 h-8 rounded-lg">✕</button>
+
+                            <span className="text-5xl block mb-4">🔒</span>
+                            <h3 className="text-2xl font-black uppercase tracking-tight text-white mb-2">Limite Atingido</h3>
+                            <p className="text-neutral-300 font-bold text-sm mb-8">Você já possui {alunosPersonal.length} alunos cadastrados. Ative a licença PRO para ter alunos ilimitados + Inteligência Artificial.</p>
+
+                            <div className="grid grid-cols-1 gap-4 mb-6">
+                                <a href={KIWIFY_MENSAL} target="_blank" rel="noopener noreferrer" className="bg-[#0d0e12] border-2 border-neutral-800 hover:border-emerald-500/50 p-5 rounded-2xl flex items-center justify-between transition-all group text-left">
+                                    <div>
+                                        <p className="text-sm font-black text-white uppercase">Plano Mensal Recorrente</p>
+                                        <p className="text-xs font-bold text-neutral-400 mt-1">Cancele quando quiser</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-xl font-black text-emerald-400">R$ 49,90</p>
+                                        <p className="text-[10px] font-bold text-neutral-500 uppercase font-mono">/mês</p>
+                                    </div>
+                                </a>
+
+                                <a href={KIWIFY_ANUAL} target="_blank" rel="noopener noreferrer" className="bg-[#0d0e12] border-2 border-emerald-500/50 hover:border-emerald-400 p-6 rounded-2xl flex items-center justify-between transition-all relative text-left group shadow-lg shadow-emerald-500/10">
+                                    <span className="absolute -top-3 right-4 bg-emerald-500 text-black font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-full shadow-md">Melhor Custo-Benefício</span>
+                                    <div>
+                                        <p className="text-sm font-black text-white uppercase">Plano Anual Elite</p>
+                                        <p className="text-xs font-bold text-emerald-400 mt-1">Economize mais de 30%</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-2xl font-black text-emerald-400">R$ 399,00</p>
+                                        <p className="text-[10px] font-bold text-neutral-400 uppercase font-mono mt-1">Eq. R$ 33,25/mês</p>
+                                    </div>
+                                </a>
+                            </div>
+                            <p className="text-[10px] font-bold text-neutral-500 uppercase font-mono">Liberação automática após o pagamento.</p>
+                        </div>
+                    </div>
+                )}
+
+                {/* ✅ AQUI RENDERIZA A AVALIAÇÃO NO PAINEL DO PERSONAL E DO ALUNO */}
+                {alunoVerAvaliacao && renderModalAvaliacao(alunoVerAvaliacao, () => setAlunoVerAvaliacao(null))}
+
             </div>
         );
     }
@@ -2103,78 +2176,68 @@ function App() {
     // ✅ PAINEL DO ALUNO
     if (etapa === "aluno") {
         return (
-            <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col p-4 md:p-6 overflow-y-auto font-sans z-40 custom-scrollbar">
-                <header className="w-full max-w-md mx-auto flex justify-between items-center border-b border-neutral-800 pb-4 mb-5">
+            <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col p-6 overflow-y-auto font-sans z-40 custom-scrollbar">
+                <header className="w-full max-w-md mx-auto flex justify-between items-center border-b-2 border-neutral-800 pb-5 mb-6">
                     <div>
-                        <p className="text-[9px] text-blue-400 font-mono font-bold uppercase tracking-wider">Consultoria Privada Treino Fit</p>
-                        <h2 className="text-lg font-bold text-neutral-100 uppercase tracking-tight mt-0.5 truncate max-w-[200px]">{alunoLogado?.nome}</h2>
-                        <p className="text-[10px] font-semibold text-neutral-400 font-mono mt-0.5">Objetivo: {alunoLogado?.objetivo}</p>
+                        <p className="text-[10px] text-blue-400 font-mono font-black uppercase tracking-wider">Consultoria Privada Treino Fit</p>
+                        <h2 className="text-xl font-black text-white uppercase tracking-tight mt-1 truncate max-w-[200px]">{alunoLogado?.nome}</h2>
+                        <p className="text-xs font-bold text-neutral-400 font-mono mt-1">Objetivo: {alunoLogado?.objetivo}</p>
                     </div>
                     <div className="flex gap-2">
-                        <button type="button" onClick={() => setModalAvaliacaoAluno(true)} className="px-3 py-1.5 bg-blue-600/10 border border-blue-500/20 text-blue-400 hover:bg-blue-600/20 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors flex items-center gap-1 shadow-sm">
+                        <button type="button" onClick={() => setModalAvaliacaoAluno(true)} className="px-4 py-2 bg-blue-600/10 border-2 border-blue-500/30 text-blue-400 hover:bg-blue-600/20 rounded-lg text-xs font-black uppercase tracking-wider transition-colors flex items-center gap-1.5 shadow-sm">
                             📋 Avaliação
                         </button>
-                        <button type="button" onClick={() => { setEtapa("triagem"); setAlunoLogado(null); }} className="px-3 py-1.5 bg-red-600/10 border border-red-500/20 rounded-md text-[10px] font-bold uppercase tracking-wider text-red-500 transition-all duration-200 hover:bg-red-600 hover:text-white shadow-sm">
+                        <button type="button" onClick={() => { setEtapa("triagem"); setAlunoLogado(null); }} className="px-4 py-2 bg-red-600/10 border-2 border-red-500/30 rounded-lg text-xs font-black uppercase tracking-wider text-red-500 transition-all duration-200 hover:bg-red-600 hover:text-white shadow-sm">
                             Sair
                         </button>
                     </div>
                 </header>
 
-                <main className="w-full max-w-md mx-auto flex-1 space-y-5 pb-8">
-                    <div className="bg-gradient-to-br from-[#16171d] to-[#0d0e12] border border-neutral-800 p-5 rounded-2xl shadow-md flex items-center justify-between">
-                        <div><p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Check-ins Validados</p><h3 className="text-4xl font-bold text-neutral-100 mt-1">{alunoLogado?.checkins?.length || 0}</h3></div>
-                        <button type="button" onClick={iniciarCheckin} className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-3 rounded-xl text-xs uppercase tracking-wider transition-colors shadow-md active:scale-95">Confirmar Treino Hoje</button>
+                <main className="w-full max-w-md mx-auto flex-1 space-y-6 pb-10">
+                    <div className="bg-gradient-to-br from-[#16171d] to-[#0d0e12] border-2 border-neutral-800 p-6 rounded-3xl shadow-xl flex items-center justify-between">
+                        <div><p className="text-xs font-black uppercase tracking-wider text-neutral-400">Check-ins Validados</p><h3 className="text-5xl font-black text-white mt-2">{alunoLogado?.checkins?.length || 0}</h3></div>
+                        <button type="button" onClick={iniciarCheckin} className="bg-blue-600 hover:bg-blue-500 text-white font-black px-5 py-4 rounded-xl text-xs uppercase tracking-wider transition-colors shadow-[0_10px_20px_rgba(37,99,235,0.3)] active:scale-95">Confirmar Treino Hoje</button>
                     </div>
 
                     {alunoLogado?.checkins?.[0]?.respostaPersonal && (
-                        <div className="bg-emerald-500/10 border-l-2 border-emerald-500 p-4 rounded-r-xl rounded-l-sm shadow-sm mt-4">
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 mb-1.5">💬 Mensagem do seu Treinador</p>
-                            <p className="text-xs font-medium text-neutral-200 italic">"{alunoLogado.checkins[0].respostaPersonal}"</p>
+                        <div className="bg-emerald-500/10 border-l-4 border-emerald-500 p-5 rounded-r-2xl rounded-l-md shadow-xl mt-5">
+                            <p className="text-xs font-black uppercase tracking-wider text-emerald-400 mb-2">💬 Mensagem do seu Treinador</p>
+                            <p className="text-sm font-bold text-neutral-200 italic">"{alunoLogado.checkins[0].respostaPersonal}"</p>
                         </div>
                     )}
 
 
                     {alunoLogado?.metaAgua && (
-                        <div className="bg-gradient-to-br from-[#16171d] to-[#0d0e12] border border-blue-500/20 p-5 rounded-2xl shadow-md flex flex-col mt-4">
-                            <div className="flex items-center justify-between mb-3">
+                        <div className="bg-gradient-to-br from-[#16171d] to-[#0d0e12] border-2 border-blue-500/30 p-6 rounded-3xl shadow-xl flex flex-col mt-5">
+                            <div className="flex items-center justify-between mb-4">
                                 <div>
-                                    <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400 flex items-center gap-1.5"><span className="text-base">💧</span> Hidratação Inteligente</p>
-                                    <h3 className="text-2xl font-bold text-neutral-100 mt-1">{alunoLogado.metaAgua}</h3>
+                                    <p className="text-xs font-black uppercase tracking-wider text-blue-400 flex items-center gap-1.5"><span className="text-lg">💧</span> Hidratação Inteligente</p>
+                                    <h3 className="text-3xl font-black text-white mt-2">{alunoLogado.metaAgua}</h3>
                                 </div>
-                                <span className="text-4xl opacity-80 drop-shadow-md">🚰</span>
+                                <span className="text-5xl opacity-80 drop-shadow-[0_0_15px_rgba(59,130,246,0.3)]">🚰</span>
                             </div>
 
                             {/* Formulário Embutido para Configurar as Notificações */}
-                            <div className="border-t border-neutral-800/60 pt-4 mt-1">
-                                <p className="text-[10px] text-neutral-400 mb-3 uppercase font-bold">Configurar Alerta no Celular</p>
-
-                                <div className="grid grid-cols-2 gap-2.5 mb-4">
+                            <div className="border-t-2 border-neutral-800/60 pt-5 mt-2">
+                                <p className="text-xs text-neutral-300 mb-3 uppercase font-black">Configurar Alerta no Celular</p>
+                                <div className="grid grid-cols-3 gap-3 mb-4">
                                     <div>
-                                        <label className="text-[9px] font-bold text-neutral-500 uppercase">Início (Hora)</label>
-                                        <input type="number" min="0" max="23" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-sm font-semibold text-neutral-100 outline-none focus:border-blue-500/50 text-center transition-colors" value={configAgua.horaInicio} onChange={e => setConfigAgua({ ...configAgua, horaInicio: e.target.value })} />
+                                        <label className="text-[10px] font-black text-neutral-400 uppercase">Início (Hora)</label>
+                                        <input type="number" min="0" max="23" className="w-full bg-[#0d0e12] border-2 border-neutral-800 p-3 rounded-lg text-sm font-bold text-white outline-none focus:border-blue-500/50 text-center" value={configAgua.horaInicio} onChange={e => setConfigAgua({ ...configAgua, horaInicio: e.target.value })} />
                                     </div>
                                     <div>
-                                        <label className="text-[9px] font-bold text-neutral-500 uppercase">Fim (Hora)</label>
-                                        <input type="number" min="0" max="23" className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-sm font-semibold text-neutral-100 outline-none focus:border-blue-500/50 text-center transition-colors" value={configAgua.horaFim} onChange={e => setConfigAgua({ ...configAgua, horaFim: e.target.value })} />
+                                        <label className="text-[10px] font-black text-neutral-400 uppercase">Fim (Hora)</label>
+                                        <input type="number" min="0" max="23" className="w-full bg-[#0d0e12] border-2 border-neutral-800 p-3 rounded-lg text-sm font-bold text-white outline-none focus:border-blue-500/50 text-center" value={configAgua.horaFim} onChange={e => setConfigAgua({ ...configAgua, horaFim: e.target.value })} />
                                     </div>
                                     <div>
-                                        <label className="text-[9px] font-bold text-neutral-500 uppercase">Intervalo</label>
-                                        <select className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs font-semibold text-neutral-100 outline-none focus:border-blue-500/50 text-center transition-colors cursor-pointer" value={configAgua.intervaloHoras} onChange={e => setConfigAgua({ ...configAgua, intervaloHoras: e.target.value })}>
+                                        <label className="text-[10px] font-black text-neutral-400 uppercase">Intervalo</label>
+                                        <select className="w-full bg-[#0d0e12] border-2 border-neutral-800 p-3 rounded-lg text-sm font-black text-white outline-none focus:border-blue-500/50 text-center" value={configAgua.intervaloHoras} onChange={e => setConfigAgua({ ...configAgua, intervaloHoras: e.target.value })}>
                                             <option value="1">1h</option>
                                             <option value="2">2h</option>
                                             <option value="3">3h</option>
                                         </select>
                                     </div>
-                                    <div>
-                                        <label className="text-[9px] font-bold text-neutral-500 uppercase">Duração</label>
-                                        <select className="w-full bg-[#0d0e12] border border-neutral-800 p-2.5 rounded-lg text-xs font-semibold text-neutral-100 outline-none focus:border-blue-500/50 text-center transition-colors cursor-pointer" value={configAgua.tipoFrequencia} onChange={e => setConfigAgua({ ...configAgua, tipoFrequencia: e.target.value })}>
-                                            <option value="Diário">Apenas Hoje</option>
-                                            <option value="Mensal">Mensal</option>
-                                            <option value="Definitivo">Definitivo</option>
-                                        </select>
-                                    </div>
                                 </div>
-
                                 <button onClick={async () => {
                                     try {
                                         const publicVapidKey = 'BH1RQXRkaFukYxIKfMfqqN1MEh_ruMEMk1toExeB_3K2nrVHzS_Px5WNtoPto0i5LosEdNNQ_MTV6amGefJyoXc';
@@ -2199,38 +2262,38 @@ function App() {
                                         console.error(e);
                                         alert("Erro ao ativar. Verifique se você permitiu notificações no navegador.");
                                     }
-                                }} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg text-[11px] uppercase transition-colors shadow-sm flex justify-center items-center gap-1.5 active:scale-95">
-                                    <span className="text-sm">🔔</span> Ativar Alertas
+                                }} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl text-xs uppercase transition-colors shadow-[0_5px_15px_rgba(37,99,235,0.3)] flex justify-center items-center gap-2 active:scale-95">
+                                    <span>🔔</span> Ativar Alertas
                                 </button>
                             </div>
                         </div>
                     )}
 
                     {alunoLogado?.dietaPrescrita && alunoLogado.dietaPrescrita.length > 0 && (
-                        <div className="bg-[#16171d] border border-neutral-800 p-5 rounded-2xl shadow-md space-y-4">
-                            <p className="text-[11px] font-bold uppercase tracking-wider text-blue-400 mb-3 border-b border-neutral-800/60 pb-2 flex items-center gap-1.5"><span className="text-base">🍽️</span> Seu Plano Alimentar</p>
-                            <div className="space-y-2.5">
+                        <div className="bg-[#16171d] border-2 border-neutral-800 p-6 rounded-3xl shadow-xl space-y-4">
+                            <p className="text-xs font-black uppercase tracking-wider text-blue-400 mb-4 border-b-2 border-neutral-800/60 pb-3 flex items-center gap-2"><span className="text-lg">🍽️</span> Seu Plano Alimentar</p>
+                            <div className="space-y-3">
                                 {alunoLogado.dietaPrescrita.map((ref, idx) => (
-                                    <div key={idx} className="bg-[#0d0e12] border border-neutral-800 p-4 rounded-xl shadow-inner relative overflow-hidden">
-                                        <div className="absolute left-0 top-0 w-1 h-full bg-blue-500/40"></div>
-                                        <p className="text-xs font-bold text-neutral-100 tracking-tight uppercase mb-1 pl-1.5">{ref.refeicao}</p>
-                                        <p className="text-[11px] font-medium text-neutral-300 pl-1.5 leading-relaxed">{ref.itens}</p>
+                                    <div key={idx} className="bg-[#0d0e12] border-2 border-neutral-800 p-5 rounded-2xl shadow-inner relative overflow-hidden">
+                                        <div className="absolute left-0 top-0 w-1.5 h-full bg-blue-500/50"></div>
+                                        <p className="text-sm font-black text-white tracking-tight uppercase mb-1.5 pl-2">{ref.refeicao}</p>
+                                        <p className="text-xs font-bold text-neutral-300 pl-2 leading-relaxed">{ref.itens}</p>
                                     </div>
                                 ))}
                             </div>
-                            <div className="mt-5 bg-gradient-to-r from-emerald-900/10 to-blue-900/10 border border-emerald-500/20 p-5 rounded-xl text-center shadow-sm">
-                                <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-400 mb-1">🛒 Facilite sua Dieta!</p>
-                                <p className="text-[10px] font-medium text-neutral-400 mb-4 leading-relaxed">Peça as carnes, frutas e verduras do seu plano sem sair de casa e sem perder o foco na semana.</p>
-                                <a href="https://hortilife-praticidade.kyte.site/pt-BR" target="_blank" rel="noopener noreferrer" className="inline-block w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-lg text-[10px] uppercase tracking-wider transition-colors shadow-sm active:scale-95">
+                            <div className="mt-6 bg-gradient-to-r from-emerald-900/20 to-blue-900/20 border-2 border-emerald-500/30 p-6 rounded-2xl text-center shadow-lg">
+                                <p className="text-sm font-black uppercase tracking-wider text-emerald-400 mb-2">🛒 Facilite sua Dieta!</p>
+                                <p className="text-xs font-bold text-neutral-300 mb-5 leading-relaxed">Peça as carnes, frutas e verduras do seu plano sem sair de casa e sem perder o foco na semana.</p>
+                                <a href="https://hortilife-praticidade.kyte.site/pt-BR" target="_blank" rel="noopener noreferrer" className="inline-block w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-4 px-4 rounded-xl text-xs uppercase tracking-wider transition-colors shadow-[0_10px_20px_rgba(16,185,129,0.3)] active:scale-95">
                                     👉 Pedir na Hortilife
                                 </a>
                             </div>
                         </div>
                     )}
 
-                    <div className="space-y-4">
-                        <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 mb-2">Calendário de Treinos Semanal</p>
-                        <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-none snap-x">
+                    <div className="space-y-5">
+                        <p className="text-xs font-black uppercase tracking-wider text-neutral-300 mb-3">Calendário de Treinos Semanal</p>
+                        <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-none snap-x">
                             {DIAS_SEMANA.map((dia) => {
                                 const diaAtualSistema = new Date().toLocaleDateString("pt-BR", { weekday: 'long' });
                                 const ehHoje = diaAtualSistema.toLowerCase().includes(dia.toLowerCase().slice(0, 4));
@@ -2240,11 +2303,11 @@ function App() {
                                         key={dia}
                                         type="button"
                                         onClick={() => setDiaAbaAluno(dia)}
-                                        className={`px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase transition-all flex-shrink-0 border snap-center ${ativo
-                                            ? 'bg-blue-600 border-blue-500 text-white shadow-md'
+                                        className={`px-5 py-3 rounded-2xl text-xs font-black uppercase transition-all flex-shrink-0 border-2 snap-center ${ativo
+                                            ? 'bg-blue-600 border-blue-500 text-white shadow-[0_5px_15px_rgba(37,99,235,0.3)] scale-105'
                                             : ehHoje
-                                                ? 'bg-neutral-900 border-blue-500/40 text-blue-400'
-                                                : 'bg-[#16171d] border-neutral-800 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200'
+                                                ? 'bg-neutral-900 border-blue-500/50 text-blue-400'
+                                                : 'bg-[#16171d] border-neutral-800 text-neutral-400 hover:bg-neutral-800 hover:text-white hover:border-neutral-700'
                                             }`}
                                     >
                                         {dia.slice(0, 3)} {ehHoje && "•"}
@@ -2257,9 +2320,9 @@ function App() {
                             const rotinaDoDia = alunoLogado?.treinoSemanal?.find(t => t.dia === diaAbaAluno);
                             if (!rotinaDoDia || !rotinaDoDia.exercicios || rotinaDoDia.exercicios.length === 0) {
                                 return (
-                                    <div className="bg-[#16171d] border border-neutral-800 p-8 rounded-2xl text-center shadow-md mt-2 border-dashed">
-                                        <span className="text-3xl mb-2 block opacity-50">🧘‍♂️</span>
-                                        <p className="text-xs text-neutral-400 font-bold uppercase font-mono tracking-wider">Nenhum treino para {diaAbaAluno}.<br />Dia de Descanso!</p>
+                                    <div className="bg-[#16171d] border-2 border-neutral-800 p-10 rounded-3xl text-center shadow-xl mt-2 border-dashed">
+                                        <span className="text-4xl mb-3 block opacity-50">🧘‍♂️</span>
+                                        <p className="text-sm text-neutral-400 font-black uppercase font-mono tracking-wider">Nenhum treino para {diaAbaAluno}.<br />Dia de Descanso!</p>
                                     </div>
                                 );
                             }
@@ -2270,29 +2333,29 @@ function App() {
                                 const todasSeriesFeitas = Array.from({ length: ex.series || 0 }).every((_, sIdx) => seriesFeitas[`${diaAbaAluno}-${i}-s${sIdx + 1}`]);
 
                                 return (
-                                    <div key={i} className={`bg-[#16171d] border transition-all rounded-2xl overflow-hidden shadow-md mt-3 ${estaconcluido || todasSeriesFeitas ? 'border-emerald-500/40 opacity-90' : 'border-neutral-800'}`}>
-                                        <div className="p-5 flex flex-col sm:flex-row items-start justify-between gap-4 relative">
-                                            <div className="absolute top-0 right-0 w-12 h-12 bg-gradient-to-bl from-neutral-800 to-transparent rounded-bl-full opacity-20 pointer-events-none"></div>
+                                    <div key={i} className={`bg-[#16171d] border-2 transition-all rounded-3xl overflow-hidden shadow-xl mt-4 ${estaconcluido || todasSeriesFeitas ? 'border-emerald-500/50 opacity-90 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'border-neutral-800'}`}>
+                                        <div className="p-6 md:p-8 flex flex-col sm:flex-row items-start justify-between gap-5 relative">
+                                            <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-neutral-800 to-transparent rounded-bl-full opacity-30 pointer-events-none"></div>
                                             <div className="flex-1 w-full">
-                                                <div className="flex items-center gap-2.5 mb-1.5">
-                                                    <span className="text-[10px] font-bold text-neutral-500 bg-[#0d0e12] border border-neutral-800 px-1.5 py-0.5 rounded font-mono">{i + 1}</span>
-                                                    <h4 className={`font-bold uppercase text-base tracking-tight text-neutral-100 ${estaconcluido || todasSeriesFeitas ? 'text-emerald-400' : ''}`}>{ex.nome}</h4>
+                                                <div className="flex items-center gap-3 mb-2">
+                                                    <span className="text-xs font-black text-neutral-500 bg-[#0d0e12] border border-neutral-800 px-2 py-1 rounded font-mono">{i + 1}</span>
+                                                    <h4 className={`font-black uppercase text-xl tracking-tight text-white ${estaconcluido || todasSeriesFeitas ? 'text-emerald-400' : ''}`}>{ex.nome}</h4>
                                                 </div>
 
-                                                <div className="flex flex-wrap items-center gap-2 mt-2">
-                                                    <span className="bg-blue-600/10 border border-blue-500/20 text-blue-400 font-mono text-[10px] font-bold uppercase px-2.5 py-1 rounded-md shadow-inner">{ex.series} Séries × {ex.reps} Reps</span>
-                                                    <button type="button" onClick={() => abrirExercicioVisual(ex, setModalGifAberto)} className="bg-neutral-800 text-neutral-300 hover:text-white hover:bg-neutral-700 hover:border-neutral-500 text-[9px] font-bold px-3 py-1 rounded-md transition-colors uppercase border border-neutral-700 shadow-sm flex items-center gap-1">
-                                                        <span className="text-[10px]">▶</span> Ver GIF
+                                                <div className="flex flex-wrap items-center gap-2 mt-3">
+                                                    <span className="bg-blue-600/20 border-2 border-blue-500/30 text-blue-400 font-mono text-xs font-black uppercase px-3.5 py-1.5 rounded-lg shadow-inner">{ex.series} Séries × {ex.reps} Reps</span>
+                                                    <button type="button" onClick={() => abrirExercicioVisual(ex, setModalGifAberto)} className="bg-neutral-800 text-neutral-300 hover:text-white hover:bg-neutral-700 hover:border-neutral-500 text-[10px] font-black px-4 py-2 rounded-lg transition-colors uppercase border-2 border-neutral-700 shadow-sm flex items-center gap-1.5">
+                                                        <span className="text-sm">▶</span> Ver GIF
                                                     </button>
                                                 </div>
-                                                {ex.obs && <p className="text-xs text-neutral-300 font-medium mt-4 bg-[#0d0e12] border-l-2 border-sky-500 p-3 rounded-r-lg font-sans shadow-inner leading-relaxed"><span className="text-sky-400 font-bold uppercase text-[9px] tracking-wider block mb-0.5">Dica do Coach:</span> {ex.obs}</p>}
+                                                {ex.obs && <p className="text-sm text-neutral-300 font-bold mt-5 bg-[#0d0e12] border-l-4 border-sky-500 p-4 rounded-r-xl font-sans shadow-inner leading-relaxed"><span className="text-sky-400 font-black uppercase text-xs tracking-wider block mb-1">Dica do Coach:</span> {ex.obs}</p>}
                                             </div>
 
-                                            <button type="button" onClick={() => alternarConclusaoExercicio(chaveUnicaExercicio)} className={`w-10 h-10 rounded-lg border flex items-center justify-center font-bold text-lg transition-all flex-shrink-0 self-end sm:self-center mt-2 sm:mt-0 ${estaconcluido || todasSeriesFeitas ? 'bg-emerald-600 border-emerald-500 text-white shadow-sm' : 'border-neutral-600 bg-[#0d0e12] text-transparent hover:border-neutral-400 hover:bg-neutral-800'}`}>✓</button>
+                                            <button type="button" onClick={() => alternarConclusaoExercicio(chaveUnicaExercicio)} className={`w-12 h-12 rounded-xl border-2 flex items-center justify-center font-black text-xl transition-all flex-shrink-0 self-end sm:self-center mt-2 sm:mt-0 ${estaconcluido || todasSeriesFeitas ? 'bg-emerald-600 border-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)] scale-105' : 'border-neutral-600 bg-[#0d0e12] text-transparent hover:border-neutral-400 hover:bg-neutral-800'}`}>✓</button>
                                         </div>
 
-                                        <div className="px-5 pb-5">
-                                            <div className="grid grid-cols-4 gap-2 pt-4 border-t border-neutral-800/60 mt-1">
+                                        <div className="px-6 md:px-8 pb-6 md:pb-8">
+                                            <div className="grid grid-cols-4 gap-3 pt-5 border-t-2 border-neutral-800/60 mt-2">
                                                 {Array.from({ length: ex.series || 0 }).map((_, sIdx) => {
                                                     const numSerie = sIdx + 1;
                                                     const chaveSerie = `${diaAbaAluno}-${i}-s${numSerie}`;
@@ -2303,10 +2366,10 @@ function App() {
                                                             key={numSerie}
                                                             type="button"
                                                             onClick={() => marcarSerie(i, numSerie, ex.series)}
-                                                            className={`py-3 rounded-xl flex flex-col items-center justify-center transition-all border ${isFeita ? 'bg-emerald-600 border-emerald-500 text-white shadow-sm scale-[1.02]' : 'bg-[#0d0e12] border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:text-white'}`}
+                                                            className={`py-4 rounded-xl flex flex-col items-center justify-center transition-all border-2 ${isFeita ? 'bg-emerald-600 border-emerald-500 text-white shadow-[0_5px_15px_rgba(16,185,129,0.3)] scale-105' : 'bg-[#0d0e12] border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:text-white'}`}
                                                         >
-                                                            <span className="text-[9px] font-bold uppercase tracking-widest mb-1 opacity-90">Série {numSerie}</span>
-                                                            <span className="text-base font-bold">{isFeita ? '✓' : '⬜'}</span>
+                                                            <span className="text-[10px] font-black uppercase tracking-widest mb-1.5 opacity-80">Série {numSerie}</span>
+                                                            <span className="text-xl font-black">{isFeita ? '✓' : '⬜'}</span>
                                                         </button>
                                                     );
                                                 })}
@@ -2319,57 +2382,57 @@ function App() {
                     </div>
 
                     {timerAtivo && timerDescanso > 0 && (
-                        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-blue-600 border border-blue-500 text-white px-6 py-3 rounded-xl shadow-[0_10px_30px_rgba(37,99,235,0.4)] flex items-center gap-4 z-50 animate-bounce">
-                            <span className="text-2xl drop-shadow-sm">⏱️</span>
+                        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-blue-600 border-2 border-blue-400 text-white px-8 py-4 rounded-2xl shadow-[0_15px_50px_rgba(37,99,235,0.6)] flex items-center gap-5 z-50 animate-bounce">
+                            <span className="text-4xl drop-shadow-md">⏱️</span>
                             <div>
-                                <p className="text-[10px] uppercase tracking-widest font-bold opacity-90 leading-none mb-1">Descanso</p>
-                                <p className="text-2xl font-bold font-mono leading-none">{timerDescanso}s</p>
+                                <p className="text-xs uppercase tracking-widest font-black opacity-90 leading-none mb-1">Descanso</p>
+                                <p className="text-3xl font-black font-mono leading-none">{timerDescanso}s</p>
                             </div>
-                            <button type="button" onClick={() => setTimerAtivo(false)} className="ml-3 bg-white/20 hover:bg-white/30 rounded-lg w-8 h-8 flex items-center justify-center text-xs font-bold transition-colors border border-white/20">✕</button>
+                            <button type="button" onClick={() => setTimerAtivo(false)} className="ml-4 bg-white/20 hover:bg-white/40 rounded-xl w-10 h-10 flex items-center justify-center text-sm font-black transition-colors border border-white/30">✕</button>
                         </div>
                     )}
 
                     {modalGifAberto && (
-                        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setModalGifAberto(null)}>
-                            <div className="w-full max-w-sm bg-[#16171d] border border-sky-500/40 rounded-2xl overflow-hidden shadow-xl relative" onClick={e => e.stopPropagation()}>
-                                <button onClick={() => setModalGifAberto(null)} className="absolute top-3 right-3 z-10 w-8 h-8 bg-black/50 hover:bg-red-500 text-white rounded-lg flex items-center justify-center text-xs font-bold transition-colors border border-neutral-600 hover:border-red-400">✕</button>
-                                <div className="p-5 bg-gradient-to-r from-[#1c1d26] to-[#16171d] border-b border-neutral-800">
-                                    <h3 className="font-bold text-neutral-100 uppercase text-sm pr-10 tracking-tight leading-tight">{modalGifAberto.nome}</h3>
+                        <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setModalGifAberto(null)}>
+                            <div className="w-full max-w-sm bg-[#16171d] border-2 border-sky-500/50 rounded-3xl overflow-hidden shadow-[0_0_40px_rgba(14,165,233,0.3)] relative" onClick={e => e.stopPropagation()}>
+                                <button onClick={() => setModalGifAberto(null)} className="absolute top-4 right-4 z-10 w-10 h-10 bg-black/60 hover:bg-red-500 text-white rounded-xl flex items-center justify-center text-sm font-black transition-colors border border-neutral-600 hover:border-red-400">✕</button>
+                                <div className="p-6 bg-gradient-to-r from-[#1c1d26] to-[#16171d] border-b-2 border-neutral-800">
+                                    <h3 className="font-black text-white uppercase text-lg pr-12 tracking-tight leading-tight">{modalGifAberto.nome}</h3>
                                 </div>
-                                <div className="w-full bg-[#0d0e12] flex justify-center p-5 min-h-[250px] items-center">
-                                    <img src={modalGifAberto.url} alt={modalGifAberto.nome} className="max-w-full rounded-lg shadow-md border border-neutral-800" />
+                                <div className="w-full bg-[#0d0e12] flex justify-center p-6 min-h-[300px] items-center">
+                                    <img src={modalGifAberto.url} alt={modalGifAberto.nome} className="max-w-full rounded-xl shadow-2xl border-2 border-neutral-800" />
                                 </div>
                             </div>
                         </div>
                     )}
 
                     {modalFeedbackAberto && (
-                        <div className="fixed inset-0 z-[999] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setModalFeedbackAberto(false)}>
-                            <div className="w-full max-w-md bg-[#16171d] border border-emerald-500/30 rounded-2xl p-6 shadow-xl relative" onClick={e => e.stopPropagation()}>
-                                <button onClick={() => setModalFeedbackAberto(false)} className="absolute top-4 right-4 text-neutral-500 font-bold hover:text-white bg-[#0d0e12] border border-neutral-700 w-8 h-8 rounded-lg flex items-center justify-center transition-colors">✕</button>
-                                <div className="text-center mb-6 pt-1">
-                                    <span className="text-5xl mb-3 block drop-shadow-sm">🔥</span>
-                                    <h3 className="text-xl font-bold text-white uppercase tracking-tight">Treino Concluído!</h3>
-                                    <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest mt-1.5 bg-emerald-500/10 inline-block px-2.5 py-0.5 rounded border border-emerald-500/20">Dê o feedback para seu treinador</p>
+                        <div className="fixed inset-0 z-[999] bg-black/95 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setModalFeedbackAberto(false)}>
+                            <div className="w-full max-w-md bg-[#16171d] border-2 border-emerald-500/40 rounded-[2rem] p-6 md:p-8 shadow-[0_0_50px_rgba(16,185,129,0.2)] relative" onClick={e => e.stopPropagation()}>
+                                <button onClick={() => setModalFeedbackAberto(false)} className="absolute top-5 right-5 text-neutral-500 font-black hover:text-white bg-[#0d0e12] border border-neutral-700 w-10 h-10 rounded-xl flex items-center justify-center transition-colors">✕</button>
+                                <div className="text-center mb-8 pt-2">
+                                    <span className="text-6xl mb-4 block drop-shadow-lg">🔥</span>
+                                    <h3 className="text-2xl font-black text-white uppercase tracking-tight">Treino Concluído!</h3>
+                                    <p className="text-xs text-emerald-400 font-black uppercase tracking-widest mt-2 bg-emerald-500/10 inline-block px-3 py-1 rounded border border-emerald-500/20">Dê o feedback para seu treinador</p>
                                 </div>
 
-                                <form onSubmit={confirmarCheckinComFeedback} className="space-y-5">
-                                    <div className="bg-[#0d0e12] p-4 rounded-xl border border-neutral-800">
-                                        <label className="text-[10px] font-bold uppercase text-neutral-400 block mb-2.5 text-center">Qual foi a Intensidade?</label>
-                                        <div className="grid grid-cols-2 gap-2.5">
+                                <form onSubmit={confirmarCheckinComFeedback} className="space-y-6">
+                                    <div className="bg-[#0d0e12] p-5 rounded-2xl border border-neutral-800">
+                                        <label className="text-xs font-black uppercase text-neutral-300 block mb-3 text-center">Qual foi a Intensidade?</label>
+                                        <div className="grid grid-cols-2 gap-3">
                                             {["Leve 🟢", "Moderado 🟡", "Intenso 🔴", "Extremo ☠️"].map(nivel => (
-                                                <button key={nivel} type="button" onClick={() => setFeedbackTreino({ ...feedbackTreino, intensidade: nivel })} className={`py-3 rounded-lg text-[11px] font-bold uppercase transition-all border ${feedbackTreino.intensidade === nivel ? 'bg-orange-600 border-orange-500 text-white shadow-sm scale-[1.02]' : 'bg-[#16171d] border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:bg-neutral-800'}`}>
+                                                <button key={nivel} type="button" onClick={() => setFeedbackTreino({ ...feedbackTreino, intensidade: nivel })} className={`py-4 rounded-xl text-xs font-black uppercase transition-all border-2 ${feedbackTreino.intensidade === nivel ? 'bg-orange-600 border-orange-500 text-white shadow-[0_5px_15px_rgba(249,115,22,0.3)] scale-105' : 'bg-[#16171d] border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:bg-neutral-800'}`}>
                                                     {nivel.split(" ")[0]}
                                                 </button>
                                             ))}
                                         </div>
                                     </div>
 
-                                    <div className="bg-[#0d0e12] p-4 rounded-xl border border-neutral-800">
-                                        <label className="text-[10px] font-bold uppercase text-neutral-400 block mb-2.5 text-center">E os Pesos / Cargas?</label>
-                                        <div className="grid grid-cols-3 gap-2.5">
+                                    <div className="bg-[#0d0e12] p-5 rounded-2xl border border-neutral-800">
+                                        <label className="text-xs font-black uppercase text-neutral-300 block mb-3 text-center">E os Pesos / Cargas?</label>
+                                        <div className="grid grid-cols-3 gap-3">
                                             {["Pouca ⬇️", "Na medida ✅", "Pesado ⬆️"].map(peso => (
-                                                <button key={peso} type="button" onClick={() => setFeedbackTreino({ ...feedbackTreino, carga: peso })} className={`py-3 rounded-lg text-[9px] font-bold uppercase transition-all border ${feedbackTreino.carga === peso ? 'bg-blue-600 border-blue-500 text-white shadow-sm scale-[1.02]' : 'bg-[#16171d] border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:bg-neutral-800'}`}>
+                                                <button key={peso} type="button" onClick={() => setFeedbackTreino({ ...feedbackTreino, carga: peso })} className={`py-4 rounded-xl text-[10px] font-black uppercase transition-all border-2 ${feedbackTreino.carga === peso ? 'bg-blue-600 border-blue-500 text-white shadow-[0_5px_15px_rgba(37,99,235,0.3)] scale-105' : 'bg-[#16171d] border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:bg-neutral-800'}`}>
                                                     {peso.split(" ")[0]}
                                                 </button>
                                             ))}
@@ -2377,17 +2440,17 @@ function App() {
                                     </div>
 
                                     <div>
-                                        <label className="text-[10px] font-bold uppercase text-neutral-400 block mb-1.5 pl-1">Observações (Opcional)</label>
+                                        <label className="text-xs font-black uppercase text-neutral-400 block mb-2 pl-1">Observações (Opcional)</label>
                                         <textarea
                                             placeholder="Descreva dores, se aumentou carga ou como se sentiu hoje..."
-                                            className="w-full bg-[#0d0e12] border border-neutral-700 p-3.5 rounded-xl text-xs font-medium text-neutral-200 outline-none focus:border-emerald-500/50 h-24 resize-none placeholder-neutral-600 transition-colors"
+                                            className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-4 rounded-2xl text-sm font-bold text-white outline-none focus:border-emerald-500/60 h-28 resize-none placeholder-neutral-600 transition-colors"
                                             value={feedbackTreino.comentario}
                                             onChange={e => setFeedbackTreino({ ...feedbackTreino, comentario: e.target.value })}
                                         />
                                     </div>
 
-                                    <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-4 rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-md mt-2 active:scale-95 flex justify-center items-center gap-1.5">
-                                        <span className="text-sm">✓</span> Registrar e Enviar
+                                    <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-5 rounded-2xl font-black text-sm uppercase tracking-wider transition-all shadow-[0_10px_25px_rgba(16,185,129,0.3)] mt-4 active:scale-95 flex justify-center items-center gap-2">
+                                        <span>✓</span> Registrar e Enviar
                                     </button>
                                 </form>
                             </div>
@@ -2396,45 +2459,45 @@ function App() {
 
                     {/* 📸 NOVO MODAL: CARD DE COMPARTILHAMENTO DO INSTAGRAM */}
                     {modalShareAberto && dadosShare && (
-                        <div className="fixed inset-0 z-[1000] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setModalShareAberto(false)}>
-                            <div className="w-full max-w-[320px] bg-gradient-to-br from-neutral-900 to-[#0d0e12] border border-emerald-500/30 rounded-3xl p-6 relative shadow-2xl flex flex-col items-center" onClick={e => e.stopPropagation()}>
-                                <button onClick={() => setModalShareAberto(false)} className="absolute top-4 right-4 text-neutral-400 hover:text-white font-bold z-10 bg-neutral-800 w-8 h-8 rounded-lg flex items-center justify-center border border-neutral-700">✕</button>
+                        <div className="fixed inset-0 z-[1000] bg-black/95 backdrop-blur-md flex items-center justify-center p-6" onClick={() => setModalShareAberto(false)}>
+                            <div className="w-full max-w-[340px] bg-gradient-to-br from-neutral-900 to-[#0d0e12] border-2 border-emerald-500/40 rounded-[2rem] p-6 md:p-8 relative shadow-[0_0_60px_rgba(16,185,129,0.3)] flex flex-col items-center" onClick={e => e.stopPropagation()}>
+                                <button onClick={() => setModalShareAberto(false)} className="absolute top-4 right-4 text-neutral-400 hover:text-white font-black bg-neutral-800 w-10 h-10 rounded-xl flex items-center justify-center z-10 border border-neutral-700">✕</button>
 
                                 {/* O "Story" Card que o aluno vai printar/compartilhar */}
-                                <div id="instagram-card" className="w-full aspect-[9/16] bg-gradient-to-b from-emerald-900/20 to-[#0d0e12] border border-emerald-500/20 rounded-2xl flex flex-col items-center justify-between p-6 relative overflow-hidden mb-6 shadow-inner">
-                                    <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-emerald-400 to-blue-500"></div>
-                                    <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl"></div>
-                                    <div className="absolute -left-8 top-1/4 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl"></div>
+                                <div id="instagram-card" className="w-full aspect-[9/16] bg-gradient-to-b from-emerald-900/30 to-[#0d0e12] border-2 border-emerald-500/30 rounded-[2rem] flex flex-col items-center justify-between p-6 md:p-8 relative overflow-hidden mb-8 shadow-inner">
+                                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-400 to-blue-500"></div>
+                                    <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl"></div>
+                                    <div className="absolute -left-10 top-1/4 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl"></div>
 
-                                    <div className="text-center w-full mt-4 z-10">
-                                        <p className="text-[9px] font-mono font-bold text-emerald-400 uppercase tracking-widest mb-1 bg-[#0d0e12] inline-block px-2.5 py-0.5 rounded border border-emerald-500/20">Treino Fit App</p>
-                                        <h3 className="text-3xl font-black text-white uppercase italic tracking-tighter drop-shadow-sm mt-2">TREINO<br />PAGO!</h3>
-                                        <p className="text-[11px] font-semibold text-neutral-400 mt-1.5">{dadosShare.data}</p>
+                                    <div className="text-center w-full mt-6 z-10">
+                                        <p className="text-[11px] font-mono font-black text-emerald-400 uppercase tracking-widest mb-1.5 bg-[#0d0e12] inline-block px-3 py-1 rounded-lg border border-emerald-500/20">Treino Fit App</p>
+                                        <h3 className="text-4xl font-black text-white uppercase italic tracking-tighter drop-shadow-lg mt-3">TREINO<br />PAGO!</h3>
+                                        <p className="text-sm font-bold text-neutral-400 mt-2">{dadosShare.data}</p>
                                     </div>
 
-                                    <div className="w-full space-y-3 my-auto z-10">
-                                        <div className="bg-[#16171d]/80 backdrop-blur-sm border border-neutral-700/50 p-4 rounded-xl text-center shadow-sm">
-                                            <p className="text-[9px] uppercase text-neutral-400 font-bold mb-1 tracking-wider">Foco de Hoje</p>
-                                            <p className="text-base font-bold text-neutral-100 uppercase">{dadosShare.treino}</p>
+                                    <div className="w-full space-y-4 my-auto z-10">
+                                        <div className="bg-[#16171d]/90 backdrop-blur-md border border-neutral-600/50 p-4 rounded-xl text-center shadow-lg">
+                                            <p className="text-[10px] uppercase text-neutral-400 font-black mb-1">Foco de Hoje</p>
+                                            <p className="text-base font-black text-white uppercase">{dadosShare.treino}</p>
                                         </div>
-                                        <div className="flex gap-2.5">
-                                            <div className="flex-1 bg-[#16171d]/80 backdrop-blur-sm border border-neutral-700/50 p-3 rounded-xl text-center shadow-sm">
-                                                <p className="text-[9px] uppercase text-neutral-400 font-bold mb-1 tracking-wider">Intensidade</p>
-                                                <p className="text-sm font-bold text-emerald-400 uppercase truncate">{dadosShare.intensidade.split(" ")[0]}</p>
+                                        <div className="flex gap-3">
+                                            <div className="flex-1 bg-[#16171d]/90 backdrop-blur-md border border-neutral-600/50 p-4 rounded-xl text-center shadow-lg">
+                                                <p className="text-[10px] uppercase text-neutral-400 font-black mb-1">Intensidade</p>
+                                                <p className="text-sm font-black text-emerald-400 uppercase truncate">{dadosShare.intensidade.split(" ")[0]}</p>
                                             </div>
-                                            <div className="flex-1 bg-[#16171d]/80 backdrop-blur-sm border border-neutral-700/50 p-3 rounded-xl text-center shadow-sm">
-                                                <p className="text-[9px] uppercase text-neutral-400 font-bold mb-1 tracking-wider">Carga</p>
-                                                <p className="text-sm font-bold text-blue-400 uppercase truncate">{dadosShare.carga.split(" ")[0]}</p>
+                                            <div className="flex-1 bg-[#16171d]/90 backdrop-blur-md border border-neutral-600/50 p-4 rounded-xl text-center shadow-lg">
+                                                <p className="text-[10px] uppercase text-neutral-400 font-black mb-1">Carga</p>
+                                                <p className="text-sm font-black text-blue-400 uppercase truncate">{dadosShare.carga.split(" ")[0]}</p>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="w-full text-center mb-1 z-10">
-                                        <div className="w-12 h-12 bg-neutral-900 rounded-full mx-auto mb-2 border-2 border-emerald-500 flex items-center justify-center text-xl shadow-sm">
+                                    <div className="w-full text-center mb-4 z-10">
+                                        <div className="w-16 h-16 bg-neutral-900 rounded-full mx-auto mb-3 border-4 border-emerald-500 flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(16,185,129,0.3)]">
                                             💪
                                         </div>
-                                        <p className="text-[9px] uppercase font-bold text-neutral-400 tracking-wider bg-[#0d0e12] inline-block px-2 py-0.5 rounded border border-neutral-800 mb-1">Treinador</p>
-                                        <p className="text-xs font-bold text-neutral-200">{dadosShare.nomePersonal}</p>
+                                        <p className="text-[10px] uppercase font-black text-neutral-400 tracking-widest bg-[#0d0e12] inline-block px-2 py-0.5 rounded border border-neutral-800 mb-1">Treinador</p>
+                                        <p className="text-base font-black text-white">{dadosShare.nomePersonal}</p>
                                     </div>
                                 </div>
 
@@ -2474,8 +2537,8 @@ function App() {
                                         console.error("Erro ao gerar/compartilhar imagem", err);
                                         alert("Erro ao preparar a imagem para o Instagram.");
                                     }
-                                }} className="w-full bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white font-bold py-3.5 rounded-xl text-xs uppercase tracking-widest transition-all shadow-md active:scale-95 flex items-center justify-center gap-2">
-                                    <span className="text-lg">📸</span> Compartilhar no Insta
+                                }} className="w-full bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white font-black py-5 rounded-2xl text-sm uppercase tracking-widest transition-all shadow-[0_15px_40px_rgba(16,185,129,0.4)] active:scale-95 flex items-center justify-center gap-3">
+                                    <span className="text-xl">📸</span> Compartilhar no Insta
                                 </button>
                             </div>
                         </div>
@@ -2496,7 +2559,7 @@ function App() {
         );
     }
 
-    return <div className="text-neutral-300 text-center p-10 bg-[#0d0e12] min-h-screen font-bold text-lg uppercase tracking-widest flex items-center justify-center">Carregando Plataforma...</div>;
+    return <div className="text-white text-center p-10 bg-[#0d0e12] min-h-screen font-black text-xl uppercase tracking-widest flex items-center justify-center">Carregando Plataforma...</div>;
 }
 
 export default App;
