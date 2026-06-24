@@ -1785,9 +1785,10 @@ function App() {
                 </main>
 
                 {/* MODAL PRESCREVER TREINO MANUAL */}
+                {/* MODAL PRESCREVER TREINO MANUAL OU VIA IA */}
                 {alunoEmEdicao && (
-                    <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center p-4">
-                        <div className="w-full max-w-4xl bg-[#16171d] border-2 border-neutral-800 rounded-[2rem] shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col max-h-[95vh] h-full sm:h-auto">
+                    <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex items-center justify-center p-4">
+                        <div className="w-full max-w-3xl bg-[#16171d] border-2 border-neutral-800 rounded-[2rem] shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col max-h-[95vh] h-full sm:h-auto">
                             <header className="p-6 md:p-8 border-b-2 border-neutral-800 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gradient-to-r from-[#1c1d26] to-[#16171d] gap-4 sm:gap-0">
                                 <div>
                                     <span className="inline-block px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg text-xs font-mono font-black uppercase tracking-widest mb-2 shadow-inner">⚡ Prescrevendo Plano Pro</span>
@@ -1795,14 +1796,54 @@ function App() {
                                 </div>
                                 <button type="button" onClick={() => setAlunoEmEdicao(null)} className="text-neutral-400 hover:text-white text-xs uppercase font-mono font-black border-2 border-neutral-700 hover:bg-neutral-800 px-4 py-2.5 rounded-xl transition-all shadow-sm">Fechar ✕</button>
                             </header>
+
+                            {/* 🔥 BOTÃO MÁGICO: GERADOR AUTOMÁTICO BASEADO NA BIOMETRIA RECENTE 🔥 */}
+                            <div className="px-6 md:px-8 pt-4 bg-[#16171d]">
+                                <button
+                                    type="button"
+                                    disabled={isRecalculando}
+                                    onClick={async () => {
+                                        setIsRecalculando(true);
+                                        const alunoId = alunoEmEdicao.id || alunoEmEdicao._id;
+                                        try {
+                                            const response = await fetch(`${API_URL}/aluno/${alunoId}/gerar-plano-ia-personal`, {
+                                                method: "POST",
+                                                headers: { "Content-Type": "application/json" }
+                                            });
+                                            if (response.ok) {
+                                                const dadosGerados = await response.json();
+                                                // Preenche o formulário na tela instantaneamente com o que a IA calculou
+                                                if (dadosGerados.treinoSemanal) setTreinoForm(dadosGerados.treinoSemanal);
+                                                if (dadosGerados.dietaPrescrita) setDietaForm(dadosGerados.dietaPrescrita);
+                                                if (dadosGerados.metaAgua) setAguaForm(dadosGerados.metaAgua);
+                                                alert("✨ IA releu a nova biometria, recalculou a água, dieta e macros, e montou a estrutura com sucesso! Revise e clique em 'Salvar e Enviar'.");
+                                            } else {
+                                                alert("Erro ao acionar a IA do servidor. Verifique o Back-end.");
+                                            }
+                                        } catch (err) {
+                                            console.error(err);
+                                            alert("Erro de conexão ao tentar gerar com IA.");
+                                        } finally {
+                                            setIsRecalculando(false);
+                                        }
+                                    }}
+                                    className={`w-full py-4 rounded-2xl font-black uppercase text-sm tracking-wider transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 border-2 ${isRecalculando
+                                            ? 'bg-purple-900/40 border-purple-500/30 text-purple-400 animate-pulse cursor-not-allowed'
+                                            : 'bg-purple-600/10 border-purple-500 text-purple-400 hover:bg-purple-600 hover:text-white shadow-[0_0_20px_rgba(147,51,234,0.1)] hover:shadow-[0_0_30px_rgba(147,51,234,0.4)]'
+                                        }`}
+                                >
+                                    <span>{isRecalculando ? "🧠 Inteligência Computando..." : "✨ Gerar Todo o Plano Automatizado com IA"}</span>
+                                </button>
+                            </div>
+
                             <form onSubmit={salvarTreinoPersonal} className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 custom-scrollbar">
 
                                 <div className="bg-gradient-to-br from-[#0d0e12] to-blue-900/10 p-6 rounded-3xl border-2 border-blue-500/30 shadow-inner relative overflow-hidden">
                                     <div className="absolute -right-4 -top-4 text-7xl opacity-10">💧</div>
                                     <label className="text-sm uppercase font-black tracking-wider text-blue-400 block mb-4 flex items-center gap-2">
-                                        <span className="text-xl">🚰</span> Meta de Hidratação Diária <span className="text-[9px] bg-blue-500/20 px-2 py-1 rounded text-blue-300 ml-2 hidden sm:inline-block">Calculada pela IA</span>
+                                        <span className="text-xl">🚰</span> Meta de Hidratação Diária
                                     </label>
-                                    <input required type="text" className="w-full bg-[#16171d] border-2 border-blue-500/30 p-4 rounded-xl text-lg text-white font-black outline-none focus:border-blue-400 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all placeholder-neutral-600" value={aguaForm} onChange={(e) => setAguaForm(e.target.value)} placeholder="Ex: 3.5 Litros" />
+                                    <input required type="text" className="w-full bg-[#16171d] border-2 border-neutral-800 p-4 rounded-xl text-lg text-white font-black outline-none focus:border-blue-400 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all placeholder-neutral-600" value={aguaForm} onChange={(e) => setAguaForm(e.target.value)} placeholder="Ex: 3.5 Litros" />
                                 </div>
 
                                 <div>
@@ -1833,16 +1874,16 @@ function App() {
                                         {(() => {
                                             const diaObj = treinoForm.find(d => d.dia === diaAbaPersonal) || { exercicios: [] };
                                             if (diaObj.exercicios.length === 0) {
-                                                return <p className="text-sm text-neutral-400 font-bold uppercase italic text-center py-6 bg-[#0d0e12] rounded-2xl border-2 border-neutral-800">Nenhum exercício cadastrado.</p>;
+                                                return <p className="text-sm text-neutral-400 font-bold uppercase italic text-center py-6 bg-[#0d0e12] rounded-2xl border-2 border-neutral-800">Nenhum exercício cadastrado para {diaAbaPersonal}.</p>;
                                             }
 
                                             return diaObj.exercicios.map((ex, idx) => (
                                                 <div key={idx} className="bg-[#0d0e12] border-2 border-neutral-800 p-5 rounded-2xl space-y-4 relative group shadow-sm">
                                                     <button type="button" onClick={() => removerExercicioForm(idx)} className="absolute top-4 right-4 text-neutral-500 hover:text-red-400 text-[10px] uppercase font-mono font-black tracking-wider transition-colors bg-[#16171d] px-2 py-1 rounded border border-neutral-800">Remover</button>
                                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 sm:pt-0">
-                                                        <div className="sm:col-span-1"><label className="text-[10px] uppercase font-black text-neutral-400 block mb-1.5">Movimento</label><input required type="text" className="w-full bg-[#16171d] border-2 border-neutral-800 p-3 rounded-xl text-sm font-bold outline-none text-white focus:border-emerald-500/50" value={ex.nome} onChange={(e) => handleExercicioChange(idx, "nome", e.target.value)} /></div>
-                                                        <div><label className="text-[10px] uppercase font-black text-neutral-400 block mb-1.5">Séries</label><input required type="number" className="w-full bg-[#16171d] border-2 border-neutral-800 p-3 rounded-xl text-sm font-bold outline-none text-white focus:border-emerald-500/50" value={ex.series} onChange={(e) => handleExercicioChange(idx, "series", Number(e.target.value))} /></div>
-                                                        <div><label className="text-[10px] uppercase font-black text-neutral-400 block mb-1.5">Repetições/Tempo</label><input required type="text" className="w-full bg-[#16171d] border-2 border-neutral-800 p-3 rounded-xl text-sm font-bold outline-none text-white focus:border-emerald-500/50" value={ex.reps} onChange={(e) => handleExercicioChange(idx, "reps", e.target.value)} /></div>
+                                                        <div className="sm:col-span-1"><label className="text-[10px] uppercase font-black text-neutral-400 block mb-1.5">Movimento</label><input required type="text" className="w-full bg-[#16171d] border-2 border-neutral-800 p-3 rounded-xl text-sm font-bold outline-none text-white focus:border-emerald-500/50" value={ex.nome || ""} onChange={(e) => handleExercicioChange(idx, "nome", e.target.value)} /></div>
+                                                        <div><label className="text-[10px] uppercase font-black text-neutral-400 block mb-1.5">Séries</label><input required type="number" className="w-full bg-[#16171d] border-2 border-neutral-800 p-3 rounded-xl text-sm font-bold outline-none text-white focus:border-emerald-500/50" value={ex.series || 0} onChange={(e) => handleExercicioChange(idx, "series", Number(e.target.value))} /></div>
+                                                        <div><label className="text-[10px] uppercase font-black text-neutral-400 block mb-1.5">Repetições/Tempo</label><input required type="text" className="w-full bg-[#16171d] border-2 border-neutral-800 p-3 rounded-xl text-sm font-bold outline-none text-white focus:border-emerald-500/50" value={ex.reps || ""} onChange={(e) => handleExercicioChange(idx, "reps", e.target.value)} /></div>
                                                     </div>
                                                     <div><label className="text-[10px] uppercase font-black text-neutral-400 block mb-1.5">Observação</label><input type="text" className="w-full bg-[#16171d] border-2 border-neutral-800 p-3 rounded-xl text-sm font-bold outline-none text-white focus:border-emerald-500/50 placeholder-neutral-600" value={ex.obs || ""} onChange={(e) => handleExercicioChange(idx, "obs", e.target.value)} /></div>
                                                 </div>
@@ -1856,15 +1897,15 @@ function App() {
                                     <div className="space-y-4">
                                         {dietaForm.map((ref, idx) => (
                                             <div key={idx} className="bg-[#0d0e12] border-2 border-neutral-800 p-4 rounded-2xl flex flex-col sm:flex-row gap-4 relative sm:items-center shadow-sm">
-                                                <div className="w-full sm:w-1/3"><label className="text-[10px] uppercase font-black text-neutral-400 block mb-1.5">Horário/Refeição</label><input required type="text" placeholder="Ex: Almoço" className="w-full bg-[#16171d] border-2 border-neutral-800 p-3 rounded-xl text-sm font-bold outline-none text-white focus:border-blue-500/50 placeholder-neutral-600" value={ref.refeicao} onChange={(e) => handleDietaChange(idx, "refeicao", e.target.value)} /></div>
-                                                <div className="w-full sm:w-2/3 pr-8"><label className="text-[10px] uppercase font-black text-neutral-400 block mb-1.5">Alimentos e Gramas</label><input required type="text" placeholder="Ex: 100g Frango" className="w-full bg-[#16171d] border-2 border-neutral-800 p-3 rounded-xl text-sm font-bold outline-none text-white focus:border-blue-500/50 placeholder-neutral-600" value={ref.itens} onChange={(e) => handleDietaChange(idx, "itens", e.target.value)} /></div>
+                                                <div className="w-full sm:w-1/3"><label className="text-[10px] uppercase font-black text-neutral-400 block mb-1.5">Horário/Refeição</label><input required type="text" placeholder="Ex: Almoço" className="w-full bg-[#16171d] border-2 border-neutral-800 p-3 rounded-xl text-sm font-bold outline-none text-white focus:border-blue-500/50 placeholder-neutral-600" value={ref.refeicao || ""} onChange={(e) => handleDietaChange(idx, "refeicao", e.target.value)} /></div>
+                                                <div className="w-full sm:w-2/3 pr-8"><label className="text-[10px] uppercase font-black text-neutral-400 block mb-1.5">Alimentos e Gramas</label><input required type="text" placeholder="Ex: 100g Frango" className="w-full bg-[#16171d] border-2 border-neutral-800 p-3 rounded-xl text-sm font-bold outline-none text-white focus:border-blue-500/50 placeholder-neutral-600" value={ref.itens || ""} onChange={(e) => handleDietaChange(idx, "itens", e.target.value)} /></div>
                                                 <button type="button" onClick={() => removerDietaForm(idx)} className="absolute top-4 right-4 sm:top-auto sm:bottom-4 text-neutral-500 hover:text-red-400 font-black text-lg bg-[#16171d] w-8 h-8 rounded-lg border border-neutral-800 flex items-center justify-center transition-colors">✕</button>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
 
-                                <footer className="pt-6 border-t border-neutral-800 flex gap-4 justify-end text-sm font-black"><button type="button" onClick={() => setAlunoEmEdicao(null)} className="bg-transparent border-2 border-neutral-800 text-neutral-300 p-4 rounded-xl uppercase tracking-wider hover:bg-neutral-800 transition-colors">Cancelar</button><button type="submit" className="bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-xl uppercase tracking-wider transition-colors shadow-[0_10px_20px_rgba(16,185,129,0.2)] px-8">Salvar e Enviar</button></footer>
+                                <footer className="pt-6 border-t border-neutral-800 flex gap-4 justify-end text-sm font-black"><button type="button" onClick={() => setAlunoEmEdicao(null)} className="bg-transparent border-2 border-neutral-800 text-neutral-300 p-4 rounded-xl uppercase tracking-wider hover:bg-neutral-800 transition-colors">Cancelar</button><button type="submit" className="bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-xl uppercase tracking-wider transition-colors shadow-[0_10px_20px_rgba(16,185,129,0.2)] px-8">Salvar e Enviar para Aluno</button></footer>
                             </form>
                         </div>
                     </div>
@@ -2278,7 +2319,7 @@ function App() {
                                         >
                                             <option value="Diário">Apenas Hoje</option>
                                             <option value="Mensal">Mensal</option>
-                                            <option value="Definitivo">Para Sempre</option>
+                                            <option value="Definitivo">Fixo</option>
                                         </select>
                                     </div>
                                 </div>
