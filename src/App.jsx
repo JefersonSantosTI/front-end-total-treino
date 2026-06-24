@@ -2221,61 +2221,96 @@ function App() {
 
 
                     {alunoLogado?.metaAgua && (
-                        <div className="bg-gradient-to-br from-[#16171d] to-[#0d0e12] border-2 border-blue-500/30 p-6 rounded-3xl shadow-xl flex flex-col mt-5">
+                        <div className="bg-blue-600/10 border-2 border-blue-500/30 p-5 rounded-2xl shadow-xl flex flex-col mt-5">
                             <div className="flex items-center justify-between mb-4">
                                 <div>
                                     <p className="text-xs font-black uppercase tracking-wider text-blue-400 flex items-center gap-1.5"><span className="text-lg">💧</span> Hidratação Inteligente</p>
-                                    <h3 className="text-3xl font-black text-white mt-2">{alunoLogado.metaAgua}</h3>
+                                    <h3 className="text-2xl font-black text-white mt-2">{alunoLogado.metaAgua}</h3>
                                 </div>
                                 <span className="text-5xl opacity-80 drop-shadow-[0_0_15px_rgba(59,130,246,0.3)]">🚰</span>
                             </div>
 
-                            {/* Formulário Embutido para Configurar as Notificações */}
-                            <div className="border-t-2 border-neutral-800/60 pt-5 mt-2">
-                                <p className="text-xs text-neutral-300 mb-3 uppercase font-black">Configurar Alerta no Celular</p>
-                                <div className="grid grid-cols-3 gap-3 mb-4">
-                                    <div>
-                                        <label className="text-[10px] font-black text-neutral-400 uppercase">Início (Hora)</label>
-                                        <input type="number" min="0" max="23" className="w-full bg-[#0d0e12] border-2 border-neutral-800 p-3 rounded-lg text-sm font-bold text-white outline-none focus:border-blue-500/50 text-center" value={configAgua.horaInicio} onChange={e => setConfigAgua({ ...configAgua, horaInicio: e.target.value })} />
+                            {/* Formulário de Configuração das Notificações */}
+                            <div className="border-t-2 border-neutral-800/60 pt-4 mt-1">
+                                <p className="text-xs text-neutral-200 mb-3 uppercase font-black tracking-wide">Configurar Alerta no Celular</p>
+
+                                <div className="grid grid-cols-2 gap-3 mb-4">
+                                    <div className="flex flex-col gap-1">
+                                        <label className="text-[10px] font-black text-neutral-400 uppercase ml-1">Início (Hora)</label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max="23"
+                                            className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-3 rounded-xl text-sm font-black text-white outline-none focus:border-blue-500/50 text-center transition-colors"
+                                            value={configAgua.horaInicio}
+                                            onChange={e => setConfigAgua({ ...configAgua, horaInicio: e.target.value })}
+                                        />
                                     </div>
-                                    <div>
-                                        <label className="text-[10px] font-black text-neutral-400 uppercase">Fim (Hora)</label>
-                                        <input type="number" min="0" max="23" className="w-full bg-[#0d0e12] border-2 border-neutral-800 p-3 rounded-lg text-sm font-bold text-white outline-none focus:border-blue-500/50 text-center" value={configAgua.horaFim} onChange={e => setConfigAgua({ ...configAgua, horaFim: e.target.value })} />
+                                    <div className="flex flex-col gap-1">
+                                        <label className="text-[10px] font-black text-neutral-400 uppercase ml-1">Fim (Hora)</label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max="23"
+                                            className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-3 rounded-xl text-sm font-black text-white outline-none focus:border-blue-500/50 text-center transition-colors"
+                                            value={configAgua.horaFim}
+                                            onChange={e => setConfigAgua({ ...configAgua, horaFim: e.target.value })}
+                                        />
                                     </div>
-                                    <div>
-                                        <label className="text-[10px] font-black text-neutral-400 uppercase">Intervalo</label>
-                                        <select className="w-full bg-[#0d0e12] border-2 border-neutral-800 p-3 rounded-lg text-sm font-black text-white outline-none focus:border-blue-500/50 text-center" value={configAgua.intervaloHoras} onChange={e => setConfigAgua({ ...configAgua, intervaloHoras: e.target.value })}>
-                                            <option value="1">1h</option>
-                                            <option value="2">2h</option>
-                                            <option value="3">3h</option>
+                                    <div className="flex flex-col gap-1">
+                                        <label className="text-[10px] font-black text-neutral-400 uppercase ml-1">Intervalo</label>
+                                        <select
+                                            className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-3 rounded-xl text-xs font-black text-white outline-none focus:border-blue-500/50 text-center transition-colors cursor-pointer"
+                                            value={configAgua.intervaloHoras}
+                                            onChange={e => setConfigAgua({ ...configAgua, intervaloHoras: e.target.value })}
+                                        >
+                                            <option value="1">1 em 1h</option>
+                                            <option value="2">2 em 2h</option>
+                                            <option value="3">3 em 3h</option>
+                                        </select>
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <label className="text-[10px] font-black text-neutral-400 uppercase ml-1">Frequência</label>
+                                        <select
+                                            className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-3 rounded-xl text-xs font-black text-white outline-none focus:border-blue-500/50 text-center transition-colors cursor-pointer"
+                                            value={configAgua.tipoFrequencia}
+                                            onChange={e => setConfigAgua({ ...configAgua, tipoFrequencia: e.target.value })}
+                                        >
+                                            <option value="Diário">Apenas Hoje</option>
+                                            <option value="Mensal">Mensal</option>
+                                            <option value="Definitivo">Para Sempre</option>
                                         </select>
                                     </div>
                                 </div>
-                                <button onClick={async () => {
-                                    try {
-                                        const publicVapidKey = 'BH1RQXRkaFukYxIKfMfqqN1MEh_ruMEMk1toExeB_3K2nrVHzS_Px5WNtoPto0i5LosEdNNQ_MTV6amGefJyoXc';
-                                        const convertedVapidKey = urlBase64ToUint8Array(publicVapidKey);
-                                        const registration = await navigator.serviceWorker.register('/service-worker.js');
-                                        const subscription = await registration.pushManager.subscribe({
-                                            userVisibleOnly: true,
-                                            applicationServerKey: convertedVapidKey
-                                        });
 
-                                        const id = alunoLogado.id || alunoLogado._id;
-                                        const payload = { ...configAgua, ativo: true, subscription };
+                                <button
+                                    onClick={async () => {
+                                        try {
+                                            const publicVapidKey = 'BH1RQXRkaFukYxIKfMfqqN1MEh_ruMEMk1toExeB_3K2nrVHzS_Px5WNtoPto0i5LosEdNNQ_MTV6amGefJyoXc';
+                                            const convertedVapidKey = urlBase64ToUint8Array(publicVapidKey);
+                                            const registration = await navigator.serviceWorker.register('/service-worker.js');
+                                            const subscription = await registration.pushManager.subscribe({
+                                                userVisibleOnly: true,
+                                                applicationServerKey: convertedVapidKey
+                                            });
 
-                                        const res = await fetch(`${API_URL}/aluno/${id}/agua`, {
-                                            method: 'PUT',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify(payload)
-                                        });
+                                            const id = alunoLogado.id || alunoLogado._id;
+                                            const payload = { ...configAgua, ativo: true, subscription };
 
-                                        if (res.ok) alert("✅ Notificações ativadas! O seu celular agora pode ler as mensagens.");
-                                    } catch (e) {
-                                        console.error(e);
-                                        alert("Erro ao ativar. Verifique se você permitiu notificações no navegador.");
-                                    }
-                                }} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl text-xs uppercase transition-colors shadow-[0_5px_15px_rgba(37,99,235,0.3)] flex justify-center items-center gap-2 active:scale-95">
+                                            const res = await fetch(`${API_URL}/aluno/${id}/agua`, {
+                                                method: 'PUT',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify(payload)
+                                            });
+
+                                            if (res.ok) alert("✅ Notificações ativadas! O seu celular agora pode ler as mensagens.");
+                                        } catch (e) {
+                                            console.error(e);
+                                            alert("Erro ao ativar. Verifique se você permitiu notificações no navegador.");
+                                        }
+                                    }}
+                                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3.5 rounded-xl text-xs uppercase tracking-wider transition-colors shadow-md active:scale-95 flex justify-center items-center gap-1.5"
+                                >
                                     <span>🔔</span> Ativar Alertas
                                 </button>
                             </div>
