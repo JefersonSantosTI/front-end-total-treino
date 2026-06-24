@@ -2033,7 +2033,69 @@ function App() {
 
                 {/* ✅ AQUI RENDERIZA A AVALIAÇÃO NO PAINEL DO PERSONAL E DO ALUNO */}
                 {alunoVerAvaliacao && renderModalAvaliacao(alunoVerAvaliacao, () => setAlunoVerAvaliacao(null))}
+                {/* MODAL DE EDIÇÃO DE PERFIL DO ALUNO */}
+                {alunoEditandoPerfil && (
+                    <div className="fixed inset-0 z-[999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+                        <div className="w-full max-w-2xl bg-[#16171d] border-2 border-neutral-800 rounded-[2rem] shadow-[0_0_50px_rgba(0,0,0,0.8)] flex flex-col max-h-[90vh] overflow-hidden">
+                            <header className="p-6 border-b-2 border-neutral-800 flex justify-between items-center bg-gradient-to-r from-[#1c1d26] to-[#16171d]">
+                                <div>
+                                    <h3 className="text-xl font-black text-white uppercase tracking-tight">Editar Ficha do Aluno</h3>
+                                    <p className="text-xs text-emerald-400 font-bold font-mono mt-1">{alunoEditandoPerfil.nome}</p>
+                                </div>
+                                <button type="button" onClick={() => setAlunoEditandoPerfil(null)} className="text-neutral-400 hover:text-white text-xs font-black uppercase bg-neutral-900 border border-neutral-700 px-4 py-2 rounded-xl transition-colors shadow-sm">✕ Fechar</button>
+                            </header>
+                            <form onSubmit={atualizarBiometriaAluno} className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 custom-scrollbar">
 
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-[11px] font-black uppercase tracking-wider text-neutral-400 ml-1">Peso Atual (kg)</label>
+                                        <input required type="text" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-4 rounded-xl text-base font-bold text-white outline-none focus:border-emerald-500 transition-colors" value={alunoEditandoPerfil.peso} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, peso: e.target.value })} />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[11px] font-black uppercase tracking-wider text-neutral-400 ml-1">Altura (m)</label>
+                                        <input required type="text" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-4 rounded-xl text-base font-bold text-white outline-none focus:border-emerald-500 transition-colors" value={alunoEditandoPerfil.altura} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, altura: e.target.value })} />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-[11px] font-black uppercase tracking-wider text-neutral-400 ml-1">Objetivo Base</label>
+                                        <select className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-4 rounded-xl text-sm font-bold text-white outline-none focus:border-emerald-500 transition-colors" value={alunoEditandoPerfil.objetivo} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, objetivo: e.target.value })}>
+                                            <option value="Emagrecimento">Emagrecimento</option>
+                                            <option value="Hipertrofia">Hipertrofia</option>
+                                            <option value="Performance">Performance</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[11px] font-black uppercase tracking-wider text-neutral-400 ml-1">Nível</label>
+                                        <select className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-4 rounded-xl text-sm font-bold text-white outline-none focus:border-emerald-500 transition-colors" value={alunoEditandoPerfil.nivel} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, nivel: e.target.value })}>
+                                            <option value="Iniciante">Iniciante</option>
+                                            <option value="Intermediário">Intermediário</option>
+                                            <option value="Avançado">Avançado</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-black uppercase tracking-wider text-neutral-400 ml-1">Restrições Alimentares</label>
+                                    <input type="text" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-4 rounded-xl text-sm font-bold text-white outline-none focus:border-emerald-500 transition-colors" value={alunoEditandoPerfil.restricoes || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, restricoes: e.target.value })} placeholder="Nenhuma" />
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-black uppercase tracking-wider text-neutral-400 ml-1">Dores ou Lesões</label>
+                                    <input type="text" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-4 rounded-xl text-sm font-bold text-white outline-none focus:border-emerald-500 transition-colors" value={alunoEditandoPerfil.lesoes || ""} onChange={e => setAlunoEditandoPerfil({ ...alunoEditandoPerfil, lesoes: e.target.value })} placeholder="Nenhuma" />
+                                </div>
+
+                                <footer className="pt-6 border-t-2 border-neutral-800 flex flex-col sm:flex-row justify-end gap-4 mt-8">
+                                    <button type="button" onClick={() => setAlunoEditandoPerfil(null)} className="bg-transparent border-2 border-neutral-800 text-neutral-300 px-6 py-4 rounded-xl font-black uppercase text-sm hover:bg-neutral-800 transition-colors">Cancelar</button>
+                                    <button type="submit" disabled={isRecalculando} className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-4 rounded-xl font-black uppercase text-sm shadow-[0_10px_25px_rgba(16,185,129,0.3)] transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2">
+                                        {isRecalculando ? "Salvando..." : "✓ Atualizar na IA"}
+                                    </button>
+                                </footer>
+                            </form>
+                        </div>
+                    </div>
+                )}
             </div>
         );
     }
