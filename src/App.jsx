@@ -8,6 +8,7 @@ import ChatReceitas from "./pages/ChatReceitas";
 import Login from "./components/Login";
 import TelaPlanos from "./components/TelaPlanos";
 
+
 // ✅ IMPORT DO NOVO ONBOARDING ADICIONADO AQUI
 import OnboardingNotificacao from "./components/OnboardingNotificacao";
 
@@ -15,6 +16,7 @@ import OnboardingNotificacao from "./components/OnboardingNotificacao";
 import { abrirExercicioVisual } from "./components/visual";
 
 const DIAS_SEMANA = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+
 
 const parseNumeroSeguro = (val) => Number(String(val).replace(',', '.')) || 0;
 
@@ -1828,8 +1830,8 @@ function App() {
                                         }
                                     }}
                                     className={`w-full py-4 rounded-2xl font-black uppercase text-sm tracking-wider transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 border-2 ${isRecalculando
-                                            ? 'bg-purple-900/40 border-purple-500/30 text-purple-400 animate-pulse cursor-not-allowed'
-                                            : 'bg-purple-600/10 border-purple-500 text-purple-400 hover:bg-purple-600 hover:text-white shadow-[0_0_20px_rgba(147,51,234,0.1)] hover:shadow-[0_0_30px_rgba(147,51,234,0.4)]'
+                                        ? 'bg-purple-900/40 border-purple-500/30 text-purple-400 animate-pulse cursor-not-allowed'
+                                        : 'bg-purple-600/10 border-purple-500 text-purple-400 hover:bg-purple-600 hover:text-white shadow-[0_0_20px_rgba(147,51,234,0.1)] hover:shadow-[0_0_30px_rgba(147,51,234,0.4)]'
                                         }`}
                                 >
                                     <span>{isRecalculando ? "🧠 Inteligência Computando..." : "✨ Gerar Todo o Plano Automatizado com IA"}</span>
@@ -2481,15 +2483,52 @@ function App() {
                         </div>
                     )}
 
+                    {/* MODAL LIMPO E INTELIGENTE COM SUPORTE A 2 VÍDEOS */}
                     {modalGifAberto && (
                         <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setModalGifAberto(null)}>
                             <div className="w-full max-w-sm bg-[#16171d] border-2 border-sky-500/50 rounded-3xl overflow-hidden shadow-[0_0_40px_rgba(14,165,233,0.3)] relative" onClick={e => e.stopPropagation()}>
                                 <button onClick={() => setModalGifAberto(null)} className="absolute top-4 right-4 z-10 w-10 h-10 bg-black/60 hover:bg-red-500 text-white rounded-xl flex items-center justify-center text-sm font-black transition-colors border border-neutral-600 hover:border-red-400">✕</button>
                                 <div className="p-6 bg-gradient-to-r from-[#1c1d26] to-[#16171d] border-b-2 border-neutral-800">
-                                    <h3 className="font-black text-white uppercase text-lg pr-12 tracking-tight leading-tight">{modalGifAberto.nome}</h3>
+                                    {/* Adicionado a interrogação por segurança: */}
+                                    <h3 className="font-black text-white uppercase text-lg pr-12 tracking-tight leading-tight">{modalGifAberto?.nome}</h3>
                                 </div>
-                                <div className="w-full bg-[#0d0e12] flex justify-center p-6 min-h-[300px] items-center">
-                                    <img src={modalGifAberto.url} alt={modalGifAberto.nome} className="max-w-full rounded-xl shadow-2xl border-2 border-neutral-800" />
+
+                                {/* Adicionamos flex-col e gap-4 para os vídeos ficarem alinhados um embaixo do outro */}
+                                <div className="w-full bg-[#0d0e12] flex flex-col justify-center p-6 min-h-[300px] items-center gap-4">
+
+                                    {/* LÊ A URL E DECIDE SOZINHO O QUE MOSTRAR */}
+                                    {modalGifAberto?.url?.includes('.mp4') ? (
+                                        <>
+                                            {/* Vídeo Principal */}
+                                            <video
+                                                src={modalGifAberto.url}
+                                                autoPlay
+                                                loop
+                                                muted
+                                                playsInline
+                                                className="max-w-full w-full rounded-xl shadow-2xl border-2 border-sky-500/30 object-cover"
+                                            />
+
+                                            {/* Vídeo Secundário (Só aparece se o arquivo -2 existir lá no visual.js) */}
+                                            {modalGifAberto.url2 && (
+                                                <video
+                                                    src={modalGifAberto.url2}
+                                                    autoPlay
+                                                    loop
+                                                    muted
+                                                    playsInline
+                                                    className="max-w-full w-full rounded-xl shadow-2xl border-2 border-neutral-700 object-cover mt-2"
+                                                />
+                                            )}
+                                        </>
+                                    ) : (
+                                        <img
+                                            src={modalGifAberto?.url}
+                                            alt={modalGifAberto?.nome}
+                                            className="max-w-full rounded-xl shadow-2xl border-2 border-neutral-800"
+                                        />
+                                    )}
+
                                 </div>
                             </div>
                         </div>
