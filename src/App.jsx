@@ -1,3 +1,4 @@
+import ControleDeCarga from './Progrecaodecarga';
 import './Home.css';
 import { toBlob } from 'html-to-image';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
@@ -2425,6 +2426,8 @@ function App() {
 
                                 return (
                                     <div key={i} className={`bg-[#16171d] border-2 transition-all rounded-3xl overflow-hidden shadow-xl mt-4 ${estaconcluido || todasSeriesFeitas ? 'border-emerald-500/50 opacity-90 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'border-neutral-800'}`}>
+
+                                        {/* CABEÇALHO DO EXERCÍCIO */}
                                         <div className="p-6 md:p-8 flex flex-col sm:flex-row items-start justify-between gap-5 relative">
                                             <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-neutral-800 to-transparent rounded-bl-full opacity-30 pointer-events-none"></div>
                                             <div className="flex-1 w-full">
@@ -2445,7 +2448,10 @@ function App() {
                                             <button type="button" onClick={() => alternarConclusaoExercicio(chaveUnicaExercicio)} className={`w-12 h-12 rounded-xl border-2 flex items-center justify-center font-black text-xl transition-all flex-shrink-0 self-end sm:self-center mt-2 sm:mt-0 ${estaconcluido || todasSeriesFeitas ? 'bg-emerald-600 border-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)] scale-105' : 'border-neutral-600 bg-[#0d0e12] text-transparent hover:border-neutral-400 hover:bg-neutral-800'}`}>✓</button>
                                         </div>
 
+                                        {/* GAVETA DE SÉRIES E PROGRESSÃO */}
                                         <div className="px-6 md:px-8 pb-6 md:pb-8">
+
+                                            {/* BOTÕES DE MARCAR AS SÉRIES */}
                                             <div className="grid grid-cols-4 gap-3 pt-5 border-t-2 border-neutral-800/60 mt-2">
                                                 {Array.from({ length: ex.series || 0 }).map((_, sIdx) => {
                                                     const numSerie = sIdx + 1;
@@ -2465,6 +2471,15 @@ function App() {
                                                     );
                                                 })}
                                             </div>
+
+                                            {/* 🚀 O BLOCO DE PROGRESSÃO DE CARGA ENTRA AQUI! 🚀 */}
+                                            <div className="mt-6 border-t-2 border-neutral-800/60 pt-6">
+                                                <ControleDeCarga
+                                                    exercicioNome={ex.nome}
+                                                    cargaUltimoTreino={0}
+                                                />
+                                            </div>
+
                                         </div>
                                     </div>
                                 );
