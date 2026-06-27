@@ -2472,14 +2472,14 @@ function App() {
                                                 })}
                                             </div>
 
-                                            {/* 🚀 O BLOCO DE PROGRESSÃO DE CARGA ENTRA AQUI! 🚀 */}
+                                            {/* 🚀 O BLOCO DE PROGRESSÃO DE CARGA 🚀 */}
                                             <div className="mt-6 border-t-2 border-neutral-800/60 pt-6">
                                                 <ControleDeCarga
                                                     exercicioNome={ex.nome}
                                                     cargaUltimoTreino={0}
+                                                    alunoId={alunoLogado?.id || alunoLogado?._id}
                                                 />
                                             </div>
-
                                         </div>
                                     </div>
                                 );
