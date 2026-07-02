@@ -178,7 +178,7 @@ function App() {
 
     const API_URL = "https://api-backend-treino-fit.onrender.com/api";
     const verificandoRef = useRef(false);
-    const KIWIFY_MENSAL = "https://pay.kiwify.com.br/O5ggnzX";
+    const KIWIFY_MENSAL = "https://pay.kiwify.com.br/MCPza7J";
     const KIWIFY_ANUAL = "https://pay.kiwify.com.br/vbvKtGY";
 
     // =========================================================================
