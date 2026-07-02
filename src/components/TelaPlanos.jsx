@@ -19,6 +19,9 @@ export function TelaAguardandoPagamento({ emailDoUsuarioLogado, setAguardando })
             console.log("🔥 Pagamento confirmado via Socket!", dados);
             setStatusTela(dados.mensagem);
 
+            // Limpa o estado de "pagamento pendente" do navegador
+            localStorage.removeItem("pagamento_iniciado");
+
             setTimeout(() => {
                 if (dados.tipo === "personal") {
                     navigate("/painel-personal");
@@ -33,8 +36,9 @@ export function TelaAguardandoPagamento({ emailDoUsuarioLogado, setAguardando })
         };
     }, [emailDoUsuarioLogado, navigate]);
 
+    // Adicionado "min-h-screen bg-gray-900" para evitar a tela preta
     return (
-        <div style={{ textAlign: 'center', padding: '50px' }} className="text-white">
+        <div className="min-h-screen bg-gray-900 flex flex-col justify-center items-center p-6 text-center text-white">
             <h2 className="text-2xl font-black mb-4">💳 Status do Pagamento:</h2>
             <h3 className="text-xl text-emerald-400 mb-6">{statusTela}</h3>
 
@@ -42,8 +46,13 @@ export function TelaAguardandoPagamento({ emailDoUsuarioLogado, setAguardando })
                 <div>
                     <p className="mb-4">⏳ Escutando a Kiwify...</p>
                     <p className="text-sm text-gray-400">Complete o pagamento na outra aba. Esta tela atualizará sozinha!</p>
-                    {/* Botão caso o usuário queira voltar ou tenha fechado a aba da Kiwify sem querer */}
-                    <button onClick={() => setAguardando(false)} className="mt-8 text-sm text-gray-500 underline">
+                    <button
+                        onClick={() => {
+                            localStorage.removeItem("pagamento_iniciado"); // Limpa caso o usuário desista
+                            setAguardando(false);
+                        }}
+                        className="mt-8 text-sm text-gray-500 underline"
+                    >
                         Voltar para os planos
                     </button>
                 </div>
@@ -58,8 +67,10 @@ export function TelaAguardandoPagamento({ emailDoUsuarioLogado, setAguardando })
 // 2. TELA DE PLANOS PRINCIPAL
 // ==========================================
 const TelaPlanos = ({ emailDoUsuario }) => {
-    // Criamos um estado para controlar se mostramos os planos ou a tela de espera
-    const [aguardandoPagamento, setAguardandoPagamento] = useState(false);
+    // Inicializa o estado lendo se já existe um pagamento pendente no navegador
+    const [aguardandoPagamento, setAguardandoPagamento] = useState(() => {
+        return localStorage.getItem("pagamento_iniciado") === "true";
+    });
 
     const planos = [
         {
@@ -88,7 +99,6 @@ const TelaPlanos = ({ emailDoUsuario }) => {
         }
     ];
 
-    // Se o usuário clicou em comprar, mostramos a tela do Socket
     if (aguardandoPagamento) {
         return (
             <TelaAguardandoPagamento
@@ -98,7 +108,6 @@ const TelaPlanos = ({ emailDoUsuario }) => {
         );
     }
 
-    // Se não clicou ainda, mostramos os planos normais
     return (
         <div className="w-full text-center p-4">
             <div className="mb-8">
@@ -141,7 +150,11 @@ const TelaPlanos = ({ emailDoUsuario }) => {
                             href={plano.linkKiwify}
                             target="_blank"
                             rel="noopener noreferrer"
-                            onClick={() => setAguardandoPagamento(true)} // 🚀 A mágica acontece aqui!
+                            onClick={() => {
+                                // Salva que o pagamento foi iniciado
+                                localStorage.setItem("pagamento_iniciado", "true");
+                                setAguardandoPagamento(true);
+                            }}
                             className={`w-full py-4 rounded-xl font-black text-base uppercase text-center block transition-all active:scale-95 ${plano.destaque
                                 ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20'
                                 : 'bg-white text-black hover:bg-gray-200'
