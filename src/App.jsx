@@ -121,6 +121,8 @@ function App() {
 
     const [alunoEmEdicao, setAlunoEmEdicao] = useState(null);
 
+
+
     // eslint-disable-next-line no-unused-vars
     const [modalGifAberto, setModalGifAberto] = useState(null);
 
@@ -1362,137 +1364,221 @@ function App() {
 
     if (etapa === "home") {
         return (
-            <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col overflow-hidden font-sans z-30">
+            <div className="fixed inset-0 bg-[#07080b] text-neutral-200 flex flex-col overflow-hidden font-sans z-30">
                 {abaAtiva === "home" && (
                     <div className="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col items-center custom-scrollbar">
-                        <header className="w-full max-w-4xl flex justify-between items-center border-b-2 border-neutral-800 pb-5 mb-8">
+                        {/* CABEÇALHO PREMIUM */}
+                        <header className="w-full max-w-4xl flex justify-between items-center pb-6 mb-6">
                             <div className="flex items-center space-x-4">
-                                <img src="/logo192.png" alt="Ícone Treino Fit" className="w-12 h-12 rounded-xl shadow-lg border border-neutral-700" />
+                                <div className="relative">
+                                    <img src="/logo192.png" alt="Ícone Treino Fit" className="w-14 h-14 rounded-2xl shadow-[0_0_15px_rgba(16,185,129,0.2)] border border-emerald-500/20 object-cover" />
+                                    {isVip && <div className="absolute -bottom-1 -right-1 bg-emerald-500 w-4 h-4 rounded-full border-2 border-[#07080b]"></div>}
+                                </div>
                                 <div>
-                                    <h2 className="text-xl font-black text-white uppercase tracking-tight">{perfil.nome}</h2>
-                                    <p className="text-xs font-black text-neutral-400 font-mono uppercase tracking-widest mt-1">Conta {isVip ? 'Premium Elite' : 'Free Tier'}</p>
+                                    <h2 className="text-2xl font-black text-white tracking-tight">{perfil.nome}</h2>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                        <span className={`w-2 h-2 rounded-full ${isVip ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`}></span>
+                                        <p className="text-xs font-bold text-neutral-400 uppercase tracking-widest">
+                                            Conta {isVip ? <span className="text-emerald-400">Premium Elite</span> : 'Free Tier'}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                            <button type="button" onClick={() => !isVip && setBloqueado(true)} className={`px-4 py-2.5 rounded-lg text-xs font-black uppercase font-mono border-2 shadow-lg transition-all ${isVip ? 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10' : 'border-amber-500/40 text-amber-400 bg-amber-500/10 animate-pulse hover:bg-amber-500/20'}`}>{isVip ? "✓ Vip Ativado" : "Upgrade Premium"}</button>
+                            <button
+                                type="button"
+                                onClick={() => !isVip && setBloqueado(true)}
+                                className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 ${isVip ? 'border border-emerald-500/30 text-emerald-400 bg-emerald-500/10 shadow-[0_0_20px_rgba(16,185,129,0.1)]' : 'border border-amber-500/50 text-amber-400 bg-amber-500/10 shadow-[0_0_20px_rgba(245,158,11,0.15)] hover:bg-amber-500/20 hover:scale-105'}`}
+                            >
+                                {isVip ? "✓ VIP Ativado" : "⭐ Fazer Upgrade"}
+                            </button>
                         </header>
 
-                        <main className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-8 items-start pb-12">
+                        <main className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-6 items-start pb-12">
+
+                            {/* COLUNA ESQUERDA: BIOMETRIA E GASTO CALÓRICO */}
                             <div className="md:col-span-1 flex flex-col gap-6">
-                                <div className="bg-[#16171d] border-2 border-neutral-800 p-6 rounded-3xl shadow-xl relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
-                                    <p className="text-neutral-400 text-xs font-black uppercase tracking-widest mb-4">Composição Corporal</p>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="bg-[#0d0e12] p-4 border border-neutral-700 rounded-2xl shadow-inner">
-                                            <span className="text-[10px] font-black text-neutral-400 uppercase tracking-wider block mb-1">Massa Global</span>
-                                            <span className="text-3xl font-black text-white">{perfil.peso}<span className="text-sm text-neutral-500 font-bold ml-1">kg</span></span>
-                                        </div>
-                                        <div className="bg-[#0d0e12] p-4 border border-neutral-700 rounded-2xl shadow-inner">
-                                            <span className="text-[10px] font-black text-neutral-400 uppercase tracking-wider block mb-1">Estatura</span>
-                                            <span className="text-3xl font-black text-white">{perfil.altura}<span className="text-sm text-neutral-500 font-bold ml-1">m</span></span>
+
+                                {/* CARD: GASTO CALÓRICO (O NOVO GRÁFICO) */}
+                                <div className="bg-[#13141a] border border-white/5 p-6 rounded-3xl shadow-2xl text-center relative overflow-hidden group">
+                                    <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 to-cyan-500 opacity-75"></div>
+                                    <p className="text-neutral-400 text-[10px] font-black uppercase tracking-[0.2em] text-left mb-6">Queima Metabólica</p>
+
+                                    {/* Anel de Progresso SVG substituindo a Pizza */}
+                                    <div className="relative w-40 h-40 mx-auto mb-4 flex items-center justify-center">
+                                        <svg className="absolute inset-0 w-full h-full transform -rotate-90">
+                                            {/* Fundo do anel */}
+                                            <circle cx="80" cy="80" r="72" fill="transparent" stroke="#1f2937" strokeWidth="8" />
+                                            {/* Progresso do anel (representando o foco do usuário) */}
+                                            <circle cx="80" cy="80" r="72" fill="transparent" stroke="url(#energiaGradient)" strokeWidth="8" strokeDasharray="452" strokeDashoffset="120" className="drop-shadow-[0_0_12px_rgba(16,185,129,0.6)] transition-all duration-1000 ease-out" strokeLinecap="round" />
+                                            <defs>
+                                                <linearGradient id="energiaGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                                    <stop offset="0%" stopColor="#10b981" />
+                                                    <stop offset="100%" stopColor="#06b6d4" />
+                                                </linearGradient>
+                                            </defs>
+                                        </svg>
+                                        <div className="relative z-10 flex flex-col items-center">
+                                            <span className="text-4xl font-black text-white tracking-tighter">{perfil.tmb}</span>
+                                            <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest mt-1">Kcal / Dia</span>
                                         </div>
                                     </div>
-                                    <div className="mt-5 text-xs text-neutral-300 font-black font-mono flex justify-between border-t border-neutral-800 pt-4 bg-neutral-900/30 p-3 rounded-lg">
-                                        <span className="uppercase">Planejamento:</span>
-                                        <span className="text-emerald-400 uppercase">{perfil.meta}</span>
+
+                                    <div className="bg-[#0a0b0e] border border-white/5 rounded-xl p-3 flex justify-between items-center mt-2">
+                                        <span className="text-[10px] text-neutral-400 uppercase tracking-widest font-black">Foco Atual</span>
+                                        <span className="text-xs text-emerald-400 font-bold uppercase">{perfil.meta}</span>
                                     </div>
                                 </div>
 
-                                <div className="bg-[#16171d] border-2 border-neutral-800 p-6 rounded-3xl shadow-xl text-center relative overflow-hidden">
-                                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-blue-500"></div>
-                                    <p className="text-neutral-400 text-xs font-black uppercase tracking-widest text-left mb-6">Meta Metabólica Diária</p>
-                                    <div className="inline-flex flex-col items-center justify-center p-8 border-4 border-neutral-800 bg-[#0d0e12] rounded-full w-40 h-40 mx-auto mb-2 border-t-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.1)]">
-                                        <span className="text-4xl font-black text-white">{perfil.tmb}</span>
-                                        <span className="text-xs font-bold font-mono text-neutral-500 uppercase mt-2 tracking-widest">kcal/dia</span>
+                                {/* CARD: PERFIL BIOMÉTRICO */}
+                                <div className="bg-[#13141a] border border-white/5 p-6 rounded-3xl shadow-2xl relative overflow-hidden">
+                                    <div className="absolute -top-10 -right-10 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl"></div>
+                                    <p className="text-neutral-400 text-[10px] font-black uppercase tracking-[0.2em] mb-5">Perfil Biométrico</p>
+                                    <div className="flex gap-4">
+                                        <div className="flex-1 bg-[#0a0b0e] p-4 border border-white/5 rounded-2xl flex flex-col items-start justify-center">
+                                            <span className="text-[10px] font-black text-neutral-500 uppercase tracking-widest mb-1">Peso</span>
+                                            <div className="flex items-baseline gap-1">
+                                                <span className="text-2xl font-black text-white">{perfil.peso}</span>
+                                                <span className="text-xs text-neutral-500 font-bold">kg</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex-1 bg-[#0a0b0e] p-4 border border-white/5 rounded-2xl flex flex-col items-start justify-center">
+                                            <span className="text-[10px] font-black text-neutral-500 uppercase tracking-widest mb-1">Altura</span>
+                                            <div className="flex items-baseline gap-1">
+                                                <span className="text-2xl font-black text-white">{perfil.altura}</span>
+                                                <span className="text-xs text-neutral-500 font-bold">m</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
+                            {/* COLUNA DIREITA: INSIGHTS E AÇÕES */}
                             <div className="md:col-span-2 flex flex-col gap-6">
-                                <div className="bg-[#16171d] border-2 border-neutral-800 p-7 rounded-3xl shadow-xl bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
-                                    <p className="text-emerald-400 text-xs font-black uppercase tracking-widest font-mono mb-4 flex items-center gap-2">
-                                        <span className="text-lg">⚡</span> Diretriz Técnica Operacional
-                                    </p>
-                                    <p className="text-base font-bold text-white leading-relaxed">
-                                        "<span className="text-emerald-300">{perfil.nome}</span>, seus parâmetros atuais indicam que o nosso foco principal deve ser a oxidação de gordura ativa. A Inteligência Artificial já está priorizando a ingestão de proteínas no seu cálculo."
+
+                                {/* BALÃO DA IA (INSIGHT) */}
+                                <div className="bg-gradient-to-br from-[#13141a] to-[#0a0b0e] border border-emerald-500/20 p-8 rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] relative">
+                                    <div className="absolute top-8 left-0 w-1 h-12 bg-emerald-500 rounded-r-full shadow-[0_0_10px_rgba(16,185,129,0.8)]"></div>
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/30">
+                                            <span className="text-lg">🤖</span>
+                                        </div>
+                                        <p className="text-emerald-400 text-[10px] font-black uppercase tracking-[0.2em]">Radar da Inteligência Artificial</p>
+                                    </div>
+                                    <p className="text-base md:text-lg font-medium text-neutral-300 leading-relaxed pl-2">
+                                        "<span className="text-white font-bold">{perfil.nome}</span>, seus parâmetros atuais indicam que o nosso foco principal deve ser a <span className="text-emerald-400 font-bold">oxidação de gordura ativa</span>. Já calibrei os algoritmos para priorizar a ingestão de proteínas na sua dieta de hoje."
                                     </p>
                                 </div>
 
-                                <div className="bg-[#16171d] border-2 border-neutral-800 p-7 rounded-3xl shadow-xl flex flex-col justify-between">
+                                {/* PAINEL DE AÇÕES */}
+                                <div className="bg-[#13141a] border border-white/5 p-8 rounded-3xl shadow-2xl flex flex-col justify-between flex-1">
                                     <div>
-                                        <p className="text-neutral-400 text-xs font-black uppercase tracking-widest mb-5 border-b border-neutral-800 pb-3">Terminais de Execução</p>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
-                                            <button type="button" onClick={() => setAbaAtiva("chat")} className="bg-gradient-to-br from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-black py-6 px-4 rounded-2xl text-sm uppercase tracking-wider text-center transition-all shadow-[0_10px_25px_rgba(16,185,129,0.3)] active:scale-95 flex flex-col items-center justify-center gap-2">
-                                                <span className="text-3xl">🤖</span>
-                                                Chat IA & Consultoria
+                                        <p className="text-neutral-400 text-[10px] font-black uppercase tracking-[0.2em] mb-5">Ações Rápidas</p>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                                            <button
+                                                type="button"
+                                                onClick={() => setAbaAtiva("chat")}
+                                                className="group relative overflow-hidden bg-[#0a0b0e] hover:bg-[#111218] border border-emerald-500/30 hover:border-emerald-400 p-6 rounded-2xl transition-all duration-300 flex flex-col items-center justify-center gap-3 active:scale-95"
+                                            >
+                                                <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                                <span className="text-4xl drop-shadow-md group-hover:scale-110 transition-transform duration-300">💬</span>
+                                                <span className="text-white font-bold text-sm uppercase tracking-wider">Chat & Consultoria</span>
                                             </button>
-                                            <button type="button" onClick={() => setAbaAtiva("treino")} className="bg-[#0d0e12] hover:bg-neutral-800 border-2 border-neutral-700 text-white font-black py-6 px-4 rounded-2xl text-sm uppercase tracking-wider text-center transition-all shadow-lg active:scale-95 flex flex-col items-center justify-center gap-2">
-                                                <span className="text-3xl">🏋️‍♂️</span>
-                                                Biblioteca de Treinos
+
+                                            <button
+                                                type="button"
+                                                onClick={() => setAbaAtiva("treino")}
+                                                className="group bg-[#0a0b0e] hover:bg-[#111218] border border-white/10 hover:border-white/30 p-6 rounded-2xl transition-all duration-300 flex flex-col items-center justify-center gap-3 active:scale-95"
+                                            >
+                                                <span className="text-4xl drop-shadow-md group-hover:scale-110 transition-transform duration-300">🏋️‍♂️</span>
+                                                <span className="text-white font-bold text-sm uppercase tracking-wider">Biblioteca de Treinos</span>
                                             </button>
                                         </div>
                                     </div>
-                                    <div className="text-center pt-5 border-t-2 border-neutral-800 mt-auto">
-                                        <button type="button" onClick={handleSair} className="text-xs font-black font-mono uppercase text-neutral-500 hover:text-red-500 transition-colors bg-neutral-900/50 px-4 py-2 rounded-lg">Encerrar sessão no dispositivo</button>
+                                    <div className="text-center pt-6 border-t border-white/5">
+                                        <button
+                                            type="button"
+                                            onClick={handleSair}
+                                            className="group w-full flex items-center justify-center gap-2 p-3.5 mt-4 border border-neutral-800 rounded-xl bg-[#0d0e12] hover:bg-red-950/20 hover:border-red-900/50 text-neutral-500 hover:text-red-400 transition-all duration-300 active:scale-[0.98]"
+                                        >
+                                            {/* Ícone de Logout - Escala bem em mobile */}
+                                            <svg className="w-4 h-4 opacity-70 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                            </svg>
+                                            <span className="text-[11px] font-bold uppercase tracking-widest">
+                                                Desconectar Dispositivo
+                                            </span>
+                                        </button>
                                     </div>
                                 </div>
 
-                                <div className="bg-gradient-to-r from-[#16171d] to-emerald-900/20 border-2 border-emerald-500/30 p-7 rounded-3xl shadow-[0_15px_40px_rgba(16,185,129,0.1)] flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden">
-                                    <div className="absolute -right-10 -bottom-10 text-[120px] opacity-5">🛒</div>
-                                    <div className="z-10 text-center sm:text-left">
-                                        <p className="text-sm font-black uppercase tracking-widest text-emerald-400 mb-2 drop-shadow-md flex items-center justify-center sm:justify-start gap-2">
-                                            🛒 Mercado Saudável Oficial
+                                {/* BANNER MERCADO SAUDÁVEL */}
+                                <div className="bg-gradient-to-r from-emerald-900/40 to-[#13141a] border border-emerald-500/20 p-6 md:p-8 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden group">
+                                    <div className="absolute -right-4 -bottom-8 text-[140px] opacity-10 group-hover:scale-110 transition-transform duration-700 ease-out">🛒</div>
+                                    <div className="z-10 text-center sm:text-left flex-1">
+                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 mb-2 flex items-center justify-center sm:justify-start gap-2">
+                                            Parceiro Oficial
                                         </p>
-                                        <p className="text-sm font-bold text-neutral-200 leading-relaxed max-w-sm">A IA montou sua dieta? Peça os ingredientes agora mesmo e receba no conforto de casa sem sair do foco.</p>
+                                        <h3 className="text-lg font-black text-white mb-2">Mercado Saudável Delivery</h3>
+                                        <p className="text-xs text-neutral-400 leading-relaxed max-w-sm">A IA montou sua dieta? Peça os ingredientes exatos agora mesmo e receba sem sair do foco.</p>
                                     </div>
-                                    <a href="https://hortilife-praticidade.kyte.site/pt-BR" target="_blank" rel="noopener noreferrer" className="z-10 whitespace-nowrap bg-emerald-600 hover:bg-emerald-500 text-white font-black py-4.5 px-8 rounded-2xl text-xs uppercase tracking-widest transition-all shadow-[0_10px_20px_rgba(16,185,129,0.4)] active:scale-95 text-center w-full sm:w-auto">
-                                        👉 Fazer Pedido Online
+                                    <a
+                                        href="https://hortilife-praticidade.kyte.site/pt-BR"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="z-10 whitespace-nowrap bg-emerald-500 hover:bg-emerald-400 text-[#07080b] font-black py-4 px-8 rounded-xl text-xs uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] active:scale-95 text-center w-full sm:w-auto"
+                                    >
+                                        Fazer Pedido
                                     </a>
                                 </div>
+
                             </div>
                         </main>
                     </div>
                 )}
+
+                {/* LÓGICA MANTIDA INTACTA PARA AS OUTRAS ABAS E MODAIS */}
                 {abaAtiva === "chat" && (
-                    <div className="flex-1 flex flex-col overflow-hidden">
-                        <header className="p-5 flex items-center justify-between border-b-2 border-neutral-800 bg-[#16171d] shadow-md z-20">
-                            <button type="button" onClick={() => { setAbaAtiva("home"); atualizarStatusVIP(); }} className="text-emerald-400 hover:text-white font-black text-sm uppercase font-mono flex items-center gap-2 bg-neutral-900 px-4 py-2 rounded-xl border border-neutral-800 transition-colors">
+                    <div className="flex-1 flex flex-col overflow-hidden bg-[#07080b]">
+                        <header className="p-5 flex items-center justify-between border-b border-white/10 bg-[#13141a] shadow-md z-20">
+                            <button type="button" onClick={() => { setAbaAtiva("home"); atualizarStatusVIP(); }} className="text-emerald-400 hover:text-white font-black text-[10px] uppercase tracking-widest flex items-center gap-2 bg-[#0a0b0e] px-4 py-2.5 rounded-xl border border-white/5 transition-colors">
                                 ← Voltar ao Início
                             </button>
-                            <span className="text-xs font-black font-mono uppercase text-neutral-400 bg-[#0d0e12] px-3 py-1.5 rounded-lg border border-neutral-800 hidden sm:block">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-500/10 px-4 py-2 rounded-lg border border-emerald-500/20 hidden sm:block">
                                 Módulo Nutrição IA
                             </span>
                         </header>
                         <ChatReceitas whatsapp={usuario} isVip={isVip} aoPedirUpgrade={() => setBloqueado(true)} perfil={perfil} setTreinoIAPescado={setTreinoIAPescado} aoAtualizarPerfil={atualizarStatusVIP} />
                     </div>
                 )}
+
                 {abaAtiva === "treino" && (
-                    <div className="flex-1 flex flex-col bg-[#0d0e12] p-4 md:p-8 overflow-y-auto custom-scrollbar">
-                        <header className="w-full max-w-5xl mx-auto flex justify-between items-center border-b-2 border-neutral-800 pb-6 mb-8">
-                            <button type="button" onClick={() => { setAbaAtiva("home"); atualizarStatusVIP(); }} className="text-emerald-400 hover:text-white font-black text-sm uppercase font-mono flex items-center gap-2 bg-neutral-900 px-4 py-2 rounded-xl border border-neutral-800 transition-colors">
+                    <div className="flex-1 flex flex-col bg-[#07080b] p-4 md:p-8 overflow-y-auto custom-scrollbar">
+                        <header className="w-full max-w-5xl mx-auto flex justify-between items-center border-b border-white/10 pb-6 mb-8">
+                            <button type="button" onClick={() => { setAbaAtiva("home"); atualizarStatusVIP(); }} className="text-emerald-400 hover:text-white font-black text-[10px] uppercase tracking-widest flex items-center gap-2 bg-[#13141a] px-4 py-2.5 rounded-xl border border-white/5 transition-colors">
                                 ← Retornar
                             </button>
-                            <span className="text-white font-black uppercase text-base tracking-widest">Planilhas de Treino</span>
+                            <span className="text-white font-black uppercase text-sm tracking-[0.2em]">Planilhas de Treino</span>
                         </header>
 
                         <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-6 mx-auto">
-                            <button type="button" onClick={() => isVip ? setModalidadeAberta('ia') : setBloqueado(true)} className="bg-gradient-to-br from-[#16171d] to-emerald-900/10 border-2 border-neutral-700 hover:border-emerald-500 p-8 rounded-[2rem] flex flex-col sm:flex-row items-center sm:items-start justify-between transition-all text-center sm:text-left group shadow-xl">
-                                <div className="order-2 sm:order-1 mt-4 sm:mt-0">
-                                    <p className="font-black uppercase text-xl text-white mb-2 group-hover:text-emerald-400 transition-colors">Treino Inteligência Artificial</p>
-                                    <p className={`text-xs font-black font-mono uppercase tracking-widest px-3 py-1.5 rounded-lg inline-block border ${!isVip ? 'bg-neutral-900 text-neutral-500 border-neutral-800' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'}`}>
-                                        {!isVip ? "Status: Bloqueado" : "Acesso Elite Ativado"}
+                            <button type="button" onClick={() => isVip ? setModalidadeAberta('ia') : setBloqueado(true)} className="bg-[#13141a] hover:bg-[#1a1b23] border border-white/5 hover:border-emerald-500/50 p-8 rounded-[2rem] flex flex-col sm:flex-row items-center sm:items-start justify-between transition-all text-center sm:text-left group shadow-xl">
+                                <div className="order-2 sm:order-1 mt-6 sm:mt-0">
+                                    <p className="font-black uppercase text-xl text-white mb-3 group-hover:text-emerald-400 transition-colors">Treino com Inteligência Artificial</p>
+                                    <p className={`text-[10px] font-black uppercase tracking-widest px-3 py-2 rounded-lg inline-block border ${!isVip ? 'bg-[#0a0b0e] text-neutral-500 border-white/5' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'}`}>
+                                        {!isVip ? "🔒 Acesso Bloqueado" : "⚡ Acesso Elite Liberado"}
                                     </p>
-                                    <p className="text-sm font-bold text-neutral-400 mt-4 leading-relaxed hidden sm:block max-w-[280px]">O seu personal virtual monta o treino exato para a sua biometria e ajusta a carga ideal.</p>
+                                    <p className="text-xs font-medium text-neutral-400 mt-4 leading-relaxed hidden sm:block max-w-[280px]">Seu personal virtual monta o treino exato para a sua biometria e ajusta a carga ideal em tempo real.</p>
                                 </div>
                                 <span className="text-6xl order-1 sm:order-2 drop-shadow-[0_0_20px_rgba(16,185,129,0.3)] group-hover:scale-110 transition-transform">🤖</span>
                             </button>
 
-                            <button type="button" onClick={() => setModalidadeAberta('academia')} className="bg-[#16171d] hover:bg-neutral-800 border-2 border-neutral-700 hover:border-blue-500 p-8 rounded-[2rem] flex flex-col sm:flex-row items-center sm:items-start justify-between transition-all text-center sm:text-left group shadow-xl">
-                                <div className="order-2 sm:order-1 mt-4 sm:mt-0">
-                                    <p className="font-black uppercase text-xl text-white mb-2 group-hover:text-blue-400 transition-colors">Metodologia Tradicional (ABC)</p>
-                                    <p className="text-xs text-blue-400 font-black font-mono uppercase tracking-widest bg-blue-500/10 px-3 py-1.5 rounded-lg inline-block border border-blue-500/30">
-                                        Acesso Livre Free
+                            <button type="button" onClick={() => setModalidadeAberta('academia')} className="bg-[#13141a] hover:bg-[#1a1b23] border border-white/5 hover:border-blue-500/50 p-8 rounded-[2rem] flex flex-col sm:flex-row items-center sm:items-start justify-between transition-all text-center sm:text-left group shadow-xl">
+                                <div className="order-2 sm:order-1 mt-6 sm:mt-0">
+                                    <p className="font-black uppercase text-xl text-white mb-3 group-hover:text-blue-400 transition-colors">Metodologia Tradicional (ABC)</p>
+                                    <p className="text-[10px] text-blue-400 font-black uppercase tracking-widest bg-blue-500/10 px-3 py-2 rounded-lg inline-block border border-blue-500/30">
+                                        🔓 Acesso Livre
                                     </p>
-                                    <p className="text-sm font-bold text-neutral-400 mt-4 leading-relaxed hidden sm:block max-w-[280px]">Biblioteca clássica com separação padrão de grupamentos musculares da academia.</p>
+                                    <p className="text-xs font-medium text-neutral-400 mt-4 leading-relaxed hidden sm:block max-w-[280px]">Biblioteca clássica com separação padrão de grupamentos musculares para a rotina de academia.</p>
                                 </div>
                                 <span className="text-6xl order-1 sm:order-2 drop-shadow-lg group-hover:scale-110 transition-transform">🏋️‍♂️</span>
                             </button>
@@ -1501,7 +1587,13 @@ function App() {
                         {modalidadeAberta && <ListaExercicios modalidade={modalidadeAberta} whatsapp={usuario} API_URL={API_URL} perfil={perfil} treinoIA={treinoIAPescado} aoFechar={() => { setModalidadeAberta(null); atualizarStatusVIP(); }} />}
                     </div>
                 )}
-                {bloqueado && <div className="fixed inset-0 z-[500] bg-[#0d0e12]/95 backdrop-blur-md flex flex-col items-center p-4 md:p-8 overflow-y-auto custom-scrollbar"><button type="button" onClick={() => { setBloqueado(false); atualizarStatusVIP(); }} className="absolute top-6 right-6 text-neutral-400 hover:text-white bg-neutral-900 border-2 border-neutral-800 w-12 h-12 rounded-xl flex items-center justify-center text-lg font-black transition-colors z-[510] shadow-lg">✕</button><TelaPlanos /></div>}
+
+                {bloqueado && (
+                    <div className="fixed inset-0 z-[500] bg-[#07080b]/90 backdrop-blur-xl flex flex-col items-center p-4 md:p-8 overflow-y-auto custom-scrollbar">
+                        <button type="button" onClick={() => { setBloqueado(false); atualizarStatusVIP(); }} className="absolute top-6 right-6 text-neutral-500 hover:text-white bg-[#13141a] border border-white/10 w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-black transition-colors z-[510] shadow-2xl hover:scale-105">✕</button>
+                        <TelaPlanos />
+                    </div>
+                )}
             </div>
         );
     }
