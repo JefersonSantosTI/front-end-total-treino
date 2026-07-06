@@ -2442,7 +2442,7 @@ function App() {
 
                     <div className="space-y-5">
                         <p className="text-xs font-black uppercase tracking-wider text-neutral-300 mb-3">Calendário de Treinos Semanal</p>
-                        <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-none snap-x">
+                        <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-none snap-x overscroll-x-contain w-full max-w-full">
                             {DIAS_SEMANA.map((dia) => {
                                 const diaAtualSistema = new Date().toLocaleDateString("pt-BR", { weekday: 'long' });
                                 const ehHoje = diaAtualSistema.toLowerCase().includes(dia.toLowerCase().slice(0, 4));

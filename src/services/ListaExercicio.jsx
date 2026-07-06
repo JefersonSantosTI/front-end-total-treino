@@ -121,7 +121,7 @@ const ListaExercicios = ({ whatsapp, aoFechar, API_URL, modalidade, perfil, trei
                 <p className="text-xs text-sky-400 uppercase font-black tracking-widest mb-1">Planejamento Ativo</p>
                 <h4 className="text-base font-black uppercase italic">{faseTreino}</h4>
               </div>
-              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none overscroll-x-contain w-full max-w-full">
                 {diasSemanas.map((dia) => (
                   <button key={dia} onClick={() => setDiaSelecionado(dia)} className={`px-4 py-2 rounded-full text-xs font-black uppercase transition-all ${diaSelecionado === dia ? 'bg-sky-600 text-white shadow-lg shadow-sky-500/30' : 'bg-gray-800 text-gray-300'}`}>{dia.slice(0, 3)}</button>
                 ))}
