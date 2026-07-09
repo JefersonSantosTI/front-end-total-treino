@@ -488,14 +488,14 @@ function App() {
         } catch { alert("Erro."); }
     };
 
-    // eslint-disable-next-line no-unused-vars
     const atualizarBiometriaAluno = async (e) => {
         e.preventDefault();
         setIsRecalculando(true);
         const alunoId = alunoEditandoPerfil.id || alunoEditandoPerfil._id;
 
         try {
-            const response = await fetch(`${API_URL}/aluno/${alunoId}/atualizar-biometria`, {
+            // 1. PRIMEIRO: Salva a nova biometria e as 7 dobras no banco
+            const responseUpdate = await fetch(`${API_URL}/aluno/${alunoId}/atualizar-biometria`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -514,14 +514,46 @@ function App() {
                 })
             });
 
-            if (response.ok) {
-                const alunoAtualizado = await response.json();
-                setAlunosPersonal(prev => prev.map(a => (a.id === alunoId || a._id === alunoId) ? alunoAtualizado : a));
-                alert(`✅ Ficha de ${alunoAtualizado.nome} atualizada na IA.`);
-                setAlunoEditandoPerfil(null);
-            } else { alert("Erro ao recriar plano."); }
-        } catch { alert("Erro de conexão com a IA."); }
-        finally { setIsRecalculando(false); }
+            if (!responseUpdate.ok) {
+                alert("Erro ao salvar os novos perímetros.");
+                return;
+            }
+
+            // 2. SEGUNDO: Aciona a IA silenciosamente com os dados novos
+            const responseIA = await fetch(`${API_URL}/aluno/${alunoId}/gerar-plano-ia-personal`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" }
+            });
+
+            if (responseIA.ok) {
+                const dadosGerados = await responseIA.json();
+
+                // Atualiza o aluno na tela para o Personal ver que deu certo
+                setAlunosPersonal(prev => prev.map(a => {
+                    if (a.id === alunoId || a._id === alunoId) {
+                        return {
+                            ...a,
+                            statusTreino: "Rascunho IA",
+                            treinoSemanal: dadosGerados.treinoSemanal,
+                            dietaPrescrita: dadosGerados.dietaPrescrita,
+                            metaAgua: dadosGerados.metaAgua,
+                            medidas: alunoEditandoPerfil.medidas
+                        };
+                    }
+                    return a;
+                }));
+
+                alert(`✅ Sucesso Coach! A IA leu a nova biometria, calculou os macros e montou a estrutura do ${alunoEditandoPerfil.nome}.`);
+                setAlunoEditandoPerfil(null); // Fecha o modal
+            } else {
+                alert("Biometria salva, mas houve um erro ao comunicar com a IA.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Erro de conexão com o servidor.");
+        } finally {
+            setIsRecalculando(false);
+        }
     };
 
     const abrirGeradorTreino = (aluno) => {
@@ -1707,14 +1739,21 @@ function App() {
                                         const idUnico = aluno.id || aluno._id;
                                         const checkinDeHoje = aluno.checkins?.find(c => c.data === hojeDataStr);
 
+
                                         const diasSemTreino = calcularDiasSemTreino(aluno.checkins);
+
                                         let corFarol = "bg-neutral-800 text-neutral-400 border-neutral-700";
                                         let iconeFarol = "⚪";
                                         let textoFarol = "Novo";
 
-                                        if (diasSemTreino !== Infinity) {
+                                        if (checkinDeHoje || diasSemTreino === 0) {
+                                            // 🔥 O ALUNO TREINOU HOJE!
+                                            corFarol = "bg-emerald-500/20 text-emerald-400 border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]";
+                                            iconeFarol = "✅";
+                                            textoFarol = "Treinou Hoje";
+                                        } else if (diasSemTreino !== Infinity) {
                                             if (diasSemTreino < 3) {
-                                                corFarol = "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
+                                                corFarol = "bg-blue-500/10 text-blue-400 border-blue-500/30";
                                                 iconeFarol = "🟢";
                                                 textoFarol = "Ativo";
                                             } else if (diasSemTreino >= 3 && diasSemTreino < 5) {
@@ -1722,12 +1761,12 @@ function App() {
                                                 iconeFarol = "🟡";
                                                 textoFarol = "Atenção";
                                             } else {
-                                                corFarol = "bg-red-500/10 text-red-400 border-red-500/30";
+                                                // 🔴 ALERTA VERMELHO: Faltou muitos dias
+                                                corFarol = "bg-red-500/20 text-red-500 border-red-500/50 font-black animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.3)]";
                                                 iconeFarol = "🔴";
-                                                textoFarol = "Risco";
+                                                textoFarol = `Sumiu (${diasSemTreino} dias)`;
                                             }
                                         }
-
                                         return (
                                             <tr key={idUnico} className={`hover:bg-neutral-800/30 transition-colors ${aluno.statusConta === 'Off' ? 'opacity-40 grayscale-[50%]' : ''}`}>
                                                 <td className="p-4">
@@ -1760,9 +1799,17 @@ function App() {
                                                         <span className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase border flex items-center gap-1.5 shadow-inner ${corFarol}`}>
                                                             {iconeFarol} {textoFarol}
                                                         </span>
+
+                                                        {/* BOTÃO DO WHATSAPP QUANDO O ALUNO SOME (VERSÃO DESKTOP) */}
                                                         {(diasSemTreino >= 3 || diasSemTreino === Infinity) && aluno.statusConta !== 'Off' && (
-                                                            <button type="button" onClick={() => enviarZapRetencao(aluno, diasSemTreino)} className="text-[#25D366] hover:scale-110 transition-transform bg-[#25D366]/10 p-1.5 rounded-lg border border-[#25D366]/30 shadow-sm" title="Chamar no WhatsApp">
-                                                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.305-.885-.653-1.482-1.46-1.656-1.758-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" /></svg>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => enviarZapRetencao(aluno, diasSemTreino)}
+                                                                className="flex items-center gap-2 bg-[#25D366] hover:bg-[#1fad53] text-black px-4 py-2 rounded-lg text-xs font-black uppercase transition-all shadow-[0_5px_15px_rgba(37,211,102,0.3)] hover:scale-105"
+                                                                title="Cobrar Presença no WhatsApp"
+                                                            >
+                                                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.305-.885-.653-1.482-1.46-1.656-1.758-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" /></svg>
+                                                                Cobrar Presença
                                                             </button>
                                                         )}
                                                     </div>
@@ -1879,16 +1926,22 @@ function App() {
                                             </div>
                                         </div>
 
-                                        <div className="bg-[#16171d] p-4 rounded-2xl border border-neutral-800/50 mt-1 flex justify-between items-center shadow-inner">
+                                        <div className="bg-[#16171d] p-4 rounded-2xl border border-neutral-800/50 mt-1 flex flex-col gap-3 shadow-inner">
                                             <div className="flex items-center gap-2">
                                                 <span className={`px-4 py-2 rounded-lg text-xs font-black uppercase border flex items-center gap-2 shadow-sm ${corFarol}`}>
                                                     {iconeFarol} {textoFarol}
                                                 </span>
                                             </div>
+
+                                            {/* BOTÃO DO WHATSAPP QUANDO O ALUNO SOME (VERSÃO MOBILE) */}
                                             {(diasSemTreino >= 3 || diasSemTreino === Infinity) && aluno.statusConta !== 'Off' && (
-                                                <button type="button" onClick={() => enviarZapRetencao(aluno, diasSemTreino)} className="flex items-center gap-2 bg-[#25D366]/10 border border-[#25D366]/30 text-[#25D366] px-4 py-2 rounded-lg text-xs font-black uppercase transition-all hover:bg-[#25D366]/20 shadow-sm">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => enviarZapRetencao(aluno, diasSemTreino)}
+                                                    className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1fad53] text-black w-full px-4 py-3 rounded-lg text-xs font-black uppercase transition-all shadow-[0_5px_15px_rgba(37,211,102,0.3)] active:scale-95"
+                                                >
                                                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.305-.885-.653-1.482-1.46-1.656-1.758-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" /></svg>
-                                                    WhatsApp
+                                                    Cobrar Presença
                                                 </button>
                                             )}
                                         </div>
@@ -1949,44 +2002,7 @@ function App() {
                                 <button type="button" onClick={() => setAlunoEmEdicao(null)} className="text-neutral-400 hover:text-white text-xs uppercase font-mono font-black border-2 border-neutral-700 hover:bg-neutral-800 px-4 py-2.5 rounded-xl transition-all shadow-sm">Fechar ✕</button>
                             </header>
 
-                            {/* 🔥 BOTÃO MÁGICO: GERADOR AUTOMÁTICO BASEADO NA BIOMETRIA RECENTE 🔥 */}
-                            <div className="px-6 md:px-8 pt-4 bg-[#16171d]">
-                                <button
-                                    type="button"
-                                    disabled={isRecalculando}
-                                    onClick={async () => {
-                                        setIsRecalculando(true);
-                                        const alunoId = alunoEmEdicao.id || alunoEmEdicao._id;
-                                        try {
-                                            const response = await fetch(`${API_URL}/aluno/${alunoId}/gerar-plano-ia-personal`, {
-                                                method: "POST",
-                                                headers: { "Content-Type": "application/json" }
-                                            });
-                                            if (response.ok) {
-                                                const dadosGerados = await response.json();
-                                                // Preenche o formulário na tela instantaneamente com o que a IA calculou
-                                                if (dadosGerados.treinoSemanal) setTreinoForm(dadosGerados.treinoSemanal);
-                                                if (dadosGerados.dietaPrescrita) setDietaForm(dadosGerados.dietaPrescrita);
-                                                if (dadosGerados.metaAgua) setAguaForm(dadosGerados.metaAgua);
-                                                alert("✨ IA releu a nova biometria, recalculou a água, dieta e macros, e montou a estrutura com sucesso! Revise e clique em 'Salvar e Enviar'.");
-                                            } else {
-                                                alert("Erro ao acionar a IA do servidor. Verifique o Back-end.");
-                                            }
-                                        } catch (err) {
-                                            console.error(err);
-                                            alert("Erro de conexão ao tentar gerar com IA.");
-                                        } finally {
-                                            setIsRecalculando(false);
-                                        }
-                                    }}
-                                    className={`w-full py-4 rounded-2xl font-black uppercase text-sm tracking-wider transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 border-2 ${isRecalculando
-                                        ? 'bg-purple-900/40 border-purple-500/30 text-purple-400 animate-pulse cursor-not-allowed'
-                                        : 'bg-purple-600/10 border-purple-500 text-purple-400 hover:bg-purple-600 hover:text-white shadow-[0_0_20px_rgba(147,51,234,0.1)] hover:shadow-[0_0_30px_rgba(147,51,234,0.4)]'
-                                        }`}
-                                >
-                                    <span>{isRecalculando ? "🧠 Inteligência Computando..." : "✨ Gerar Todo o Plano Automatizado com IA"}</span>
-                                </button>
-                            </div>
+
 
                             <form onSubmit={salvarTreinoPersonal} className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 custom-scrollbar">
 
@@ -2244,6 +2260,32 @@ function App() {
 
                             {alunoVerFeedback.checkins && alunoVerFeedback.checkins.length > 0 ? (
                                 <div className="space-y-5 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                                    {/* ✨ NOVO BLOCO: VISÃO DO PERSONAL PARA AS CARGAS ✨ */}
+                                    <div className="mt-6 border-t-2 border-neutral-800 pt-5">
+                                        <h4 className="text-sm font-black uppercase text-emerald-400 mb-3 flex items-center gap-2">
+                                            <span className="text-xl">📈</span> Evolução de Cargas
+                                        </h4>
+                                        <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-2">
+                                            {alunoVerFeedback.historicoCargas && alunoVerFeedback.historicoCargas.length > 0 ? (
+                                                // Invertemos o array para mostrar os mais recentes primeiro
+                                                [...alunoVerFeedback.historicoCargas].reverse().map((hist, idx) => (
+                                                    <div key={idx} className="bg-[#0d0e12] border border-neutral-800 p-3 rounded-xl flex justify-between items-center">
+                                                        <div>
+                                                            <p className="text-xs font-bold text-white uppercase">{hist.exercicio}</p>
+                                                            <p className="text-[10px] text-neutral-500 font-mono mt-1">
+                                                                {new Date(hist.data).toLocaleDateString("pt-BR")} • Esforço: {hist.esforco}
+                                                            </p>
+                                                        </div>
+                                                        <div className="bg-blue-600/20 border border-blue-500/30 px-3 py-1.5 rounded-lg text-blue-400 font-black text-sm shadow-inner">
+                                                            {hist.carga} kg
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <p className="text-xs text-neutral-500 italic">O aluno ainda não registrou cargas.</p>
+                                            )}
+                                        </div>
+                                    </div>
                                     {alunoVerFeedback.checkins.slice(0, 3).map((checkin, index) => (
                                         <div key={index} className="bg-[#0d0e12] border-2 border-neutral-800 p-5 rounded-2xl shadow-inner">
                                             <div className="flex justify-between items-center mb-4">
@@ -2621,13 +2663,24 @@ function App() {
                                                 })}
                                             </div>
 
-                                            {/* 🚀 O BLOCO DE PROGRESSÃO DE CARGA 🚀 */}
+                                            {/* 🚀 O BLOCO DE PROGRESSÃO DE CARGA AJUSTADO 🚀 */}
                                             <div className="mt-6 border-t-2 border-neutral-800/60 pt-6">
-                                                <ControleDeCarga
-                                                    exercicioNome={ex.nome}
-                                                    cargaUltimoTreino={0}
-                                                    alunoId={alunoLogado?.id || alunoLogado?._id}
-                                                />
+                                                {(() => {
+                                                    // Busca no histórico do aluno se ele já fez esse exercício antes
+                                                    const historicoDoExercicio = alunoLogado?.historicoCargas?.filter(h => h.exercicio === ex.nome) || [];
+                                                    // Pega a última carga anotada (se existir), senão começa com 0
+                                                    const ultimaCarga = historicoDoExercicio.length > 0
+                                                        ? historicoDoExercicio[historicoDoExercicio.length - 1].carga
+                                                        : 0;
+
+                                                    return (
+                                                        <ControleDeCarga
+                                                            exercicioNome={ex.nome}
+                                                            cargaUltimoTreino={ultimaCarga}
+                                                            alunoId={alunoLogado?.id || alunoLogado?._id}
+                                                        />
+                                                    );
+                                                })()}
                                             </div>
                                         </div>
                                     </div>
