@@ -2663,7 +2663,7 @@ function App() {
                                                 })}
                                             </div>
 
-                                            {/* 🚀 O BLOCO DE PROGRESSÃO DE CARGA AJUSTADO 🚀 */}
+                                            {/* 🚀 O BLOCO DE PROGRESSÃO DE CARGA FINAL E CONECTADO 🚀 */}
                                             <div className="mt-6 border-t-2 border-neutral-800/60 pt-6">
                                                 {(() => {
                                                     // Busca no histórico do aluno se ele já fez esse exercício antes
@@ -2678,6 +2678,7 @@ function App() {
                                                             exercicioNome={ex.nome}
                                                             cargaUltimoTreino={ultimaCarga}
                                                             alunoId={alunoLogado?.id || alunoLogado?._id}
+                                                            API_URL={API_URL} /* 🔥 ISSO FALTAVA AQUI PARA CONECTAR NO BACKEND 🔥 */
                                                         />
                                                     );
                                                 })()}

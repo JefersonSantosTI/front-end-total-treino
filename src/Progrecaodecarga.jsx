@@ -1,7 +1,8 @@
 import { useState } from 'react';
 
 // ✅ ADICIONAMOS O 'alunoId' AQUI NAS PROPS
-export default function ControleDeCarga({ exercicioNome, cargaUltimoTreino, alunoId }) {
+// ✅ ADICIONAMOS A API_URL AQUI NAS PROPS!
+export default function ControleDeCarga({ exercicioNome, cargaUltimoTreino, alunoId, API_URL }) {
     const [cargaAtual, setCargaAtual] = useState(cargaUltimoTreino || 0);
     const [esforco, setEsforco] = useState(null);
     const [salvo, setSalvo] = useState(false);
@@ -10,21 +11,18 @@ export default function ControleDeCarga({ exercicioNome, cargaUltimoTreino, alun
         setCargaAtual((prev) => (prev + valor > 0 ? prev + valor : 0));
     };
 
-    // 🔥 A FUNÇÃO MÁGICA QUE CONECTA COM O BACKEND
+    // 🔥 AGORA A ROTA VAI PARA O SERVIDOR CERTO (Render)
     const salvarProgresso = async () => {
-        setSalvo(true); // Fica verde na hora pro aluno ter resposta rápida
+        setSalvo(true);
 
         try {
-            // Mandando os dados para a rota nova do seu backend
-            // (Se o seu front rodar local, usa http://localhost:10000/aluno/progressao-carga)
-            // Se já estiver no ar, mude para a URL do seu Render: 'https://sua-api.onrender.com/aluno/progressao-carga'
-            const response = await fetch('/aluno/progressao-carga', {
+            const response = await fetch(`${API_URL}/aluno/progressao-carga`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    alunoId: alunoId, // ID do aluno logado
+                    alunoId: alunoId,
                     exercicioNome: exercicioNome,
                     carga: cargaAtual,
                     esforco: esforco
@@ -35,10 +33,8 @@ export default function ControleDeCarga({ exercicioNome, cargaUltimoTreino, alun
             if (response.ok) {
                 console.log("Sucesso! Gravado no MongoDB:", dados);
             } else {
-                console.error("Erro do servidor:", dados.erro);
                 setSalvo(false);
             }
-
         } catch (error) {
             console.error("Erro na requisição:", error);
             setSalvo(false);
@@ -72,12 +68,6 @@ export default function ControleDeCarga({ exercicioNome, cargaUltimoTreino, alun
             <button onClick={salvarProgresso} disabled={esforco === null} className={`w-full py-3 rounded-xl font-black uppercase tracking-wider transition-all ${salvo ? 'bg-green-500 text-white' : esforco !== null ? 'bg-sky-500 text-white hover:bg-sky-400' : 'bg-neutral-800 text-gray-500 cursor-not-allowed'}`}>
                 {salvo ? '✓ Salvo!' : 'Confirmar Série'}
             </button>
-
-            {salvo && cargaAtual > (cargaUltimoTreino || 0) && (cargaUltimoTreino || 0) > 0 && (
-                <div className="mt-3 text-center animate-bounce">
-                    <p className="text-green-400 text-sm font-bold">🔥 Novo Recorde! +{cargaAtual - cargaUltimoTreino}kg</p>
-                </div>
-            )}
         </div>
     );
 }
