@@ -1444,37 +1444,34 @@ function App() {
                             {/* COLUNA ESQUERDA: BIOMETRIA E GASTO CALÓRICO */}
                             <div className="md:col-span-1 flex flex-col gap-6">
 
-                                {/* CARD: GASTO CALÓRICO (O NOVO GRÁFICO) */}
+                                {/* CARD: GASTO CALÓRICO (O NOVO GRÁFICO ATUALIZADO) */}
                                 <div className="bg-[#13141a] border border-white/5 p-6 rounded-3xl shadow-2xl text-center relative overflow-hidden group">
                                     <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 to-cyan-500 opacity-75"></div>
-                                    <p className="text-neutral-400 text-[10px] font-black uppercase tracking-[0.2em] text-left mb-6">Queima Metabólica</p>
+                                    <p className="text-neutral-400 text-[10px] font-black uppercase tracking-[0.2em] text-left mb-4">Queima Metabólica</p>
 
-                                    {/* Anel de Progresso SVG substituindo a Pizza */}
-                                    <div className="relative w-40 h-40 mx-auto mb-4 flex items-center justify-center">
-                                        <svg className="absolute inset-0 w-full h-full transform -rotate-90">
-                                            {/* Fundo do anel */}
-                                            <circle cx="80" cy="80" r="72" fill="transparent" stroke="#1f2937" strokeWidth="8" />
-                                            {/* Progresso do anel (representando o foco do usuário) */}
-                                            <circle cx="80" cy="80" r="72" fill="transparent" stroke="url(#energiaGradient)" strokeWidth="8" strokeDasharray="452" strokeDashoffset="120" className="drop-shadow-[0_0_12px_rgba(16,185,129,0.6)] transition-all duration-1000 ease-out" strokeLinecap="round" />
-                                            <defs>
-                                                <linearGradient id="energiaGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                                    <stop offset="0%" stopColor="#10b981" />
-                                                    <stop offset="100%" stopColor="#06b6d4" />
-                                                </linearGradient>
-                                            </defs>
-                                        </svg>
-                                        <div className="relative z-10 flex flex-col items-center">
-                                            <span className="text-4xl font-black text-white tracking-tighter">{perfil.tmb}</span>
-                                            <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest mt-1">Kcal / Dia</span>
+                                    <div className="relative z-10 flex flex-col items-center">
+                                        {/* Destaque para o Metabolismo do corpo */}
+                                        <span className="text-4xl font-black text-white tracking-tighter">{perfil.tmb}</span>
+                                        <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest mt-1 mb-3">Kcal / Basal (TMB)</span>
+
+                                        {/* 🔥 NOVA PONTE VISUAL: Mostra a meta exata que a Nutri passou no Chat */}
+                                        <div className="w-full pt-3 border-t border-neutral-800/60 flex items-center justify-between text-left">
+                                            <div>
+                                                <p className="text-neutral-400 text-[10px] font-bold uppercase tracking-wider">Meta Alvo IA</p>
+                                                <p className="text-[10px] text-neutral-500">Consumo para {perfil.meta || 'Emagrecimento'}</p>
+                                            </div>
+                                            <div className="text-right">
+                                                {/* Calcula dinamicamente o valor final com base na meta do aluno */}
+                                                <span className="text-sm font-black text-emerald-400">
+                                                    {perfil.meta?.toLowerCase().includes("hipertrofia")
+                                                        ? Math.round((Number(perfil.tmb) * 1.4) + 400)
+                                                        : Math.round((Number(perfil.tmb) * 1.45) - 500)}
+                                                </span>
+                                                <span className="text-[9px] text-neutral-500 font-bold block">Kcal / Dia</span>
+                                            </div>
                                         </div>
                                     </div>
-
-                                    <div className="bg-[#0a0b0e] border border-white/5 rounded-xl p-3 flex justify-between items-center mt-2">
-                                        <span className="text-[10px] text-neutral-400 uppercase tracking-widest font-black">Foco Atual</span>
-                                        <span className="text-xs text-emerald-400 font-bold uppercase">{perfil.meta}</span>
-                                    </div>
                                 </div>
-
                                 {/* CARD: PERFIL BIOMÉTRICO */}
                                 <div className="bg-[#13141a] border border-white/5 p-6 rounded-3xl shadow-2xl relative overflow-hidden">
                                     <div className="absolute -top-10 -right-10 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl"></div>
