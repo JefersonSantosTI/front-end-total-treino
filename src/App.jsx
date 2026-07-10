@@ -470,7 +470,8 @@ function App() {
             const data = await response.json();
             if (response.ok) {
                 setAlunosPersonal([data, ...alunosPersonal]);
-                alert(`✅ Aluno Cadastrado!\n\nCódigo de Acesso: ${data.nome}`);
+                // 🔥 AVISO ATUALIZADO: Mostra o WhatsApp em vez do nome
+                alert(`✅ Aluno Cadastrado!\n\nAvise o aluno que o login dele é o número do WhatsApp: ${data.whatsapp}`);
                 setModalNovoAluno(false);
                 setNovoAlunoForm({ nome: "", whatsapp: "", objetivo: "Emagrecimento" });
             } else { alert(data.mensagem || "Erro ao cadastrar."); }
@@ -1122,9 +1123,22 @@ function App() {
             <div className="fixed inset-0 bg-[#0d0e12] flex flex-col items-center justify-center p-6 text-white font-sans z-50">
                 <div className="w-full max-w-sm bg-[#16171d] border border-neutral-800 p-8 rounded-2xl shadow-xl">
                     <h2 className="text-xl font-bold uppercase tracking-tight text-neutral-100 mb-2 text-center">Portal do Aluno</h2>
-                    <p className="text-neutral-400 font-medium text-xs mb-8 text-center bg-[#0d0e12] p-4 rounded-xl border border-neutral-800">Insira o código de acesso fornecido pelo seu Personal Trainer para continuar.</p>
+
+                    {/* 🔥 TEXTO INFORMATIVO ATUALIZADO */}
+                    <p className="text-neutral-400 font-medium text-xs mb-8 text-center bg-[#0d0e12] p-4 rounded-xl border border-neutral-800">
+                        Insira o seu número de WhatsApp cadastrado pelo seu Personal Trainer para continuar.
+                    </p>
+
                     <form onSubmit={handleLoginAluno} className="space-y-4">
-                        <input required type="text" placeholder="Código de Acesso (Ex: João Silva)" className="w-full bg-[#0d0e12] border border-neutral-700 p-4 rounded-xl text-sm font-semibold outline-none focus:border-blue-500 text-neutral-100 placeholder-neutral-500 text-center transition-colors" value={codigoAcessoAluno} onChange={(e) => setCodigoAcessoAluno(e.target.value)} />
+                        {/* 🔥 PLACEHOLDER ATUALIZADO */}
+                        <input
+                            required
+                            type="text"
+                            placeholder="Seu WhatsApp (Ex: 11999999999)"
+                            className="w-full bg-[#0d0e12] border border-neutral-700 p-4 rounded-xl text-sm font-semibold outline-none focus:border-blue-500 text-neutral-100 placeholder-neutral-500 text-center transition-colors"
+                            value={codigoAcessoAluno}
+                            onChange={(e) => setCodigoAcessoAluno(e.target.value)}
+                        />
                         <div className="flex flex-col gap-3 font-bold">
                             <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white p-4 rounded-xl text-xs uppercase tracking-wider transition-colors shadow-md">Entrar no App</button>
                             <button type="button" onClick={() => setEtapa("triagem")} className="w-full bg-transparent border border-neutral-800 hover:bg-neutral-800 p-4 rounded-xl text-xs uppercase tracking-wider text-neutral-400 transition-colors">Voltar para Início</button>
