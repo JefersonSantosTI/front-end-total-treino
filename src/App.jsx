@@ -1561,7 +1561,7 @@ function App() {
                                         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 mb-2 flex items-center justify-center sm:justify-start gap-2">
                                             Parceiro Oficial
                                         </p>
-                                        <h3 className="text-lg font-black text-white mb-2">Mercado Saudável Delivery</h3>
+                                        <h3 className="text-lg font-black text-white mb-2">HortiLife Delivery</h3>
                                         <p className="text-xs text-neutral-400 leading-relaxed max-w-sm">A IA montou sua dieta? Peça os ingredientes exatos agora mesmo e receba sem sair do foco.</p>
                                     </div>
                                     <a

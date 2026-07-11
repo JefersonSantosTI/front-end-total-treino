@@ -140,7 +140,7 @@ const ListaExercicios = ({ whatsapp, aoFechar, API_URL, modalidade, perfil, trei
           {(() => {
             let exerciciosDoDia = [];
             if (modalidade === 'ia') {
-              const rotina = planoSemanalIA.find(t => t.dia === diaSelecionado);
+              const rotina = planoSemanalIA.find(t => t.dia.toLowerCase().includes(diaSelecionado.toLowerCase()));
               exerciciosDoDia = rotina ? rotina.exercicios : [];
               if (exerciciosDoDia.length === 0) return <div className="bg-gray-900 p-8 rounded-[2rem] text-center border border-white/10"><p className="text-gray-400 text-sm font-black uppercase italic">Descanso! 🧘‍♂️</p></div>;
             } else { exerciciosDoDia = treinosFixosData[treinoFixosAtivo]; }
