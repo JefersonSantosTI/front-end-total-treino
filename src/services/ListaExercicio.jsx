@@ -5,6 +5,8 @@ const ListaExercicios = ({ whatsapp, aoFechar, API_URL, modalidade, perfil, trei
   const [treinoFixosAtivo, setTreinoFixosAtivo] = useState('A');
   const [carregandoIA, setCarregandoIA] = useState(false);
   const [faseTreino, setFaseTreino] = useState("");
+
+  // O gifAtivo agora pode receber um .mp4 ou .gif (e até a url2)
   const [gifAtivo, setGifAtivo] = useState(null);
 
   const [planoSemanalIA, setPlanoSemanalIA] = useState([]);
@@ -23,70 +25,79 @@ const ListaExercicios = ({ whatsapp, aoFechar, API_URL, modalidade, perfil, trei
     }
   }, [treinoIA, modalidade, diaAtualSistema]);
 
-  const formatarNomeArquivo = (nome) => {
-    return nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+  // 🔥 SUA LÓGICA DE VÍDEOS DE ALTA PERFORMANCE (Adaptada para rodar aqui dentro)
+  const handleAbrirVideo = async (ex) => {
+    const nomeLimpo = ex.nome.toLowerCase().trim()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, '-');
+
+    const urlVideoMp4 = `/videos/${nomeLimpo}.mp4`;
+    const urlVideoMp4_2 = `/videos/${nomeLimpo}-2.mp4`;
+    const urlGif = `/exercicios/${nomeLimpo}.gif`;
+
+    // 1. TENTA O VÍDEO MP4 PRIMEIRO
+    try {
+      const checkVideo = await fetch(urlVideoMp4, { method: 'HEAD' });
+      if (checkVideo.ok) {
+        let segundoVideo = null;
+        try {
+          const checkVideo2 = await fetch(urlVideoMp4_2, { method: 'HEAD' });
+          if (checkVideo2.ok) {
+            segundoVideo = urlVideoMp4_2;
+          }
+        } catch {
+          // Ignora erro do segundo vídeo silenciosamente
+        }
+
+        setGifAtivo({ nome: ex.nome, url: urlVideoMp4, url2: segundoVideo });
+        return;
+      }
+    } catch {
+      console.log("Tentando fallback para GIF...");
+    }
+
+    // 2. SE NÃO ACHOU O MP4, TENTA O GIF ANTIGO
+    const img = new Image();
+    img.src = urlGif;
+
+    img.onload = () => setGifAtivo({ nome: ex.nome, url: urlGif });
+
+    // 3. SE NÃO ACHOU NEM O MP4 E NEM O GIF, VAI PRO YOUTUBE
+    img.onerror = () => {
+      if (ex.videoUrl && ex.videoUrl.trim() !== "") {
+        window.open(ex.videoUrl, '_blank');
+      } else {
+        window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(ex.nome)}+shorts+execução`, '_blank');
+      }
+    };
   };
 
-  // 🔥 O CÉREBRO DA IA: Para quando a IA inventar nomes
-  const dicionarioVideos = {
-    "supino-reto": "https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/supino-reto.gif",
-    "supino-inclinado": "https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/supino-inclinado-com-halteres.gif",
-    "peck-deck-voador": "https://gymvisual.com/img/p/5/7/4/0/5740.gif",
-    "crucifixo-reto": "https://gymvisual.com/img/p/5/7/4/0/5740.gif",
-    "desenvolvimento": "https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/desenvolvimento-para-ombros-com-halteres.gif",
-    "elevacao-lateral": "https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/ombros-elevacao-lateral-de-ombros-com-halteres.gif",
-    "triceps-corda": "https://i.pinimg.com/originals/15/6b/79/156b79c6e5418472dc05fd4bc161cd16.gif",
-    "puxada-pulley": "https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/costas-puxada-atras-no-pulley-alto.gif",
-    "puxada-frontal": "https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/costas-puxada-atras-no-pulley-alto.gif",
-    "remada-curvada": "https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/costas-remada-curvada-com-barra.gif",
-    "rosca-direta": "https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/biceps-rosca-direta-com-barra-w.gif",
-    "rosca-martelo": "https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/biceps-rosca-martelo-com-halteres.gif",
-    "leg-press-45": "https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/pernas-leg-press-45-graus.gif",
-    "leg-press": "https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/pernas-leg-press-45-graus.gif",
-    "cadeira-extensora": "https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/pernas-extensao-de-pernas.gif",
-    "mesa-flexora": "https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/pernas-flexao-de-pernas-na-mesa-flexora.gif",
-    "panturrilha-sentado": "https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/panturrilhas-elevacao-de-gemeos-sentado.gif",
-    "panturrilha-em-pe": "https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/panturrilhas-elevacao-de-gemeos-sentado.gif",
-    "agachamento-livre": "https://www.mundoboaforma.com.br/wp-content/uploads/2020/11/agachamento-livre.gif",
-    "flexao-de-bracos": "https://i.pinimg.com/originals/92/6e/c5/926ec5127683c2779b7f5cc627cf75e0.gif",
-    "flexao-corporal": "https://i.pinimg.com/originals/92/6e/c5/926ec5127683c2779b7f5cc627cf75e0.gif",
-    "afundo": "https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/pernas-afundo-ou-passada-com-halteres.gif",
-    "polichinelos": "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJid3R3bmZ3bmZ3bmZ3/3o7TKVUn7iM8FMEU24/giphy.gif"
-  };
-
-  const obterUrlDoVideo = (nomeExercicio, arquivoPersonalizado) => {
-    const nomeFormatado = formatarNomeArquivo(nomeExercicio);
-    if (dicionarioVideos[nomeFormatado]) return dicionarioVideos[nomeFormatado];
-    return `/videos/${arquivoPersonalizado || nomeFormatado}.gif`;
-  };
-
-  // 🔥 OS SEUS TREINOS GRATUITOS (Agora puxando direto do seu Protocolo Original com Links Oficiais)
   const treinosFixosData = {
     A: [
-      { nome: "Supino Reto", series: 4, reps: "10", url: "https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/supino-reto.gif" },
-      { nome: "Supino Inclinado Halter", series: 3, reps: "12", url: "https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/supino-inclinado-com-halteres.gif" },
-      { nome: "Peck Deck (Voador)", series: 3, reps: "15", url: "https://gymvisual.com/img/p/5/7/4/0/5740.gif" },
-      { nome: "Desenvolvimento Ombro", series: 3, reps: "10", url: "https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/desenvolvimento-para-ombros-com-halteres.gif" },
-      { nome: "Elevação Lateral", series: 4, reps: "12", url: "https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/ombros-elevacao-lateral-de-ombros-com-halteres.gif" },
-      { nome: "Tríceps Corda", series: 4, reps: "12", url: "https://i.pinimg.com/originals/15/6b/79/156b79c6e5418472dc05fd4bc161cd16.gif" }
+      { nome: "Supino Reto", series: 4, reps: "10" },
+      { nome: "Supino Inclinado Halter", series: 3, reps: "12" },
+      { nome: "Peck Deck (Voador)", series: 3, reps: "15" },
+      { nome: "Desenvolvimento Ombro", series: 3, reps: "10" },
+      { nome: "Elevação Lateral", series: 4, reps: "12" },
+      { nome: "Tríceps Corda", series: 4, reps: "12" }
     ],
     B: [
-      { nome: "Puxada Pulley", series: 4, reps: "12", url: "https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/costas-puxada-atras-no-pulley-alto.gif" },
-      { nome: "Remada Curvada", series: 3, reps: "10", url: "https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/costas-remada-curvada-com-barra.gif" },
-      { nome: "Rosca Direta Barra W", series: 4, reps: "12", url: "https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/biceps-rosca-direta-com-barra-w.gif" },
-      { nome: "Rosca Martelo", series: 3, reps: "12", url: "https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/biceps-rosca-martelo-com-halteres.gif" }
+      { nome: "Puxada Pulley", series: 4, reps: "12" },
+      { nome: "Remada Curvada", series: 3, reps: "10" },
+      { nome: "Rosca Direta Barra W", series: 4, reps: "12" },
+      { nome: "Rosca Martelo", series: 3, reps: "12" }
     ],
     C: [
-      { nome: "Leg Press 45", series: 4, reps: "12", url: "https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/pernas-leg-press-45-graus.gif" },
-      { nome: "Cadeira Extensora", series: 3, reps: "15", url: "https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/pernas-extensao-de-pernas.gif" },
-      { nome: "Mesa Flexora", series: 3, reps: "12", url: "https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/pernas-flexao-de-pernas-na-mesa-flexora.gif" },
-      { nome: "Panturrilha Sentado", series: 4, reps: "20", url: "https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/panturrilhas-elevacao-de-gemeos-sentado.gif" }
+      { nome: "Leg Press 45", series: 4, reps: "12" },
+      { nome: "Cadeira Extensora", series: 3, reps: "15" },
+      { nome: "Mesa Flexora", series: 3, reps: "12" },
+      { nome: "Panturrilha Sentado", series: 4, reps: "20" }
     ],
     Casa: [
-      { nome: "Agachamento Livre", series: 4, reps: "20", url: "https://www.mundoboaforma.com.br/wp-content/uploads/2020/11/agachamento-livre.gif" },
-      { nome: "Flexão de Braços", series: 3, reps: "12", url: "https://i.pinimg.com/originals/92/6e/c5/926ec5127683c2779b7f5cc627cf75e0.gif" },
-      { nome: "Afundo", series: 3, reps: "12", url: "https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/pernas-afundo-ou-passada-com-halteres.gif" },
-      { nome: "Polichinelos", series: 4, reps: "40", url: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJid3R3bmZ3bmZ3bmZ3/3o7TKVUn7iM8FMEU24/giphy.gif" }
+      { nome: "Agachamento Livre", series: 4, reps: "20" },
+      { nome: "Flexão de Braços", series: 3, reps: "12" },
+      { nome: "Afundo", series: 3, reps: "12" },
+      { nome: "Polichinelos", series: 4, reps: "40" }
     ]
   };
 
@@ -114,12 +125,24 @@ const ListaExercicios = ({ whatsapp, aoFechar, API_URL, modalidade, perfil, trei
         <h3 className="font-black italic text-sky-400 uppercase tracking-widest">{modalidade === 'ia' ? 'Mentor IA Pro' : 'Treino Fixo'}</h3>
       </header>
 
-      {/* MODAL DO GIF ATUALIZADO */}
+      {/* 🔥 MODAL DE VÍDEO ATUALIZADO (RODA MP4 E GIF) */}
       {gifAtivo && (
         <div className="fixed inset-0 z-[9999] bg-black/95 flex flex-col items-center justify-center p-4" onClick={() => setGifAtivo(null)}>
           <div className="w-full max-w-sm bg-gray-900 rounded-[2rem] p-4 border border-sky-500/50" onClick={e => e.stopPropagation()}>
             <h4 className="text-center font-black uppercase text-sky-400 mb-4 text-lg">{gifAtivo.nome}</h4>
-            <img src={gifAtivo.url} className="w-full rounded-xl" onError={(e) => { e.target.src = "https://media.giphy.com/media/3o7TKMGpxxS06DclhS/giphy.gif"; }} />
+
+            {/* Verifica se a URL é um MP4 ou um GIF */}
+            {gifAtivo.url?.includes('.mp4') ? (
+              <video src={gifAtivo.url} autoPlay loop muted playsInline className="w-full rounded-xl mb-2" />
+            ) : (
+              <img src={gifAtivo.url} className="w-full rounded-xl mb-2" onError={(e) => { e.target.src = "https://media.giphy.com/media/3o7TKMGpxxS06DclhS/giphy.gif"; }} />
+            )}
+
+            {/* Se houver o 2º ângulo da câmera (-2.mp4), ele renderiza aqui embaixo! */}
+            {gifAtivo.url2 && (
+              <video src={gifAtivo.url2} autoPlay loop muted playsInline className="w-full rounded-xl mt-2" />
+            )}
+
             <button onClick={() => setGifAtivo(null)} className="w-full mt-4 bg-sky-600 text-white py-3 rounded-xl font-black uppercase hover:bg-sky-500 transition-all text-base">Fechar</button>
           </div>
         </div>
@@ -150,7 +173,6 @@ const ListaExercicios = ({ whatsapp, aoFechar, API_URL, modalidade, perfil, trei
             </>
           )}
 
-          {/* 🔥 ABAS DO TREINO FIXO ATUALIZADAS */}
           {modalidade !== 'ia' && (
             <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-none">
               {['A', 'B', 'C', 'Casa'].map(letra => (
@@ -179,12 +201,8 @@ const ListaExercicios = ({ whatsapp, aoFechar, API_URL, modalidade, perfil, trei
                 <div className="flex gap-2">
                   <span className="bg-sky-600/20 text-sky-400 border border-sky-500/40 text-xs font-black px-3 py-1.5 rounded uppercase">{ex.series}X {ex.reps} REPS</span>
 
-                  {/* 🔥 LÓGICA DE VÍDEOS HÍBRIDA */}
-                  <button onClick={() => {
-                    // Se for treino Fixo ele puxa direto a ex.url. Se for IA ele consulta o obterUrlDoVideo.
-                    const urlVideo = ex.url || obterUrlDoVideo(ex.nome, ex.arquivo);
-                    setGifAtivo({ nome: ex.nome, url: urlVideo });
-                  }} className="bg-white/20 text-white text-xs font-black px-4 py-1.5 rounded-full uppercase hover:bg-sky-600 transition-all">▶ Ver GIF</button>
+                  {/* 🔥 BOTÃO QUE ACIONA A INTELIGÊNCIA UNIVERSAL */}
+                  <button onClick={() => handleAbrirVideo(ex)} className="bg-white/20 text-white text-xs font-black px-4 py-1.5 rounded-full uppercase hover:bg-sky-600 transition-all">▶ VER VÍDEO</button>
                 </div>
                 {ex.obs && <div className="bg-black/50 p-3 rounded-xl mt-3 border-l-4 border-sky-500"><p className="text-gray-300 text-xs font-bold uppercase italic"><span className="text-sky-400 font-black">Coach:</span> {ex.obs}</p></div>}
               </div>
