@@ -2,24 +2,38 @@ import React, { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
 import { useNavigate } from 'react-router-dom';
 
-const URL_DO_BACKEND = 'https://sua-api-treinofit.onrender.com';
-
 // ==========================================
-// 1. COMPONENTE DE ESPERA (SOCKET)
+// 1. COMPONENTE DE ESPERA HÍBRIDO (SOCKET)
 // ==========================================
-export function TelaAguardandoPagamento({ emailDoUsuarioLogado, setAguardando }) {
+export function TelaAguardandoPagamento({ emailDoUsuarioLogado, whatsappDoUsuarioLogado, tipoUsuario, setAguardando }) {
     const navigate = useNavigate();
     const [statusTela, setStatusTela] = useState("Aguardando confirmação do pagamento...");
 
     useEffect(() => {
-        const socket = io(URL_DO_BACKEND);
-        socket.emit("entrar_sala_pagamento", emailDoUsuarioLogado);
+        // 🔥 URL Oficial de Produção (Resolve o erro 404 e CORS)
+        const URL_PRODUCAO = "https://api.treinofit.app.br";
+
+        const socket = io(URL_PRODUCAO, {
+            withCredentials: true
+        });
+
+        // 🧠 Inteligência Híbrida: Define se escuta o E-mail (Personal) ou o WhatsApp (Aluno)
+        const obterSalaCorreta = () => {
+            if (tipoUsuario === "personal") {
+                return emailDoUsuarioLogado;
+            }
+            const numeroLimpo = String(whatsappDoUsuarioLogado || "").replace(/\D/g, "");
+            return numeroLimpo.startsWith("55") ? numeroLimpo.slice(2) : numeroLimpo;
+        };
+
+        const salaAtiva = obterSalaCorreta();
+
+        console.log(`📡 Conectando ao canal de pagamentos da sala: ${salaAtiva}`);
+        socket.emit("entrar_sala_pagamento", salaAtiva);
 
         socket.on("pagamento_aprovado", (dados) => {
-            console.log("🔥 Pagamento confirmado via Socket!", dados);
-            setStatusTela(dados.mensagem);
-
-            // Limpa o estado de "pagamento pendente" do navegador
+            console.log("🔥 Sinal de pagamento capturado via Socket!", dados);
+            setStatusTela(dados.mensagem || "💎 Acesso Liberado!");
             localStorage.removeItem("pagamento_iniciado");
 
             setTimeout(() => {
@@ -34,31 +48,43 @@ export function TelaAguardandoPagamento({ emailDoUsuarioLogado, setAguardando })
         return () => {
             socket.disconnect();
         };
-    }, [emailDoUsuarioLogado, navigate]);
+    }, [emailDoUsuarioLogado, whatsappDoUsuarioLogado, tipoUsuario, navigate]);
 
-    // Adicionado "min-h-screen bg-gray-900" para evitar a tela preta
     return (
-        <div className="min-h-screen bg-gray-900 flex flex-col justify-center items-center p-6 text-center text-white">
-            <h2 className="text-2xl font-black mb-4">💳 Status do Pagamento:</h2>
-            <h3 className="text-xl text-emerald-400 mb-6">{statusTela}</h3>
+        <div className="min-h-screen bg-[#0d0e12] flex flex-col items-center justify-center p-6 text-white text-center">
+            <div className="bg-gray-900 border border-sky-500/20 p-8 rounded-[2.5rem] max-w-sm w-full shadow-2xl">
+                <div className="text-5xl mb-4 animate-bounce">💳</div>
+                <h2 className="text-xl font-black uppercase tracking-tight mb-2">Status do Pagamento</h2>
+                <h3 className="text-base font-black italic text-sky-400 uppercase tracking-wide mb-6">
+                    {statusTela}
+                </h3>
 
-            {statusTela.includes("Aguardando") ? (
-                <div>
-                    <p className="mb-4">⏳ Escutando a Kiwify...</p>
-                    <p className="text-sm text-gray-400">Complete o pagamento na outra aba. Esta tela atualizará sozinha!</p>
-                    <button
-                        onClick={() => {
-                            localStorage.removeItem("pagamento_iniciado"); // Limpa caso o usuário desista
-                            setAguardando(false);
-                        }}
-                        className="mt-8 text-sm text-gray-500 underline"
-                    >
-                        Voltar para os planos
-                    </button>
-                </div>
-            ) : (
-                <p className="text-2xl font-bold text-emerald-500">✅ Acesso Liberado!</p>
-            )}
+                {statusTela.includes("Aguardando") ? (
+                    <div className="flex flex-col items-center gap-2">
+                        <div className="w-8 h-8 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mb-2"></div>
+                        <p className="text-xs text-gray-400 uppercase font-bold">Sincronizando com a Kiwify...</p>
+                        <p className="text-xs text-gray-500 mt-2">Complete o pagamento na aba segura. Esta tela atualizará sozinha!</p>
+
+                        {/* Botão de voltar mantido para o Personal Trainer não ficar preso */}
+                        {setAguardando && (
+                            <button
+                                onClick={() => {
+                                    localStorage.removeItem("pagamento_iniciado");
+                                    setAguardando(false);
+                                }}
+                                className="mt-6 text-xs text-gray-500 underline hover:text-white transition-colors"
+                            >
+                                Voltar para os planos
+                            </button>
+                        )}
+                    </div>
+                ) : (
+                    <div className="flex flex-col items-center gap-1">
+                        <p className="text-emerald-400 font-black text-lg uppercase animate-pulse">🚀 Acesso Liberado!</p>
+                        <p className="text-xs text-gray-400">Preparando seu ambiente...</p>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
@@ -66,8 +92,9 @@ export function TelaAguardandoPagamento({ emailDoUsuarioLogado, setAguardando })
 // ==========================================
 // 2. TELA DE PLANOS PRINCIPAL
 // ==========================================
-const TelaPlanos = ({ emailDoUsuario }) => {
-    // Inicializa o estado lendo se já existe um pagamento pendente no navegador
+
+
+const TelaPlanos = ({ emailDoUsuario, whatsappDoUsuario }) => {
     const [aguardandoPagamento, setAguardandoPagamento] = useState(() => {
         return localStorage.getItem("pagamento_iniciado") === "true";
     });
@@ -79,7 +106,7 @@ const TelaPlanos = ({ emailDoUsuario }) => {
             precoMensal: "17,90",
             total: "53,70",
             destaque: false,
-            linkKiwify: "https://pay.kiwify.com.br/3TMozok"
+            linkKiwify: "https://pay.kiwify.com.br/bphu4Hm"
         },
         {
             nome: "Semestral",
@@ -103,6 +130,8 @@ const TelaPlanos = ({ emailDoUsuario }) => {
         return (
             <TelaAguardandoPagamento
                 emailDoUsuarioLogado={emailDoUsuario}
+                whatsappDoUsuarioLogado={whatsappDoUsuario} // 🔥 2. Passe o WhatsApp para a sala
+                tipoUsuario="aluno" // 🔥 3. Avise que é a tela do Aluno!
                 setAguardando={setAguardandoPagamento}
             />
         );

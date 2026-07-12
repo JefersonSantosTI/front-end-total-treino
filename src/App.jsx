@@ -8,64 +8,6 @@ import ListaExercicios from "./services/ListaExercicio";
 import ChatReceitas from "./pages/ChatReceitas";
 import Login from "./components/Login";
 import TelaPlanos from "./components/TelaPlanos";
-import { io } from 'socket.io-client';
-import { useNavigate } from 'react-router-dom'; // Se estiver usando React Router
-
-const URL_DO_BACKEND = 'https://sua-api-treinofit.onrender.com';
-
-export function TelaAguardandoPagamento({ emailDoUsuarioLogado }) {
-    const navigate = useNavigate();
-    const [statusTela, setStatusTela] = useState("Aguardando confirmação do pagamento...");
-
-    useEffect(() => {
-        // 1. Conecta ao seu servidor Node.js
-        const socket = io(URL_DO_BACKEND);
-
-        // 2. Avisa o back-end em qual "sala" este usuário está
-        socket.emit("entrar_sala_pagamento", emailDoUsuarioLogado);
-
-        // 3. Fica escutando o momento exato em que a Kiwify avisar o Node.js
-        socket.on("pagamento_aprovado", (dados) => {
-            console.log("🔥 Pagamento confirmado via Socket!", dados);
-
-            // Muda a mensagem na tela para o usuário ver instantaneamente
-            setStatusTela(dados.mensagem);
-
-            // 4. Redireciona o usuário para a área correta após 2 segundos
-            setTimeout(() => {
-                // Aqui nós usamos aquele "tipo" que configuramos lá no back-end
-                if (dados.tipo === "personal") {
-                    navigate("/painel-personal"); // Rota do painel do Personal
-                    // Se não usar o useNavigate, use: window.location.href = "/painel-personal";
-                } else if (dados.tipo === "aluno") {
-                    navigate("/area-aluno"); // Rota da área VIP do aluno
-                    // Se não usar o useNavigate, use: window.location.href = "/area-aluno";
-                }
-            }, 2000); // 2000ms = 2 segundos para ele conseguir ler a mensagem de sucesso
-        });
-
-        // 5. Segurança: Desconecta o socket quando o usuário sair da página
-        return () => {
-            socket.disconnect();
-        };
-    }, [emailDoUsuarioLogado, navigate]);
-
-    return (
-        <div style={{ textAlign: 'center', padding: '50px' }}>
-            <h2>💳 Status:</h2>
-            <h3>{statusTela}</h3>
-
-            {/* Se ainda estiver aguardando, mostra um spinner. Se não, mostra um check de sucesso */}
-            {statusTela.includes("Aguardando") ? (
-                <p>⏳ Escutando a Kiwify...</p>
-                /* Coloque o seu componente de QR Code ou Spinner aqui */
-            ) : (
-                <p>✅ Redirecionando para sua área exclusiva...</p>
-            )}
-        </div>
-    );
-}
-
 
 // ✅ IMPORT DO NOVO ONBOARDING ADICIONADO AQUI
 import OnboardingNotificacao from "./components/OnboardingNotificacao";
@@ -74,7 +16,6 @@ import OnboardingNotificacao from "./components/OnboardingNotificacao";
 import { abrirExercicioVisual } from "./components/visual";
 
 const DIAS_SEMANA = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
-
 
 const parseNumeroSeguro = (val) => Number(String(val).replace(',', '.')) || 0;
 
@@ -91,6 +32,7 @@ const urlBase64ToUint8Array = (base64String) => {
 };
 
 function App() {
+    // ... a partir daqui o seu código continua normalmente (const [configAgua, setConfigAgua] = useState...)
     // =========================================================================
     // 1. TODOS OS ESTADOS (HOOKS)
     // =========================================================================
@@ -180,7 +122,7 @@ function App() {
 
     const API_URL = "https://api-backend-treino-fit.onrender.com/api";
     const verificandoRef = useRef(false);
-    const KIWIFY_MENSAL = "https://pay.kiwify.com.br/MCPza7J";
+    const KIWIFY_MENSAL = "https://pay.kiwify.com.br/O5ggnzX";
     const KIWIFY_ANUAL = "https://pay.kiwify.com.br/vbvKtGY";
 
     // =========================================================================
@@ -1634,7 +1576,12 @@ function App() {
                 {bloqueado && (
                     <div className="fixed inset-0 z-[500] bg-[#07080b]/90 backdrop-blur-xl flex flex-col items-center p-4 md:p-8 overflow-y-auto custom-scrollbar">
                         <button type="button" onClick={() => { setBloqueado(false); atualizarStatusVIP(); }} className="absolute top-6 right-6 text-neutral-500 hover:text-white bg-[#13141a] border border-white/10 w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-black transition-colors z-[510] shadow-2xl hover:scale-105">✕</button>
-                        <TelaPlanos />
+
+                        {/* 🔥 A MÁGICA ACONTECE AQUI: Passamos a variável 'usuario' que guarda o WhatsApp! */}
+                        <TelaPlanos
+                            whatsappDoUsuario={usuario}
+                        />
+
                     </div>
                 )}
             </div>
