@@ -120,7 +120,7 @@ function App() {
     const [menuEntrarAberto, setMenuEntrarAberto] = useState(false);
 
 
-    const API_URL = "https://api-backend-treino-fit.onrender.com/api";
+    const API_URL = "https://api-backend-total-treino.onrender.com/api";
     const verificandoRef = useRef(false);
     const KIWIFY_MENSAL = "https://pay.kiwify.com.br/O5ggnzX";
     const KIWIFY_ANUAL = "https://pay.kiwify.com.br/vbvKtGY";
@@ -909,7 +909,7 @@ function App() {
 
                     {/* Menu Superior */}
                     <header className="home-header relative">
-                        <div className="home-logo text-3xl font-black italic text-emerald-400">Treino Fit</div>
+                        <div className="home-logo text-3xl font-black italic text-emerald-400">Total Treino</div>
                         <div className="relative">
                             <button
                                 onClick={() => setMenuEntrarAberto(!menuEntrarAberto)}
@@ -1013,7 +1013,7 @@ function App() {
                     </section>
 
                     <footer style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8', borderTop: '2px solid #1e293b', fontSize: '14px', fontWeight: 'black', textTransform: 'uppercase', trackingWidth: 'widest' }}>
-                        &copy; 2026 Treino Fit. Todos os direitos reservados.
+                        &copy; 2026 Total Treino. Todos os direitos reservados.
                     </footer>
                 </div>
             </div>
