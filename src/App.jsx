@@ -2372,6 +2372,51 @@ function App() {
                     </div>
                 )}
 
+                {/* MODAL DE CADASTRAR NOVO ALUNO */}
+                {modalNovoAluno && (
+                    <div className="fixed inset-0 z-[1000] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+                        <div className="w-full max-w-md bg-[#16171d] border-2 border-emerald-500/40 rounded-3xl p-6 md:p-8 shadow-2xl relative">
+                            <button onClick={() => setModalNovoAluno(false)} className="absolute top-4 right-4 text-neutral-400 hover:text-white font-black bg-[#0d0e12] border border-neutral-700 w-8 h-8 rounded-lg flex items-center justify-center transition-colors">✕</button>
+
+                            <div className="mb-6 border-b-2 border-neutral-800 pb-4">
+                                <h3 className="font-black text-white uppercase text-lg tracking-tight flex items-center gap-2">
+                                    <span className="text-2xl">➕</span> Novo Aluno
+                                </h3>
+                                <p className="text-[10px] font-bold text-emerald-400 font-mono uppercase tracking-widest mt-1">Cadastro Rápido</p>
+                            </div>
+
+                            {/* 🔥 AQUI ESTÁ A SUA FUNÇÃO QUE SALVA NO BANCO! */}
+                            <form onSubmit={cadastrarNovoAluno} className="space-y-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-black uppercase text-neutral-400 block ml-1">Nome do Aluno</label>
+                                    <input required type="text" placeholder="Ex: João Silva" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-3.5 rounded-xl text-sm font-bold text-white outline-none focus:border-emerald-500/70 transition-colors" value={novoAlunoForm.nome} onChange={e => setNovoAlunoForm({ ...novoAlunoForm, nome: e.target.value })} />
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-black uppercase text-neutral-400 block ml-1">WhatsApp (Apenas Números)</label>
+                                    <input required type="text" placeholder="Ex: 11999999999" className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-3.5 rounded-xl text-sm font-bold text-white outline-none focus:border-emerald-500/70 transition-colors font-mono" value={novoAlunoForm.whatsapp} onChange={e => setNovoAlunoForm({ ...novoAlunoForm, whatsapp: e.target.value })} />
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-black uppercase text-neutral-400 block ml-1">Objetivo Inicial</label>
+                                    <select className="w-full bg-[#0d0e12] border-2 border-neutral-700 p-3.5 rounded-xl text-sm font-bold text-white outline-none focus:border-emerald-500/70 transition-colors" value={novoAlunoForm.objetivo} onChange={e => setNovoAlunoForm({ ...novoAlunoForm, objetivo: e.target.value })}>
+                                        <option value="Emagrecimento">Emagrecimento</option>
+                                        <option value="Hipertrofia">Hipertrofia</option>
+                                        <option value="Performance">Performance</option>
+                                    </select>
+                                </div>
+
+                                <div className="flex gap-3 pt-4">
+                                    <button type="button" onClick={() => setModalNovoAluno(false)} className="w-1/3 bg-transparent border-2 border-neutral-800 hover:bg-neutral-800 text-neutral-300 font-black p-4 rounded-xl text-xs uppercase transition-colors">Cancelar</button>
+                                    <button type="submit" className="w-2/3 bg-emerald-600 hover:bg-emerald-500 text-white font-black p-4 rounded-xl text-xs uppercase transition-colors shadow-[0_5px_15px_rgba(16,185,129,0.3)] flex justify-center items-center gap-2">
+                                        Salvar Aluno
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
                 {/* ✅ AQUI RENDERIZA A AVALIAÇÃO NO PAINEL DO PERSONAL E DO ALUNO */}
                 {alunoVerAvaliacao && renderModalAvaliacao(alunoVerAvaliacao, () => setAlunoVerAvaliacao(null))}
 
@@ -2865,5 +2910,7 @@ function App() {
 
     return <div className="text-white text-center p-10 bg-[#0d0e12] min-h-screen font-black text-xl uppercase tracking-widest flex items-center justify-center">Carregando Plataforma...</div>;
 }
+
+
 
 export default App;
