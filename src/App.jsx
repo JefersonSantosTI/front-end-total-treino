@@ -331,7 +331,7 @@ function App() {
     const enviarZapRetencao = (aluno, dias) => {
         const primeiroNome = aluno.nome.split(' ')[0];
         let diasTexto = dias === Infinity ? "ainda não registrou nenhum treino no app" : `não treina há ${dias} dias`;
-        const mensagem = `Fala ${primeiroNome}, vi no Treino Fit que você ${diasTexto}. Aconteceu algo? Bora voltar pro foco! 💪🔥`;
+        const mensagem = `Fala ${primeiroNome}, vi no Total Treino que você ${diasTexto}. Aconteceu algo? Bora voltar pro foco! 💪🔥`;
         const zap = String(aluno.whatsapp).replace(/\D/g, '');
         const url = `https://wa.me/55${zap}?text=${encodeURIComponent(mensagem)}`;
         window.open(url, '_blank');
@@ -629,7 +629,7 @@ function App() {
                     intensidade: novoCheckin.feedback.intensidade,
                     carga: novoCheckin.feedback.carga,
                     data: dataFormatada,
-                    nomePersonal: personalLogado?.nome || "Treinador Treino Fit"
+                    nomePersonal: personalLogado?.nome || "Treinador Total Treino"
                 });
                 setModalShareAberto(true);
             }
@@ -1004,7 +1004,7 @@ function App() {
                                     <div className="absolute left-0 top-0 h-full w-1.5 bg-blue-500"></div>
                                     <span className="text-3xl mr-4 select-none">💧</span>
                                     <div className="text-sm text-white font-bold leading-relaxed">
-                                        <strong className="text-blue-400 block mb-1 text-xs uppercase tracking-wider font-black">Notificação Treino Fit:</strong>
+                                        <strong className="text-blue-400 block mb-1 text-xs uppercase tracking-wider font-black">Notificação Total Treino:</strong>
                                         Hora de beber água! Faltam 1.2L para bater a sua meta de hoje.
                                     </div>
                                 </div>

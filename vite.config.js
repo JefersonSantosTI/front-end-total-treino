@@ -12,8 +12,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'logo192.png'],
       manifest: {
-        name: 'Treino Fit - Consultoria IA',
-        short_name: 'Treino Fit',
+        name: ' Total Treino- Consultoria IA',
+        short_name: 'Total Treino',
         description: 'Sua dieta e treino personalizados com IA',
         theme_color: '#10b981', // Verde esmeralda do seu botão
         background_color: '#0f172a', // Cor escura do seu fundo

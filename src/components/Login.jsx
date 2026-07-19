@@ -16,7 +16,7 @@ export default function Login({ aoLogar, aoVoltar }) {
     return (
         <div className="flex flex-col items-center justify-center h-screen bg-gray-900 text-white p-4">
             <div className="bg-gray-800 p-8 rounded-2xl shadow-xl w-full max-w-md border border-green-500/30">
-                <h1 className="text-3xl font-black mb-6 text-center text-green-500">🦾 Treino Fit</h1>
+                <h1 className="text-3xl font-black mb-6 text-center text-green-500">🦾 Total Treino</h1>
                 <p className="text-gray-300 font-bold text-base mb-6 text-center">Digite seu WhatsApp para acessar sua consultoria personalizada.</p>
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
