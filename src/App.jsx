@@ -1044,7 +1044,7 @@ function App() {
                                         <p className="text-[10px] text-emerald-400 font-semibold font-mono mt-1">Autenticação Concluída ✓</p>
                                     </div>
                                 </div>
-                                <p className="text-neutral-300 font-medium text-xs mb-6 leading-relaxed bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl">Este é o seu primeiro acesso. Para ativar a sua licença no sistema Treino Fit, insira o seu <strong className="text-white">registo profissional (CREF)</strong> abaixo.</p>
+                                <p className="text-neutral-300 font-medium text-xs mb-6 leading-relaxed bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl">Este é o seu primeiro acesso. Para ativar a sua licença no sistema Total Treino, insira o seu <strong className="text-white">registo profissional (CREF)</strong> abaixo.</p>
                                 <form onSubmit={handleCadastrarCref} className="space-y-4">
                                     <input required type="text" placeholder="Registro CREF (Ex: 123456-G/SP)" className="w-full bg-[#0d0e12] border border-neutral-700 p-3.5 rounded-xl text-sm font-semibold outline-none focus:border-emerald-500 text-neutral-100 placeholder-neutral-500 uppercase transition-colors" value={cref} onChange={(e) => setCref(e.target.value)} />
                                     <div className="flex gap-3 text-xs font-bold pt-2">
@@ -1359,7 +1359,7 @@ function App() {
                         <header className="w-full max-w-4xl flex justify-between items-center pb-6 mb-6">
                             <div className="flex items-center space-x-4">
                                 <div className="relative">
-                                    <img src="/logo192.png" alt="Ícone Treino Fit" className="w-14 h-14 rounded-2xl shadow-[0_0_15px_rgba(16,185,129,0.2)] border border-emerald-500/20 object-cover" />
+                                    <img src="/logo192.png" alt="Ícone Total Treino" className="w-14 h-14 rounded-2xl shadow-[0_0_15px_rgba(16,185,129,0.2)] border border-emerald-500/20 object-cover" />
                                     {isVip && <div className="absolute -bottom-1 -right-1 bg-emerald-500 w-4 h-4 rounded-full border-2 border-[#07080b]"></div>}
                                 </div>
                                 <div>
@@ -1595,7 +1595,7 @@ function App() {
             <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col p-4 md:p-8 overflow-y-auto font-sans z-40 custom-scrollbar">
                 <header className="w-full max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center sm:items-end border-b-2 border-neutral-800 pb-6 mb-8 gap-4 sm:gap-0">
                     <div className="flex items-center gap-4 text-center sm:text-left flex-col sm:flex-row">
-                        <img src="/logo192.png" alt="Ícone Treino Fit" className="w-14 h-14 rounded-xl shadow-lg border border-neutral-700" />
+                        <img src="/logo192.png" alt="Ícone Total Treino" className="w-14 h-14 rounded-xl shadow-lg border border-neutral-700" />
                         <div>
                             <h2 className="text-2xl font-black text-white uppercase tracking-tight">{personalLogado?.nome}</h2>
                             <div className="flex items-center justify-center sm:justify-start gap-2 mt-2">
@@ -2430,7 +2430,7 @@ function App() {
             <div className="fixed inset-0 bg-[#0d0e12] text-neutral-200 flex flex-col p-6 overflow-y-auto font-sans z-40 custom-scrollbar">
                 <header className="w-full max-w-md mx-auto flex justify-between items-center border-b-2 border-neutral-800 pb-5 mb-6">
                     <div>
-                        <p className="text-[10px] text-blue-400 font-mono font-black uppercase tracking-wider">Consultoria Privada Treino Fit</p>
+                        <p className="text-[10px] text-blue-400 font-mono font-black uppercase tracking-wider">Consultoria Privada Total Treino</p>
                         <h2 className="text-xl font-black text-white uppercase tracking-tight mt-1 truncate max-w-[200px]">{alunoLogado?.nome}</h2>
                         <p className="text-xs font-bold text-neutral-400 font-mono mt-1">Objetivo: {alunoLogado?.objetivo}</p>
                     </div>
@@ -2819,7 +2819,7 @@ function App() {
                                     <div className="absolute -left-10 top-1/4 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl"></div>
 
                                     <div className="text-center w-full mt-6 z-10">
-                                        <p className="text-[11px] font-mono font-black text-emerald-400 uppercase tracking-widest mb-1.5 bg-[#0d0e12] inline-block px-3 py-1 rounded-lg border border-emerald-500/20">Treino Fit App</p>
+                                        <p className="text-[11px] font-mono font-black text-emerald-400 uppercase tracking-widest mb-1.5 bg-[#0d0e12] inline-block px-3 py-1 rounded-lg border border-emerald-500/20">Total Treino App</p>
                                         <h3 className="text-4xl font-black text-white uppercase italic tracking-tighter drop-shadow-lg mt-3">TREINO<br />PAGO!</h3>
                                         <p className="text-sm font-bold text-neutral-400 mt-2">{dadosShare.data}</p>
                                     </div>
