@@ -22,15 +22,19 @@ export default function HomePersonal({ setEtapa }) {
 
             {/* HEADER FLUTUANTE */}
             <header className="sticky top-0 z-[60] bg-zinc-950/80 backdrop-blur-xl border-b border-white/5 py-4 px-6 md:px-12 flex justify-between items-center shadow-2xl">
-                <div className="flex items-center gap-2">
-                    <div className="w-10 h-10 bg-gradient-to-br from-orange-600 to-red-600 rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(234,88,12,0.4)]">
-                        <Dumbbell size={20} className="text-white" />
-                    </div>
+                <div className="flex items-center gap-3">
+
+                    {/* SUA LOGO AQUI */}
+                    <img
+                        src="/logo192.png"
+                        alt="Logo Total Treino"
+                        className="w-11 h-11 rounded-xl shadow-[0_0_15px_rgba(234,88,12,0.4)] object-cover"
+                    />
+
                     <div className="text-xl md:text-2xl font-black italic text-white tracking-tight uppercase">
                         Total Treino <span className="text-xs text-orange-500 not-italic font-black tracking-widest bg-orange-500/10 border border-orange-500/30 px-2 py-0.5 rounded-md ml-1">PRO</span>
                     </div>
                 </div>
-
                 <div className="flex items-center gap-4">
                     <button onClick={() => setEtapa("login_aluno")} className="text-zinc-400 hover:text-white font-bold text-xs md:text-sm transition-colors hidden md:block uppercase tracking-wider">
                         Portal do Aluno
