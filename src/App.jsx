@@ -473,11 +473,23 @@ function App() {
             if (responseIA.ok) {
                 const dadosGerados = await responseIA.json();
 
-                // Atualiza o aluno na tela para o Personal ver que deu certo
+                // 🔥 A CORREÇÃO ESTÁ AQUI: Atualiza TUDO na tela, incluindo o Peso e Altura!
                 setAlunosPersonal(prev => prev.map(a => {
                     if (a.id === alunoId || a._id === alunoId) {
                         return {
                             ...a,
+                            // Atualiza a Biometria Visível
+                            peso: alunoEditandoPerfil.peso,
+                            altura: alunoEditandoPerfil.altura,
+                            idade: alunoEditandoPerfil.idade,
+                            genero: alunoEditandoPerfil.genero,
+                            objetivo: alunoEditandoPerfil.objetivo,
+                            meta: alunoEditandoPerfil.objetivo,
+                            nivel: alunoEditandoPerfil.nivel,
+                            diasTreino: alunoEditandoPerfil.diasTreino,
+                            restricoes: alunoEditandoPerfil.restricoes,
+                            lesoes: alunoEditandoPerfil.lesoes,
+                            // Atualiza os dados da IA
                             statusTreino: "Rascunho IA",
                             treinoSemanal: dadosGerados.treinoSemanal,
                             dietaPrescrita: dadosGerados.dietaPrescrita,
